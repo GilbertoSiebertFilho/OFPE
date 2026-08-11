@@ -13,15 +13,15 @@ import random
 
 import pytest
 
-from abline.fitting import (
+from ofpe.fitting import (
     TrackPoint,
     detect_passes,
     dominant_heading,
     estimate_swath_width,
     fit_guidance_from_track,
 )
-from abline.geo import LatLon, LocalFrame, geodesic_distance
-from abline.models import PatternType
+from ofpe.geo import LatLon, LocalFrame, geodesic_distance
+from ofpe.models import PatternType
 
 ORIGIN = LatLon(-27.845, -54.477)
 

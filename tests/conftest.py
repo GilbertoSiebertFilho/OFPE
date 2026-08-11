@@ -14,9 +14,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from abline.db import Database  # noqa: E402
-from abline.geo import LatLon  # noqa: E402
-from abline.models import FieldRecord, Machine, MachineCategory  # noqa: E402
+from ofpe.db import Database  # noqa: E402
+from ofpe.geo import LatLon  # noqa: E402
+from ofpe.models import FieldRecord, Machine, MachineCategory  # noqa: E402
 
 
 @pytest.fixture
@@ -67,7 +67,7 @@ def db() -> Database:
 def client(db):
     from fastapi.testclient import TestClient
 
-    from abline.web.app import create_app, get_db
+    from ofpe.web.app import create_app, get_db
 
     app = create_app()
     app.dependency_overrides[get_db] = lambda: db

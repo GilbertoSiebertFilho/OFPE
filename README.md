@@ -1,4 +1,4 @@
-# AB Line Platform
+# OFPE Field Data Platform
 
 **How do I get this file into the monitor — and how do I get the data back out?**
 That is the question this platform answers. Pick your equipment, your display and
@@ -18,6 +18,13 @@ Three tabs:
 pip install -r requirements.txt
 python3 run.py --seed      # demo machine, field and lines
 python3 run.py             # http://127.0.0.1:8000
+```
+
+Optional, only if you change the terminal drawings:
+
+```bash
+pip install pillow
+python3 tools/generate_icons.py
 ```
 
 ---
@@ -250,7 +257,7 @@ re-export to anything else. This is the cross-brand translator.
 ## How it fits together
 
 ```
-web/            FastAPI, the no-build browser client, and the handbook renderer
+ofpe/web/       FastAPI, the no-build browser client, and the handbook renderer
 db              SQLite
 procedures/     _core.py  types, registry, resolver
                 families.py  shapes shared by whole families of displays
@@ -385,3 +392,17 @@ build time rather than when a producer clicks download.
   of curvature past the radius collapses it; those passes simply run out. That is
   real geometry, not a bug, but it means a tight curve produces fewer passes on
   the inside than a naive count suggests.
+
+
+---
+
+## Where this came from
+
+The procedure knowledge base started life as two tabs in an unrelated
+spreadsheet — a CWSI irrigation tool that happened to also carry a monitor
+file-transfer guide. That guide held 24 procedures, all tagged "all versions".
+
+This is that idea taken seriously: 264 procedures, a real software-version
+dimension, every claim sourced and confidence-flagged, and a correction loop so
+the flags can come down. The two projects share nothing but that origin, and
+this one owns its own icon generator and assets.

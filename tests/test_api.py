@@ -242,7 +242,7 @@ def test_import_rejects_a_file_it_cannot_read(client):
 def test_fit_endpoint_from_a_csv_track(client):
     import math
 
-    from abline.geo import LatLon, LocalFrame
+    from ofpe.geo import LatLon, LocalFrame
 
     machine = make_machine(client)
     field = make_field(client)
@@ -375,7 +375,7 @@ def test_download_surfaces_the_two_step_warning_in_a_header(client):
         "machine_id": machine["id"],
     })
     assert response.status_code == 200
-    assert "closed" in response.headers["x-abline-notes"]
+    assert "closed" in response.headers["x-ofpe-notes"]
 
 
 def test_download_refuses_lines_from_two_different_fields(client):

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Start the AB Line Platform.
+"""Start the OFPE Field Data Platform.
 
     python3 run.py                      # http://127.0.0.1:8000
     python3 run.py --host 0.0.0.0       # reachable from the office network
     python3 run.py --seed               # add a demo machine, field and line
 
-The database defaults to ``platform/data/abline.sqlite3``; override it with
-``--db`` or the ``ABLINE_DB`` environment variable.
+The database defaults to ``platform/data/ofpe.sqlite3``; override it with
+``--db`` or the ``OFPE_DB`` environment variable.
 """
 
 from __future__ import annotations
@@ -21,10 +21,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 def seed(db_path: str) -> None:
     """Put one of everything in the database so the UI has something to show."""
-    from abline.db import Database
-    from abline.generate import line_from_boundary, make_headland
-    from abline.geo import LatLon
-    from abline.models import FieldRecord, Machine, MachineCategory
+    from ofpe.db import Database
+    from ofpe.generate import line_from_boundary, make_headland
+    from ofpe.geo import LatLon
+    from ofpe.models import FieldRecord, Machine, MachineCategory
 
     db = Database(db_path)
 
@@ -98,25 +98,25 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
-    parser.add_argument("--db", default=os.environ.get("ABLINE_DB", ""))
+    parser.add_argument("--db", default=os.environ.get("OFPE_DB", ""))
     parser.add_argument("--seed", action="store_true", help="load demo data and exit")
     parser.add_argument("--reload", action="store_true", help="restart on code changes")
     args = parser.parse_args()
 
     if args.db:
-        os.environ["ABLINE_DB"] = args.db
+        os.environ["OFPE_DB"] = args.db
 
     if args.seed:
-        from abline.db import DEFAULT_DB_PATH
+        from ofpe.db import DEFAULT_DB_PATH
 
         seed(args.db or str(DEFAULT_DB_PATH))
         return 0
 
     import uvicorn
 
-    print(f"AB Line Platform -> http://{args.host}:{args.port}")
+    print(f"OFPE Field Data Platform -> http://{args.host}:{args.port}")
     uvicorn.run(
-        "abline.web.app:app", host=args.host, port=args.port, reload=args.reload
+        "ofpe.web.app:app", host=args.host, port=args.port, reload=args.reload
     )
     return 0
 

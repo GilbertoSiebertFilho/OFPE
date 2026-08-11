@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from abline import procedures as pr
+from ofpe import procedures as pr
 
 
 def test_start_returns_everything_step_one_needs(client):
@@ -107,7 +107,7 @@ def test_procedure_offers_related_next_steps(client):
     assert body["related"], "a procedure with no suggested next step"
     assert all(r["objective"] != "import_prescription" for r in body["related"])
     # Ordered as a workflow: preparation before the job, records after it.
-    from abline.procedures._core import _RELATED_ORDER
+    from ofpe.procedures._core import _RELATED_ORDER
 
     keys = [r["objective"] for r in body["related"]]
     assert keys == sorted(keys, key=_RELATED_ORDER.index)

@@ -6,7 +6,7 @@ import math
 
 import pytest
 
-from abline.geo import (
+from ofpe.geo import (
     LatLon,
     LocalFrame,
     circular_mean_180,
@@ -67,7 +67,7 @@ def test_geodesic_distance_matches_a_known_value():
 
 def test_geodesic_distance_beats_a_sphere_over_long_distances():
     """The ellipsoidal answer must differ measurably from the spherical one."""
-    from abline.geo import _haversine
+    from ofpe.geo import _haversine
 
     lisbon = LatLon(38.7223, -9.1393)
     new_york = LatLon(40.7128, -74.0060)

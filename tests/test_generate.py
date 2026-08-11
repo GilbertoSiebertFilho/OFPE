@@ -6,7 +6,7 @@ import math
 
 import pytest
 
-from abline.generate import (
+from ofpe.generate import (
     expand_swaths,
     line_from_boundary,
     make_ab_line,
@@ -14,8 +14,8 @@ from abline.generate import (
     make_pivot_line,
     optimize_heading,
 )
-from abline.geo import LatLon, geodesic_distance
-from abline.models import FieldRecord, Machine, PatternType
+from ofpe.geo import LatLon, geodesic_distance
+from ofpe.models import FieldRecord, Machine, PatternType
 
 
 def test_field_area_matches_hand_calculation(rectangle_field):

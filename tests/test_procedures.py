@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import pytest
 
-from abline import catalog as catalog_module
-from abline import procedures as pr
+from ofpe import catalog as catalog_module
+from ofpe import procedures as pr
 
 
 def combos() -> dict[tuple[str, str, str], list[pr.Procedure]]:
@@ -109,7 +109,7 @@ def test_every_monitor_has_both_icon_variants_on_disk():
     A missing UI variant renders as a broken image in the wizard, which is the
     first thing anyone sees.
     """
-    from abline.web.app import ICON_DIR
+    from ofpe.web.app import ICON_DIR
 
     missing = []
     for key, monitor in catalog_module.MONITORS.items():

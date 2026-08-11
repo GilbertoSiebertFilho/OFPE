@@ -13,17 +13,17 @@ import zipfile
 
 import pytest
 
-from abline.catalog import MONITORS, SupportLevel
-from abline.generate import line_from_boundary, make_headland, make_pivot_line
-from abline.geo import LatLon, geodesic_distance
-from abline.models import FieldRecord, GuidanceLine, PatternType
-from abline.readers import read_any
-from abline.readers.isoxml import parse_taskdata
-from abline.readers.shp import read_dbf, read_shp
-from abline.writers import build_download, build_format
-from abline.writers.isoxml import build_taskdata
-from abline.writers.shp import write_lines, write_polygons
-from abline.writers.simple import build_geojson, build_kml
+from ofpe.catalog import MONITORS, SupportLevel
+from ofpe.generate import line_from_boundary, make_headland, make_pivot_line
+from ofpe.geo import LatLon, geodesic_distance
+from ofpe.models import FieldRecord, GuidanceLine, PatternType
+from ofpe.readers import read_any
+from ofpe.readers.isoxml import parse_taskdata
+from ofpe.readers.shp import read_dbf, read_shp
+from ofpe.writers import build_download, build_format
+from ofpe.writers.isoxml import build_taskdata
+from ofpe.writers.shp import write_lines, write_polygons
+from ofpe.writers.simple import build_geojson, build_kml
 
 
 # ------------------------------------------------------------------- ISOXML
@@ -374,7 +374,7 @@ def test_read_any_reads_kml_we_wrote(rectangle_field, combine):
 
 def test_catalog_support_levels_are_consistent():
     """Downloadable monitors need a real format; API-only ones must not claim one."""
-    from abline.catalog import FORMATS
+    from ofpe.catalog import FORMATS
 
     for key, monitor in MONITORS.items():
         assert monitor.primary_format in FORMATS, f"{key} names an unknown format"

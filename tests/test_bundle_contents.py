@@ -13,9 +13,9 @@ import zipfile
 
 import pytest
 
-from abline.catalog import MONITORS
-from abline.generate import line_from_boundary, make_headland
-from abline.writers import build_download
+from ofpe.catalog import MONITORS
+from ofpe.generate import line_from_boundary, make_headland
+from ofpe.writers import build_download
 
 
 def contents(result) -> dict[str, bytes]:
@@ -108,7 +108,7 @@ def test_headland_survives_the_whole_export_path(rectangle_field, combine):
     files = contents(
         build_download("generic.isobus", rectangle_field, [headland], machine=combine)
     )
-    from abline.readers.isoxml import parse_taskdata
+    from ofpe.readers.isoxml import parse_taskdata
 
     _fields, lines, warnings = parse_taskdata(files["TASKDATA/TASKDATA.XML"])
     assert warnings == []
@@ -135,8 +135,8 @@ def test_agopengps_coordinates_are_easting_then_northing(rectangle_field, combin
     AgOpenGPS agrees -- that is why the catalog marks the format unverified --
     but it does catch a transposition creeping in later.
     """
-    from abline.geo import LocalFrame
-    from abline.writers.simple import build_agopengps
+    from ofpe.geo import LocalFrame
+    from ofpe.writers.simple import build_agopengps
 
     line, _ = line_from_boundary(rectangle_field, combine)
     written = build_agopengps(rectangle_field, [line])
