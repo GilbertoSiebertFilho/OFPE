@@ -219,3 +219,10 @@ _add(
 
 _terminal_update("raven.viper4", "the Raven support portal", _RAVEN_SOURCES)
 _cloud_route("raven.viper4", "Raven Slingshot", _RAVEN_SOURCES)
+
+
+from ..families import _point_routes  # noqa: E402
+
+_point_routes("raven.viper4", _RAVEN_SOURCES,
+              vocabulary="Field marker", file_kind="shapefile",
+              media_path=_GFF + "\\markers")

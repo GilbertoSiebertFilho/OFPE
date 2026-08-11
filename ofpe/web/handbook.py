@@ -42,7 +42,9 @@ def _procedure_block(procedure: pr.Procedure, index: int, version_label: str) ->
     facts = []
 
     def fact(label: str, value: str, code: bool = False) -> None:
-        if not value:
+        # A field reading "n/a" does not apply to this route; printing it is
+        # noise on a page somebody is about to carry to a machine.
+        if not value or value.lower().startswith("n/a"):
             return
         rendered = (
             f"<code>{escape(value)}</code>" if code else escape(value)

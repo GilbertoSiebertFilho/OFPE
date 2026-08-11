@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ..families import _point_routes
 from .._core import (
     ANY_VERSION,
     _mirror,
@@ -728,3 +729,91 @@ _add(
     confidence=Confidence.CONFIRM_ON_MACHINE,
     sources=("John Deere StellarSupport, GreenStar 3 software downloads",),
 )
+
+
+# --------------------------------------------------------------------------- #
+#  Points through Operations Center                                            #
+# --------------------------------------------------------------------------- #
+# Deere calls a marked point a Flag, and Operations Center is the good route
+# here: you place it on the map at the office and it reaches the cab without
+# anyone typing a coordinate into a display.
+
+for _jd_monitor in ("john_deere.gen4", "john_deere.g5"):
+    _add(
+        monitor_key=_jd_monitor,
+        objective="import_point",
+        transport=Transport.CLOUD,
+        platform=_OPS_CENTER,
+        file_format="A flag placed in Operations Center, sent over the air",
+        media_path="",
+        filesystem="n/a — wireless",
+        minutes=10,
+        prerequisites=(
+            "The machine needs JDLink and must show as connected in Operations "
+            "Center. This is the tidiest way to get a point into a Deere cab: "
+            "nobody has to key in a coordinate.",
+        ),
+        steps=(
+            "In Operations Center, open Land and select the field.",
+            "Switch on the map view and place a flag at the position you want.",
+            "If you have the coordinates rather than a spot on the map, paste "
+            "them into the search box to jump there first.",
+            "Name the flag something the operator will recognise.",
+            "Send the field to the machine, or let it sync on its own.",
+            "In the cab, open the field and check the flag is on the map.",
+        ),
+        verify=(
+            "The flag appears on the display's map in the right place.",
+            "Its name matches what you typed at the office.",
+        ),
+        cautions=(
+            "Deere calls a marked point a Flag. Look for that word, not "
+            "'marker' or 'waypoint'.",
+            "Write coordinates as decimal degrees — -27.845123, -54.477456 — "
+            "with south and west negative.",
+            "Flags dropped by the operator in the cab come back the same way, "
+            "so this works in both directions once sync is on.",
+        ),
+        common_errors=(
+            "Placing the flag on the wrong field when two fields have similar "
+            "names.",
+        ),
+        confidence=Confidence.CONFIRM_ON_MACHINE,
+        sources=("John Deere Operations Center documentation",),
+    )
+
+    _add(
+        monitor_key=_jd_monitor,
+        objective="export_point",
+        transport=Transport.CLOUD,
+        platform=_OPS_CENTER,
+        file_format="Flags sync back to Operations Center on their own",
+        media_path="",
+        filesystem="n/a — wireless",
+        minutes=5,
+        prerequisites=("JDLink active and data sync enabled on the display.",),
+        steps=(
+            "Flags the operator drops in the cab upload by themselves.",
+            "In Operations Center, open the field and look at the map.",
+            "Export them from there if your agronomy software needs them.",
+        ),
+        verify=("The operator's flags appear against the right field.",),
+        cautions=(
+            "This is the cheapest field record anyone makes: the operator taps "
+            "once when they see a problem, and it is on the office map before "
+            "they finish the pass.",
+        ),
+        confidence=Confidence.CONFIRM_ON_MACHINE,
+        sources=("John Deere Operations Center documentation",),
+    )
+
+_point_routes("john_deere.gen4", ("John Deere StellarSupport, Gen 4 File Manager",),
+              vocabulary="Flag", file_kind="shapefile",
+              media_path="Setup file folder written by Operations Center")
+_point_routes("john_deere.g5", ("John Deere StellarSupport, G5 data management",),
+              vocabulary="Flag", file_kind="shapefile",
+              media_path="Setup file folder written by Operations Center")
+_point_routes("john_deere.gs3_2630",
+              ("John Deere StellarSupport, legacy display data management",),
+              vocabulary="Flag", file_kind="shapefile",
+              media_path="GS3_2630\\<Profile>\\RCD\\")

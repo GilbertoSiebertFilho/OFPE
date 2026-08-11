@@ -78,7 +78,7 @@ Six questions, each narrowing the next:
 equipment type → brand/display → software version → what you want to do → how it travels → the procedure
 ```
 
-**264 procedures across 23 displays.** Every answer carries the file format, the
+**341 procedures across 23 displays.** Every answer carries the file format, the
 exact media path, the filesystem, numbered click-by-click steps, how to check it
 worked, what usually goes wrong, and the source the claim came from. The result
 card prints cleanly — that is the artefact you carry to the machine.
@@ -128,9 +128,32 @@ names which releases *do* have specific instructions.
 
 | Direction | Jobs |
 |---|---|
-| **Into the monitor** | prescriptions, guidance lines, boundaries, client/farm/field setup |
-| **Out of the monitor** | work data (yield / as-applied), guidance lines, boundaries, full backup |
+| **Into the monitor** | prescriptions, guidance lines, boundaries, **specific points (lat/lon)**, client/farm/field setup |
+| **Out of the monitor** | work data (yield / as-applied), guidance lines, boundaries, **marked points**, full backup |
 | **On the monitor** | update the display software, prepare the USB stick |
+
+### Getting a coordinate into a cab
+
+Worth calling out, because it is the job on-farm trials actually need — plot
+corners and sample points have to reach the operator — and because the obvious
+assumption about it is wrong.
+
+**Almost every display can mark where the machine *is*. Very few can be given a
+latitude and then guide you to it.** So if a point has to be exact, it goes in
+as a file. Three routes are documented per display:
+
+- **USB** — points ride inside the field record (ISOXML) or as a point
+  shapefile, depending on the display.
+- **Cloud** — a flag placed on the map at the office. On John Deere this is
+  Operations Center and it is the tidiest route by a distance: nobody types a
+  coordinate into a display at all.
+- **Type it in** — drive to the coordinate using the map app on a phone, then
+  drop a flag at the current position. Fastest for one point, accurate to
+  wherever you stopped the machine, and honestly labelled as such.
+
+Coordinates are decimal degrees with south and west negative. A point that
+lands in the wrong place is almost always degrees-and-minutes notation rather
+than a broken import.
 
 Each is available by USB, by the manufacturer's cloud, or through their desktop
 software — whichever routes actually exist for that display. The wizard only
@@ -157,7 +180,7 @@ famous one.
 Folder paths and file formats are checked against manufacturer documentation.
 Menu names are not checkable that way: they move between software releases, and
 the only way anyone finds out is somebody standing in front of the screen. So
-148 of the 264 procedures carry **Confirm the menu wording on the machine** —
+roughly half the procedures carry **Confirm the menu wording on the machine** —
 that is an honest label, not a defect.
 
 The button on every procedure card closes that loop. It asks four short
@@ -422,7 +445,7 @@ build time rather than when a producer clicks download.
   *is* documented for that display.
 - **Menu wording is the weakest claim.** Folder paths and file formats are
   verified against cited sources. Exact menu names drift between releases, which
-  is why 148 of 264 procedures are flagged "confirm on the machine" and every
+  is why roughly half the procedures are flagged "confirm on the machine" and every
   card shows that flag. The correction button is the fix, and it needs people to
   use it — the knowledge base cannot improve on this axis without field reports.
 - **No cloud APIs yet.** John Deere Operations Center exposes a guidance-line

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ..families import (
     _cloud_route,
+    _point_routes,
     _ISOXML_ERRORS,
     _ISOXML_IMPORT_STEPS,
     _isoxml_extras,
@@ -229,12 +230,16 @@ _cloud_route(
            "data usually travels through 365FarmNet rather than TELEMATICS.",
 )
 _cloud_route("agco.fendt_one", "Fendt Connect / AGCO Connectivity Center",
-             _AGCO_SOURCES)
+             _AGCO_SOURCES,
+             objectives=("import_prescription", "import_guidance",
+                         "import_boundary", "import_point", "export_work_data"))
 _cloud_route("agco.valtra_smarttouch", "Valtra Connect / AGCO Connectivity Center",
              _AGCO_SOURCES)
 _cloud_route("agco.mf_datatronic", "MF Connect / AGCO Connectivity Center",
              _AGCO_SOURCES)
-_cloud_route("topcon.x_family", "Topcon Agriculture Platform (TAP)", _TOPCON_SOURCES)
+_cloud_route("topcon.x_family", "Topcon Agriculture Platform (TAP)", _TOPCON_SOURCES,
+             objectives=("import_prescription", "import_guidance",
+                         "import_boundary", "import_point", "export_work_data"))
 _cloud_route("kverneland.isomatch", "IsoMatch FarmCentre", _KV_SOURCES)
 _cloud_route(
     "mueller.track_leader", "agrirouter", _ME_SOURCES,
@@ -251,3 +256,20 @@ _cloud_route(
 )
 
 _isoxml_extras("mueller.track_leader", _ME_SOURCES, vocabulary="Guidance line")
+
+
+# --------------------------------------------------------------------------- #
+#  Points                                                                      #
+# --------------------------------------------------------------------------- #
+# ISO 11783-10 carries points inside the field record, so the ISOBUS family
+# gets this for free from the same TASKDATA import they already use.
+
+_point_routes("claas.cemis_1200", _CLAAS_SOURCES, vocabulary="Marker")
+_point_routes("claas.s10", ("CLAAS S10 task import documentation",), vocabulary="Marker")
+_point_routes("agco.fendt_one", _AGCO_SOURCES, vocabulary="Marker")
+_point_routes("agco.valtra_smarttouch", _AGCO_SOURCES, vocabulary="Marker")
+_point_routes("agco.mf_datatronic", _AGCO_SOURCES, vocabulary="Marker")
+_point_routes("topcon.x_family", _TOPCON_SOURCES, vocabulary="Point of interest")
+_point_routes("kverneland.isomatch", _KV_SOURCES, vocabulary="Marker")
+_point_routes("mueller.track_leader", _ME_SOURCES, vocabulary="Marker")
+_point_routes("generic.isobus", ("ISO 11783-10",), vocabulary="Point")

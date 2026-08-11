@@ -374,3 +374,13 @@ _add(
     confidence=Confidence.CONFIRM_ON_MACHINE,
     sources=("Trimble legacy display data management documentation",),
 )
+
+
+from ..families import _point_routes  # noqa: E402
+
+_point_routes("trimble.precision_iq", _PIQ_SOURCES,
+              vocabulary="Landmark", file_kind="shapefile",
+              media_path="AgData\\ — written by Trimble Ag Software")
+_point_routes("trimble.fmx", ("Trimble legacy display data management documentation",),
+              vocabulary="Landmark", file_kind="shapefile",
+              media_path="AgGPS\\ — written by the desktop software")

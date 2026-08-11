@@ -92,6 +92,7 @@ class Transport(str, Enum):
     USB = "usb"
     CLOUD = "cloud"
     DESKTOP = "desktop"
+    MANUAL = "manual"
 
     @property
     def label(self) -> str:
@@ -99,6 +100,7 @@ class Transport(str, Enum):
             Transport.USB: "USB flash drive",
             Transport.CLOUD: "Wireless / manufacturer's cloud platform",
             Transport.DESKTOP: "Manufacturer's desktop software",
+            Transport.MANUAL: "Type it in on the display",
         }[self]
 
     @property
@@ -115,6 +117,11 @@ class Transport(str, Enum):
             Transport.DESKTOP: (
                 "The manufacturer's own PC software writes the display's file. "
                 "Slower, but it is the only route for the closed formats."
+            ),
+            Transport.MANUAL: (
+                "No file and no computer -- key it straight into the display. "
+                "Quickest for one or two points, and the only route that works "
+                "with a flat tyre and no signal."
             ),
         }[self]
 
@@ -205,6 +212,28 @@ OBJECTIVES: dict[str, Objective] = {
                 "management and area reporting."
             ),
             typical_formats="Shapefile (polygon), ISOXML, KML",
+        ),
+        Objective(
+            key="import_point",
+            label="Load a specific point (latitude / longitude)",
+            direction=Direction.TO_MONITOR,
+            description=(
+                "A position the operator has to find: a trial plot corner, a "
+                "soil sample point, a tile inlet, a rock. Coordinates in, marker "
+                "on the map."
+            ),
+            typical_formats="Point shapefile, ISOXML, KML, or typed by hand",
+        ),
+        Objective(
+            key="export_point",
+            label="Pull off marked points",
+            direction=Direction.FROM_MONITOR,
+            description=(
+                "Flags the operator dropped in the cab -- a wet hole, a broken "
+                "tile, where the trial actually started. Usually the only record "
+                "that it happened."
+            ),
+            typical_formats="Point shapefile, ISOXML, KML",
         ),
         Objective(
             key="import_setup",

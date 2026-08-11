@@ -995,7 +995,9 @@ function renderProcedure(data) {
 
   const facts = el('dl', { class: 'facts' });
   const addFact = (label, value) => {
-    if (!value) return;
+    // "n/a" is what a field looks like when it does not apply to this route --
+    // a wireless transfer has no stick to format. Printing it is noise.
+    if (!value || String(value).toLowerCase().startsWith('n/a')) return;
     facts.append(el('div', {}, el('dt', {}, label), el('dd', {}, value)));
   };
   addFact('File format', p.file_format);

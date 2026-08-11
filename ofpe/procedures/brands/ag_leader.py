@@ -268,3 +268,9 @@ _add(
 
 _terminal_update("ag_leader.incommand", "the Ag Leader support portal", _AGL_SOURCES)
 _cloud_route("ag_leader.incommand", "AgFiniti", _AGL_SOURCES)
+
+
+from ..families import _point_routes  # noqa: E402
+
+_point_routes("ag_leader.incommand", _AGL_SOURCES,
+              vocabulary="Marker", file_kind="shapefile")

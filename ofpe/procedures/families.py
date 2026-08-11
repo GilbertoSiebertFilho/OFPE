@@ -16,6 +16,7 @@ from ._core import (
     _add,
     _EJECT,
     _FAT32,
+    _SHP_SET,
 )
 
 _ISOXML_IMPORT_STEPS = (
@@ -393,3 +394,200 @@ def _cloud_route(monitor_key: str, platform: str, sources: tuple[str, ...],
         )
 
 
+
+
+# --------------------------------------------------------------------------- #
+#  Points: getting a latitude / longitude onto the display                     #
+# --------------------------------------------------------------------------- #
+# The thing to understand before reading any of these: a display marks where
+# the machine IS far more readily than it navigates to where you WANT it. Most
+# terminals will drop a flag at the current position with one tap, and most
+# will draw points that arrived in a file -- but very few let you key in an
+# arbitrary latitude and then guide you there.
+#
+# That shapes the advice. If the point matters, it should arrive as a file. The
+# typed route is documented because it is genuinely the fastest way to record
+# one spot, not because it is the way to find one.
+
+_COORD_FORMAT = (
+    "Write coordinates as plain decimal degrees -- -27.845123, -54.477456 -- "
+    "with south and west negative. Degrees-and-minutes (27 50.7 S) is a "
+    "different notation and lands the point kilometres away."
+)
+
+_POINT_USES = (
+    "Trial plot corners, soil sample points, a tile inlet, a rock worth "
+    "steering around: anything the operator has to find rather than guess at."
+)
+
+
+def _point_routes(
+    monitor_key: str,
+    sources: tuple[str, ...],
+    *,
+    vocabulary: str = "Flag",
+    file_kind: str = "isoxml",
+    media_path: str = "",
+    filesystem: str = "FAT32",
+) -> None:
+    """Import and export of marked points, by file and by hand.
+
+    ``filesystem`` exists because not every target is a USB stick: AgOpenGPS is
+    an application on a PC, where demanding a FAT32 stick would be nonsense.
+    """
+    on_a_stick = filesystem.upper().startswith("FAT")
+
+    if not on_a_stick:
+        # A PC application: there is no stick to format and no display to plug
+        # it into, so the steps are a straight file copy.
+        fmt = "Point file dropped into the field folder"
+        extensions = (".shp", ".shx", ".dbf", ".prj")
+        path = media_path or "The field folder"
+        file_steps = (
+            "Copy the point file into the field folder on the computer.",
+            "Open the field in the software.",
+            "The points draw on the map.",
+        )
+        export_steps = (
+            "Close the field so everything is written to disk.",
+            "Copy the field folder out.",
+            "The points are in there with the rest of the field.",
+        )
+    elif file_kind == "isoxml":
+        fmt = "ISOXML task data -- points travel inside the field record"
+        extensions = (".xml",)
+        path = media_path or "TASKDATA\\ at the drive ROOT"
+        file_steps = (
+            _FAT32,
+            "Unzip at the ROOT of the stick so a TASKDATA folder appears.",
+            "Plug the stick into the terminal and run the import.",
+            "Open the field. The points appear on the map as markers.",
+        )
+        export_steps = (
+            _FAT32,
+            "Plug the stick into the display.",
+            "Open the data screen and export the field data.",
+            "Wait for it to finish, then eject.",
+            f"At the office, the {vocabulary.lower()}s come out with the field.",
+        )
+    else:
+        fmt = "Point shapefile: the .shp, .shx, .dbf and .prj together"
+        extensions = (".shp", ".shx", ".dbf", ".prj")
+        path = media_path or "Drive root"
+        file_steps = (
+            _FAT32,
+            _SHP_SET,
+            "Plug the stick into the display and open the import screen.",
+            f"Import it as {vocabulary.lower()}s, then open the field.",
+        )
+        export_steps = (
+            _FAT32,
+            "Plug the stick into the display.",
+            "Open the data screen and export the field data.",
+            "Wait for it to finish, then eject.",
+            f"At the office, the {vocabulary.lower()}s come out with the field.",
+        )
+
+    _add(
+        monitor_key=monitor_key,
+        objective="import_point",
+        transport=Transport.USB,
+        file_format=fmt,
+        extensions=extensions,
+        media_path=path,
+        filesystem=filesystem,
+        minutes=10,
+        prerequisites=(
+            _POINT_USES,
+            "You need the points as a file. If you only have numbers on a bit "
+            "of paper, the office can turn them into one -- or use the "
+            "type-it-in route instead.",
+        ),
+        steps=file_steps,
+        verify=(
+            f"The {vocabulary.lower()}s draw on the map where you expect them.",
+            "Zoom right in on one and check it sits where it should relative to "
+            "a fence or a corner you recognise.",
+        ),
+        cautions=(
+            f"This display calls a marked point a {vocabulary}.",
+            _COORD_FORMAT,
+            "A point that lands in the wrong place is almost always a "
+            "coordinate written in the wrong notation, not a broken import.",
+        ),
+        common_errors=(
+            "Latitude and longitude the wrong way round. In this part of the "
+            "world latitude is the smaller number and both are negative.",
+        ),
+        confidence=Confidence.CONFIRM_ON_MACHINE,
+        sources=sources,
+    )
+
+    _add(
+        monitor_key=monitor_key,
+        objective="import_point",
+        transport=Transport.MANUAL,
+        file_format="None -- nothing to prepare",
+        media_path="",
+        filesystem="n/a",
+        minutes=5,
+        prerequisites=(
+            "Read this before you start: almost every display can mark where "
+            "the machine IS, but very few can be given a latitude and then "
+            "guide you to it. So the reliable way to hit an exact point by hand "
+            "is to get there first, then mark it.",
+        ),
+        steps=(
+            "Put the coordinates into the map app on your phone and drive to "
+            "the spot. Any phone map takes decimal degrees.",
+            "Stop with the machine sitting on the point.",
+            f"On the display, add a {vocabulary.lower()} at the current "
+            "position -- usually one button on the map or run screen.",
+            "Give it a name you will recognise later, not the default.",
+            "Repeat for each point.",
+        ),
+        verify=(
+            f"The {vocabulary.lower()} shows on the map at the machine.",
+            "Drive away and back: it should stay put.",
+        ),
+        cautions=(
+            _COORD_FORMAT,
+            "This is accurate to wherever you stopped the machine, which is "
+            "fine for a sample point and not fine for a trial plot corner. For "
+            "anything that has to be exact, use a file.",
+            "If your display does let you key in a latitude directly, it is "
+            "usually under the field or flag setup rather than on the run "
+            "screen. Worth two minutes of looking before you drive out.",
+        ),
+        common_errors=(
+            "Marking the point from the cab while the machine is a few metres "
+            "past it. The display marks the antenna, not the drawbar.",
+        ),
+        confidence=Confidence.CONFIRM_ON_MACHINE,
+        sources=sources,
+    )
+
+    _add(
+        monitor_key=monitor_key,
+        objective="export_point",
+        transport=Transport.USB,
+        file_format=fmt,
+        extensions=extensions,
+        media_path=path,
+        filesystem=filesystem,
+        minutes=10,
+        prerequisites=(
+            "Flags dropped in the cab are often the only record that something "
+            "happened -- a wet hole, a blocked row, where a trial actually "
+            "started rather than where it was planned.",
+        ),
+        steps=export_steps,
+        verify=("The points open in your office software where you expect.",),
+        cautions=(
+            "Collect these at the end of every season. They are the cheapest "
+            "field records anyone ever makes and the first ones lost when a "
+            "display is traded in.",
+        ),
+        confidence=Confidence.CONFIRM_ON_MACHINE,
+        sources=sources,
+    )

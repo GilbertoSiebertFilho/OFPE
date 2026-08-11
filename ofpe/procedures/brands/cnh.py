@@ -373,8 +373,12 @@ _terminal_update("case_ih.afs_pro_1200", "your Case IH dealer or the AFS portal"
 _terminal_update("new_holland.intelliview_12", "your New Holland dealer or PLM",
                  _CNH_IV12_SOURCES, dealer=True)
 
-_cloud_route("case_ih.afs_pro_1200", "AFS Connect", _CNH_1200_SOURCES)
-_cloud_route("new_holland.intelliview_12", "PLM Connect", _CNH_IV12_SOURCES)
+_cloud_route("case_ih.afs_pro_1200", "AFS Connect", _CNH_1200_SOURCES,
+             objectives=("import_prescription", "import_guidance",
+                         "import_boundary", "import_point", "export_work_data"))
+_cloud_route("new_holland.intelliview_12", "PLM Connect", _CNH_IV12_SOURCES,
+             objectives=("import_prescription", "import_guidance",
+                         "import_boundary", "import_point", "export_work_data"))
 
 
 # --------------------------------------------------------------------------- #
@@ -568,3 +572,13 @@ _add(
     confidence=Confidence.CONFIRM_ON_MACHINE,
     sources=_VOYAGER_SOURCES,
 )
+
+
+from ..families import _point_routes  # noqa: E402
+
+_point_routes("case_ih.afs_pro_1200", _CNH_1200_SOURCES, vocabulary="Marker")
+_point_routes("new_holland.intelliview_12", _CNH_IV12_SOURCES, vocabulary="Marker")
+_point_routes("case_ih.afs_pro_700", _VOYAGER_SOURCES,
+              vocabulary="Marker", file_kind="shapefile")
+_point_routes("new_holland.intelliview_iv", _VOYAGER_SOURCES,
+              vocabulary="Marker", file_kind="shapefile")

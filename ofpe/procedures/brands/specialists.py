@@ -407,3 +407,16 @@ _add(
     confidence=Confidence.CONFIRM_ON_MACHINE,
     sources=_AOG_SOURCES,
 )
+
+
+from ..families import _point_routes  # noqa: E402
+
+_point_routes("precision_planting.2020", _PP_SOURCES,
+              vocabulary="Marker", file_kind="shapefile",
+              media_path="Drive root, or a folder named exactly SendTo2020")
+_point_routes("teejet.matrix_pro_gs", _TJ_SOURCES,
+              vocabulary="Marker", file_kind="shapefile")
+_point_routes("agopengps.aog", _AOG_SOURCES,
+              vocabulary="Flag", file_kind="shapefile",
+              media_path="The field folder under your AgOpenGPS Fields directory",
+              filesystem="any — this is a PC, not an embedded display")
