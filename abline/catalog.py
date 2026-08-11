@@ -16,7 +16,7 @@ Sources are recorded per entry so a claim can be re-checked when firmware moves.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field as dc_field
+from dataclasses import dataclass, field as dc_field, replace
 from enum import Enum
 from typing import Iterable
 
@@ -233,6 +233,22 @@ class MonitorProfile:
     common_errors: tuple[str, ...] = ()
     sources: tuple[str, ...] = ()
 
+    icon: str = "generic_isobus.png"
+    """Schematic terminal drawing in ``assets/icons``.
+
+    These are our own schematic drawings of the physical terminal -- screen
+    proportion, physical keys, rotary encoder. They deliberately do not
+    reproduce photographs, logos or figurative marks; model names appear as
+    text reference only.
+    """
+
+    equipment: tuple[str, ...] = ()
+    """Equipment types this terminal is typically fitted to.
+
+    Drives the first step of the wizard: someone who knows they are standing
+    next to a sprayer should not have to scroll past combine-only displays.
+    """
+
     @property
     def formats(self) -> tuple[str, ...]:
         """Primary format first, then the extras, without duplicates."""
@@ -245,6 +261,15 @@ class MonitorProfile:
     @property
     def label(self) -> str:
         return f"{self.brand} {self.model}"
+
+    @property
+    def is_terminal(self) -> bool:
+        """Whether this is a real in-cab display.
+
+        Office GIS is in the catalog because it is a legitimate export target,
+        but it has no menus to walk through, so the procedure wizard skips it.
+        """
+        return bool(self.equipment)
 
     def to_dict(self) -> dict:
         return {
@@ -276,6 +301,13 @@ class MonitorProfile:
             "caveats": list(self.caveats),
             "common_errors": list(self.common_errors),
             "sources": list(self.sources),
+            "icon": self.icon,
+            # The captioned variant is the one the spreadsheet embeds; the web
+            # UI wants the caption-free one, because it renders the model name
+            # as real text right beside the picture.
+            "icon_url": f"/icons/ui/{self.icon}",
+            "icon_captioned_url": f"/icons/{self.icon}",
+            "equipment": list(self.equipment),
         }
 
 
@@ -1110,6 +1142,87 @@ _add(
         sources=(),
     )
 )
+
+
+# --------------------------------------------------------------------------- #
+#  Icons and equipment fit                                                     #
+# --------------------------------------------------------------------------- #
+# Applied after the fact rather than repeated on every entry above: the profile
+# bodies are about file formats and procedures, and threading two more fields
+# through twenty-four literals would bury that.
+
+_ICONS: dict[str, str] = {
+    "john_deere.gs3_2630": "jd_gs3_2630.png",
+    "john_deere.gen4": "jd_gen4.png",
+    "john_deere.g5": "jd_g5.png",
+    "case_ih.afs_pro_700": "cih_afs_pro700.png",
+    "case_ih.afs_pro_1200": "cih_afs_pro1200.png",
+    "new_holland.intelliview_iv": "nh_intelliview4.png",
+    "new_holland.intelliview_12": "nh_intelliview12.png",
+    "trimble.precision_iq": "trimble_gfx750.png",
+    "trimble.fmx": "trimble_fmx.png",
+    "ag_leader.incommand": "agleader_incommand.png",
+    "raven.viper4": "raven_viper4.png",
+    "claas.cemis_1200": "claas_cemis1200.png",
+    "claas.s10": "claas_s10.png",
+    "agco.fendt_one": "fendt_varioterminal.png",
+    "agco.valtra_smarttouch": "valtra_smarttouch.png",
+    "agco.mf_datatronic": "mf_datatronic.png",
+    "topcon.x_family": "topcon_x35.png",
+    "kverneland.isomatch": "kverneland_isomatch.png",
+    "mueller.track_leader": "mueller_touch1200.png",
+    "precision_planting.2020": "pp_2020.png",
+    "teejet.matrix_pro_gs": "teejet_matrix.png",
+    "agopengps.aog": "agopengps.png",
+    "generic.isobus": "generic_isobus.png",
+    "generic.gis": "generic_isobus.png",
+}
+
+_ALL_MACHINES = (
+    "tractor", "combine", "sprayer", "planter", "seeder", "spreader",
+    "forage", "universal",
+)
+
+_EQUIPMENT: dict[str, tuple[str, ...]] = {
+    "john_deere.gs3_2630": ("tractor", "combine", "sprayer", "planter", "seeder", "universal"),
+    "john_deere.gen4": ("tractor", "combine", "sprayer", "planter", "seeder", "forage"),
+    "john_deere.g5": ("tractor", "combine", "sprayer", "planter", "seeder", "universal"),
+    "case_ih.afs_pro_700": ("tractor", "combine", "sprayer", "planter", "seeder"),
+    "case_ih.afs_pro_1200": ("tractor", "combine", "sprayer", "planter", "seeder"),
+    "new_holland.intelliview_iv": ("tractor", "combine", "sprayer", "forage"),
+    "new_holland.intelliview_12": ("tractor", "combine", "sprayer", "forage"),
+    "trimble.precision_iq": ("universal", "tractor", "sprayer", "combine", "spreader"),
+    "trimble.fmx": ("universal", "tractor", "sprayer"),
+    "ag_leader.incommand": ("universal", "planter", "combine", "sprayer", "tractor"),
+    "raven.viper4": ("universal", "sprayer", "spreader", "tractor"),
+    "claas.cemis_1200": ("tractor", "combine", "forage"),
+    "claas.s10": ("tractor", "combine", "forage"),
+    "agco.fendt_one": ("tractor",),
+    "agco.valtra_smarttouch": ("tractor",),
+    "agco.mf_datatronic": ("tractor",),
+    "topcon.x_family": ("universal", "tractor", "sprayer", "spreader"),
+    "kverneland.isomatch": ("tractor", "seeder", "spreader", "sprayer"),
+    "mueller.track_leader": ("tractor", "seeder", "sprayer", "spreader"),
+    "precision_planting.2020": ("planter",),
+    "teejet.matrix_pro_gs": ("sprayer", "spreader", "universal"),
+    "agopengps.aog": ("universal", "tractor"),
+    "generic.isobus": _ALL_MACHINES,
+    "generic.gis": (),
+}
+
+for _key, _profile in list(MONITORS.items()):
+    MONITORS[_key] = replace(
+        _profile,
+        icon=_ICONS.get(_key, "generic_isobus.png"),
+        equipment=_EQUIPMENT.get(_key, ()),
+    )
+
+_missing_icons = sorted(set(MONITORS) - set(_ICONS))
+if _missing_icons:
+    raise RuntimeError(
+        "these monitors have no icon assigned and would render with the "
+        f"generic one: {', '.join(_missing_icons)}"
+    )
 
 
 BRANDS: list[str] = sorted({m.brand for m in MONITORS.values()})

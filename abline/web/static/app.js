@@ -377,9 +377,11 @@ function wireTabs() {
       $$('.tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
       tab.classList.add('active');
       tab.setAttribute('aria-selected', 'true');
-      $('#panel-ops').classList.toggle('active', tab.dataset.tab === 'ops');
-      $('#panel-producer').classList.toggle('active', tab.dataset.tab === 'producer');
-      if (tab.dataset.tab === 'producer') loadProducer();
+      const which = tab.dataset.tab;
+      $('#panel-guide').classList.toggle('active', which === 'guide');
+      $('#panel-ops').classList.toggle('active', which === 'ops');
+      $('#panel-producer').classList.toggle('active', which === 'producer');
+      if (which === 'producer') loadProducer();
     });
   }
 }
@@ -705,4 +707,322 @@ function renderProducerDownload() {
   host.append(card);
 }
 
+/* ============================================================== guide tab
+ *
+ * A six-step wizard. Each answer narrows the next, and choosing something
+ * earlier in the chain clears everything after it -- a stale monitor selection
+ * left over from a different brand is how you end up reading the wrong
+ * procedure with no way to tell.
+ */
+
+const guide = {
+  equipment: null,
+  monitor: null,
+  version: null,
+  objective: null,
+  transport: null,
+  monitors: [],
+  objectiveGroups: [],
+};
+
+const GUIDE_STEPS = ['equipment', 'monitor', 'version', 'objective', 'transport', 'result'];
+
+function guideReset(from) {
+  const index = GUIDE_STEPS.indexOf(from);
+  for (const step of GUIDE_STEPS.slice(index)) {
+    if (step !== 'result') guide[step] = null;
+    const section = $(`#g-step-${step}`);
+    if (section && step !== 'equipment') section.hidden = true;
+  }
+}
+
+async function loadGuide() {
+  try {
+    const start = await api('/api/guide/start');
+    const host = $('#g-equipment');
+    host.replaceChildren();
+    for (const kind of start.equipment_types) {
+      host.append(el('button', {
+        class: 'chip',
+        onclick: () => selectEquipment(kind.key, kind.label),
+      }, kind.label, el('span', { class: 'count' }, `${kind.monitor_count}`)));
+    }
+  } catch (error) {
+    toast(`Could not load the guide: ${error.message}`, true);
+  }
+}
+
+async function selectEquipment(key, label) {
+  guide.equipment = key;
+  guideReset('monitor');
+  markSelected('#g-equipment', label);
+  await showMonitors({ equipment: key });
+}
+
+async function showMonitors(params) {
+  const query = new URLSearchParams(params);
+  guide.monitors = await api(`/api/guide/monitors?${query}`);
+  const host = $('#g-monitors');
+  host.replaceChildren();
+  if (!guide.monitors.length) {
+    host.append(el('p', { class: 'hint' }, 'No displays recorded for that yet.'));
+  }
+  for (const monitor of guide.monitors) {
+    host.append(el('button', {
+      class: 'monitorcard',
+      onclick: () => selectMonitor(monitor),
+    },
+      el('img', { src: monitor.icon_url, alt: '', loading: 'lazy' }),
+      el('span', { class: 'mbrand' }, monitor.brand),
+      el('span', { class: 'mname' }, monitor.model),
+    ));
+  }
+  $('#g-step-monitor').hidden = false;
+  $('#g-step-monitor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function selectMonitor(monitor) {
+  guide.monitor = monitor;
+  guideReset('version');
+  for (const card of $$('#g-monitors .monitorcard')) {
+    card.classList.toggle('selected', card.querySelector('.mname').textContent === monitor.model);
+  }
+
+  const host = $('#g-versions');
+  host.replaceChildren();
+  for (const version of monitor.versions) {
+    host.append(el('button', {
+      class: 'chip stacked',
+      onclick: () => selectVersion(version.key, version.label),
+    }, version.label, version.notes ? el('span', { class: 'sub' }, version.notes) : null));
+  }
+  // Always offered last: an operator who cannot find the version number should
+  // still reach an answer, just one flagged as generic.
+  host.append(el('button', {
+    class: 'chip stacked',
+    onclick: () => selectVersion(null, 'I am not sure'),
+  }, 'I am not sure', el('span', { class: 'sub' }, 'You will get the general steps')));
+
+  $('#g-step-version').hidden = false;
+  $('#g-step-version').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function selectVersion(key, label) {
+  guideReset('objective');  // clears objective and transport, keeps the version
+  guide.version = key;
+  markSelected('#g-versions', label);
+
+  const query = key ? `?version=${encodeURIComponent(key)}` : '';
+  const data = await api(`/api/guide/monitors/${guide.monitor.key}/objectives${query}`);
+  guide.objectiveGroups = data.groups;
+
+  const host = $('#g-objectives');
+  host.replaceChildren();
+  for (const group of data.groups) {
+    const block = el('div', { class: 'objgroup' }, el('h3', {}, group.direction_label));
+    for (const objective of group.objectives) {
+      block.append(el('button', {
+        class: 'objcard',
+        onclick: () => selectObjective(objective),
+      },
+        el('span', { class: 'oname' }, objective.label),
+        el('span', { class: 'odesc' }, objective.description),
+      ));
+    }
+    host.append(block);
+  }
+  $('#g-step-objective').hidden = false;
+  $('#g-step-objective').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function selectObjective(objective) {
+  guideReset('transport');  // clears transport, keeps the objective
+  guide.objective = objective;
+  for (const card of $$('#g-objectives .objcard')) {
+    card.classList.toggle('selected', card.querySelector('.oname').textContent === objective.label);
+  }
+
+  const host = $('#g-transports');
+  host.replaceChildren();
+  for (const transport of objective.transports) {
+    host.append(el('button', {
+      class: 'chip stacked',
+      onclick: () => selectTransport(transport.key, transport.label),
+    }, transport.label, el('span', { class: 'sub' }, transport.description)));
+  }
+  $('#g-step-transport').hidden = false;
+
+  // One route only: choosing it is not a decision, so make it for them.
+  if (objective.transports.length === 1) {
+    selectTransport(objective.transports[0].key, objective.transports[0].label);
+  } else {
+    $('#g-step-transport').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+async function selectTransport(key, label) {
+  guide.transport = key;
+  markSelected('#g-transports', label);
+  const params = new URLSearchParams({
+    monitor_key: guide.monitor.key,
+    objective: guide.objective.key,
+    transport: key,
+  });
+  if (guide.version) params.set('version', guide.version);
+  try {
+    renderProcedure(await api(`/api/guide/procedure?${params}`));
+  } catch (error) {
+    toast(error.message, true);
+  }
+}
+
+function markSelected(selector, label) {
+  for (const chip of $$(`${selector} .chip`)) {
+    chip.classList.toggle('selected', chip.firstChild && chip.firstChild.textContent === label);
+  }
+}
+
+function renderProcedure(data) {
+  const host = $('#g-result');
+  host.replaceChildren();
+  const section = $('#g-step-result');
+  section.hidden = false;
+
+  if (!data.found) {
+    host.append(el('div', { class: 'proc' },
+      el('div', { class: 'proc-body' },
+        el('div', { class: 'panelbox warn' }, data.message),
+        el('p', {}, 'Documented for this display:'),
+        el('ul', { class: 'procnotes' },
+          data.alternatives.map(a => el('li', {}, `${a.objective_label} — ${a.transport_label}`))))));
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
+  const p = data.procedure;
+  const monitor = data.monitor;
+
+  const badges = [
+    el('span', { class: `badge ${p.confidence === 'verified' ? 'native' : 'needs_sample'}` },
+      p.confidence_label),
+    el('span', { class: 'badge' }, data.version_label),
+    el('span', { class: 'badge' }, p.transport_label),
+  ];
+
+  const card = el('div', { class: 'proc' },
+    el('div', { class: 'proc-head' },
+      el('img', { src: monitor.icon_url, alt: '' }),
+      el('div', { class: 'titles' },
+        el('h3', {}, p.objective_label),
+        el('div', { class: 'sub' }, `${monitor.label} · ${p.direction_label}`),
+        el('div', { class: 'badges' }, badges)),
+    ));
+
+  const body = el('div', { class: 'proc-body' });
+
+  if (!data.matched_version) {
+    body.append(el('div', { class: 'panelbox warn' }, data.message));
+  }
+
+  const facts = el('dl', { class: 'facts' });
+  const addFact = (label, value) => {
+    if (!value) return;
+    facts.append(el('div', {}, el('dt', {}, label), el('dd', {}, value)));
+  };
+  addFact('File format', p.file_format);
+  if (p.extensions.length) addFact('Extensions', p.extensions.join('  '));
+  if (p.media_path) {
+    facts.append(el('div', {},
+      el('dt', {}, 'Exactly where it goes'),
+      el('dd', {}, el('code', {}, p.media_path))));
+  }
+  addFact('Format the stick as', p.filesystem);
+  addFact('Allow about', `${p.minutes} minutes`);
+  if (facts.children.length) {
+    body.append(el('h4', {}, 'The file'), facts);
+  }
+
+  if (p.prerequisites.length) {
+    body.append(el('h4', {}, 'Before you start'));
+    body.append(el('div', { class: 'panelbox' },
+      el('ul', { class: 'procnotes' }, p.prerequisites.map(x => el('li', {}, x)))));
+  }
+
+  body.append(el('h4', {}, 'Step by step'));
+  body.append(el('ol', { class: 'procsteps' }, p.steps.map(s => el('li', {}, s))));
+
+  if (p.verify.length) {
+    body.append(el('h4', {}, 'Check it worked'));
+    body.append(el('div', { class: 'panelbox good' },
+      el('ul', { class: 'procnotes' }, p.verify.map(x => el('li', {}, x)))));
+  }
+  if (p.cautions.length) {
+    body.append(el('h4', {}, 'Worth knowing'));
+    body.append(el('div', { class: 'panelbox warn' },
+      el('ul', { class: 'procnotes' }, p.cautions.map(x => el('li', {}, x)))));
+  }
+  if (p.common_errors.length) {
+    body.append(el('h4', {}, 'What usually goes wrong'));
+    body.append(el('div', { class: 'panelbox bad' },
+      el('ul', { class: 'procnotes' }, p.common_errors.map(x => el('li', {}, x)))));
+  }
+
+  body.append(el('div', { class: 'proc-actions no-print' },
+    el('button', { class: 'primary', onclick: () => window.print() }, 'Print this procedure'),
+    el('button', {
+      class: 'ghost',
+      onclick: () => {
+        guideReset('equipment');
+        $('#g-step-result').hidden = true;
+        $$('#g-equipment .chip').forEach(c => c.classList.remove('selected'));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+    }, 'Start over')));
+
+  card.append(body);
+  if (p.sources.length) {
+    card.append(el('div', { class: 'proc-foot' }, `Sources: ${p.sources.join(' · ')}`));
+  }
+  host.append(card);
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function wireGuideSearch() {
+  const input = $('#guide-search');
+  const results = $('#guide-search-results');
+  let timer = null;
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(async () => {
+      const q = input.value.trim();
+      if (q.length < 2) return results.replaceChildren();
+      try {
+        const hits = await api(`/api/guide/search?q=${encodeURIComponent(q)}`);
+        results.replaceChildren();
+        for (const monitor of hits.slice(0, 6)) {
+          results.append(el('button', {
+            onclick: () => {
+              results.replaceChildren();
+              input.value = '';
+              guideReset('monitor');
+              $('#g-step-monitor').hidden = false;
+              $('#g-monitors').replaceChildren();
+              guide.monitors = [monitor];
+              $('#g-monitors').append(el('button', { class: 'monitorcard selected' },
+                el('img', { src: monitor.icon_url, alt: '' }),
+                el('span', { class: 'mbrand' }, monitor.brand),
+                el('span', { class: 'mname' }, monitor.model)));
+              selectMonitor(monitor);
+            },
+          },
+            el('img', { src: monitor.icon_url, alt: '' }),
+            el('span', {}, `${monitor.brand} ${monitor.model}`)));
+        }
+      } catch { /* a failed search should not shout at anyone */ }
+    }, 180);
+  });
+}
+
 boot();
+loadGuide();
+wireGuideSearch();

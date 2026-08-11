@@ -20,7 +20,9 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field as PField
 
 from .. import catalog as catalog_module
+from .. import procedures as procedures_module
 from ..db import DEFAULT_DB_PATH, Database
+from ..procedures import OBJECTIVES, Direction, EquipmentType
 from ..fitting import fit_guidance_from_track
 from ..generate import (
     expand_swaths,
@@ -45,6 +47,10 @@ from ..readers import read_any
 from ..writers import build_download
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+# The monitor drawings live with the spreadsheet's assets rather than being
+# duplicated here, so one icon set serves both deliverables.
+ICON_DIR = Path(__file__).resolve().parents[3] / "assets" / "icons"
 
 # A single database for the process. Tests override it with an in-memory one
 # through the dependency below rather than by reaching into module state.
@@ -624,6 +630,169 @@ def download(payload: DownloadIn, db: Database = Depends(get_db)) -> Response:
     )
 
 
+# ------------------------------------------------------------------ procedures
+#
+# The wizard walks: equipment type -> brand -> monitor -> version -> objective
+# -> transport. Each endpoint answers "what is still reachable from here", so
+# the UI can never offer a combination that has no procedure behind it. A dead
+# end discovered on the last click is worse than a shorter menu on the first.
+
+guide = APIRouter(prefix="/api/guide")
+
+
+@guide.get("/start")
+def guide_start() -> dict[str, Any]:
+    """Everything needed to render step 1, in one request."""
+    terminals = [m for m in catalog_module.iter_monitors() if m.is_terminal]
+    equipment_counts: dict[str, int] = {}
+    for monitor in terminals:
+        for kind in monitor.equipment:
+            equipment_counts[kind] = equipment_counts.get(kind, 0) + 1
+
+    return {
+        "equipment_types": [
+            {
+                "key": kind.value,
+                "label": kind.label,
+                "monitor_count": equipment_counts.get(kind.value, 0),
+            }
+            for kind in EquipmentType
+            if equipment_counts.get(kind.value)
+        ],
+        "brands": sorted({m.brand for m in terminals}),
+        "objectives": [o.to_dict() for o in OBJECTIVES.values()],
+        "directions": [
+            {"key": d.value, "label": d.label} for d in Direction
+        ],
+        "coverage": procedures_module.coverage(),
+    }
+
+
+@guide.get("/monitors")
+def guide_monitors(
+    equipment: str | None = None, brand: str | None = None
+) -> list[dict[str, Any]]:
+    """Terminals matching the equipment type and/or brand chosen so far."""
+    out = []
+    for monitor in catalog_module.iter_monitors():
+        if not monitor.is_terminal:
+            continue
+        if equipment and equipment not in monitor.equipment:
+            continue
+        if brand and monitor.brand.lower() != brand.lower():
+            continue
+        data = monitor.to_dict()
+        data["versions"] = [
+            v.to_dict() for v in procedures_module.versions_for(monitor.key)
+        ]
+        data["objective_count"] = len(
+            procedures_module.available_objectives(monitor.key)
+        )
+        out.append(data)
+    return out
+
+
+@guide.get("/monitors/{monitor_key}/objectives")
+def guide_objectives(
+    monitor_key: str, version: str | None = None
+) -> dict[str, Any]:
+    """What this display, on this release, can actually be asked to do."""
+    try:
+        monitor = catalog_module.get_monitor(monitor_key)
+    except KeyError as exc:
+        raise HTTPException(404, str(exc)) from exc
+
+    objectives = procedures_module.available_objectives(monitor_key, version)
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for obj in objectives:
+        entry = obj.to_dict()
+        entry["transports"] = [
+            {"key": t.value, "label": t.label, "description": t.description}
+            for t in procedures_module.available_transports(
+                monitor_key, obj.key, version
+            )
+        ]
+        grouped.setdefault(obj.direction.value, []).append(entry)
+
+    return {
+        "monitor": monitor.to_dict(),
+        "version": version,
+        "versions": [
+            v.to_dict() for v in procedures_module.versions_for(monitor_key)
+        ],
+        "groups": [
+            {
+                "direction": d.value,
+                "direction_label": d.label,
+                "objectives": grouped.get(d.value, []),
+            }
+            for d in Direction
+            if grouped.get(d.value)
+        ],
+    }
+
+
+@guide.get("/procedure")
+def guide_procedure(
+    monitor_key: str,
+    objective: str,
+    transport: str,
+    version: str | None = None,
+) -> dict[str, Any]:
+    """The answer: one procedure, plus how confidently it was matched."""
+    try:
+        monitor = catalog_module.get_monitor(monitor_key)
+    except KeyError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    try:
+        resolution = procedures_module.resolve(
+            monitor_key, objective, transport, version
+        )
+    except (KeyError, ValueError) as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+    version_label = next(
+        (
+            v.label
+            for v in procedures_module.versions_for(monitor_key)
+            if v.key == version
+        ),
+        "Any version",
+    )
+    return {
+        "monitor": monitor.to_dict(),
+        "version_key": version,
+        "version_label": version_label,
+        **resolution.to_dict(),
+    }
+
+
+@guide.get("/search")
+def guide_search(q: str) -> list[dict[str, Any]]:
+    """Free-text jump straight to a display, for people who know what they have.
+
+    Matches the model, the brand and the aliases, because an operator says
+    "2630" or "Pro 700", not "john_deere.gs3_2630".
+    """
+    needle = (q or "").strip().lower()
+    if len(needle) < 2:
+        return []
+    hits = []
+    for monitor in catalog_module.iter_monitors():
+        if not monitor.is_terminal:
+            continue
+        haystack = " ".join(
+            [monitor.brand, monitor.model, *monitor.aka, monitor.generations]
+        ).lower()
+        if needle in haystack:
+            data = monitor.to_dict()
+            data["versions"] = [
+                v.to_dict() for v in procedures_module.versions_for(monitor.key)
+            ]
+            hits.append(data)
+    return hits
+
+
 # ------------------------------------------------------------------- producer
 
 
@@ -677,7 +846,11 @@ def create_app() -> FastAPI:
         ),
     )
     app.include_router(api)
+    app.include_router(guide)
     app.include_router(producer)
+
+    if ICON_DIR.is_dir():
+        app.mount("/icons", StaticFiles(directory=ICON_DIR), name="icons")
 
     if STATIC_DIR.is_dir():
         app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

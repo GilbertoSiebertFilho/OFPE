@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AB Line Platform</title>
+<!-- Inline so the page needs no network beyond its own two assets. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233f7d3a'/%3E%3Cg stroke='%23fff' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M8 25 L12 7'/%3E%3Cpath d='M16 25 L16 7'/%3E%3Cpath d='M24 25 L20 7'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
@@ -14,8 +16,9 @@
     <span>AB Line Platform</span>
   </div>
   <nav class="tabs" role="tablist">
-    <button class="tab active" role="tab" data-tab="ops" aria-selected="true">Operations</button>
-    <button class="tab" role="tab" data-tab="producer" aria-selected="false">Producer</button>
+    <button class="tab active" role="tab" data-tab="guide" aria-selected="true">Guide</button>
+    <button class="tab" role="tab" data-tab="producer" aria-selected="false">Download lines</button>
+    <button class="tab" role="tab" data-tab="ops" aria-selected="false">Operations</button>
   </nav>
   <div class="stats" id="stats" aria-live="polite"></div>
 </header>
@@ -23,9 +26,64 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <!-- ================================================================= -->
+<!--  GUIDE  —  how to get files in and out of a display               -->
+<!-- ================================================================= -->
+<main id="panel-guide" class="panel guide active">
+  <div class="steps">
+
+    <div class="guide-intro no-print">
+      <h1>What do you need the monitor to do?</h1>
+      <p>Answer six questions and you get the exact file format, the exact folder
+         on the USB stick, and the buttons to press — for your display, on your
+         software version.</p>
+      <label class="searchbox">
+        <span class="sr-only">Search for your display</span>
+        <input id="guide-search" type="search" autocomplete="off"
+               placeholder="Know your display? Type it — 2630, Pro 700, GFX-750, CEMIS…">
+      </label>
+      <div id="guide-search-results" class="searchresults"></div>
+    </div>
+
+    <section class="step no-print" id="g-step-equipment">
+      <h2><span class="num">1</span> What are you working with?</h2>
+      <div id="g-equipment" class="chipgrid"></div>
+    </section>
+
+    <section class="step no-print" id="g-step-monitor" hidden>
+      <h2><span class="num">2</span> Which display is in the cab?</h2>
+      <div id="g-monitors" class="monitorgrid"></div>
+    </section>
+
+    <section class="step no-print" id="g-step-version" hidden>
+      <h2><span class="num">3</span> Which software version?</h2>
+      <p class="hint">This matters more than it looks — menus move between
+         releases, and one John Deere update stopped accepting a file format it
+         used to take. If you are not sure, pick the last option.</p>
+      <div id="g-versions" class="chipgrid"></div>
+    </section>
+
+    <section class="step no-print" id="g-step-objective" hidden>
+      <h2><span class="num">4</span> What do you want to do?</h2>
+      <div id="g-objectives"></div>
+    </section>
+
+    <section class="step no-print" id="g-step-transport" hidden>
+      <h2><span class="num">5</span> How does the data travel?</h2>
+      <div id="g-transports" class="chipgrid"></div>
+    </section>
+
+    <section class="step" id="g-step-result" hidden>
+      <h2 class="no-print"><span class="num">6</span> Do this</h2>
+      <div id="g-result"></div>
+    </section>
+
+  </div>
+</main>
+
+<!-- ================================================================= -->
 <!--  OPERATIONS                                                       -->
 <!-- ================================================================= -->
-<main id="panel-ops" class="panel active">
+<main id="panel-ops" class="panel">
 
   <div class="layout">
 
