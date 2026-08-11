@@ -45,7 +45,6 @@ _add(
         _EJECT,
     ),
     common_errors=(
-        "Copying only the .shp file.",
         "Leaving the files inside a folder.",
     ),
     confidence=Confidence.VERIFIED,
@@ -109,7 +108,6 @@ _add(
         "This display calls an AB line a Swath, and a set of imported lines a "
         "Multiswath. Look for those words, not 'guidance line'.",
     ),
-    common_errors=("Copying only the .shp file.",),
     confidence=Confidence.VERIFIED,
     sources=("Case IH AFS Pro 700 shapefile import guide",),
 )
@@ -133,8 +131,7 @@ _add(
         "At the office, import the folder into AFS Software or your FMIS.",
     ),
     verify=("The folder on the stick is not empty and carries today's date.",),
-    cautions=("Use one stick per machine to avoid overwriting folder trees.",),
-    common_errors=("Removing the stick before the transfer finishes.",),
+    cautions=("Use one stick for this machine only.",),
     confidence=Confidence.CONFIRM_ON_MACHINE,
     sources=("Case IH AFS Pro 700 software operating guide",),
 )
@@ -208,7 +205,7 @@ _add(
     extensions=(".xml", ".bin"),
     media_path="TASKDATA\\ — created by the display on the stick",
     minutes=15,
-    prerequisites=("Close the running task first.",),
+    prerequisites=("Close the running job first.",),
     steps=(
         _FAT32,
         "Close the running task.",
@@ -274,7 +271,6 @@ _add(
         "IntelliView IV and the Case IH AFS Pro 700 are the same display in "
         "different paint. Anything that imports on one imports on the other.",
     ),
-    common_errors=("Copying only the .shp file.",),
     confidence=Confidence.VERIFIED,
     sources=("Case IH / New Holland Voyager display documentation",),
 )
@@ -297,7 +293,8 @@ _add(
     ),
     verify=("The rate map draws over the right field.",),
     cautions=("Later IntelliView IV software also accepts ISOXML and CN1 format.",),
-    common_errors=("Rate column stored as text.",),
+    common_errors=("The rates are stored as words rather than numbers, so they all read as "
+        "zero.",),
     confidence=Confidence.CONFIRM_ON_MACHINE,
     sources=("New Holland IntelliView IV documentation",),
 )
@@ -419,8 +416,8 @@ def _voyager_extras(monitor_key: str, brand: str) -> None:
             "import and then behave as if there is no boundary at all.",
         ),
         common_errors=(
-            "Line geometry instead of polygon.",
-            "Copying only the .shp file.",
+            "The file draws the field as an outline rather than an area. It imports "
+        "and then behaves as if there is no boundary at all.",
         ),
         confidence=Confidence.CONFIRM_ON_MACHINE,
         sources=_VOYAGER_SOURCES,
@@ -556,7 +553,7 @@ _add(
     file_format="Display data package written by the IntelliView software",
     media_path="Drive root — the display creates its own folder tree",
     minutes=15,
-    prerequisites=("Close the running task so the last records are written.",),
+    prerequisites=("Close the running job first, so the last of it is saved.",),
     steps=(
         _FAT32,
         "Close or pause the running task.",
@@ -567,8 +564,7 @@ _add(
         _EJECT,
     ),
     verify=("The folder on the stick is not empty and carries today's date.",),
-    cautions=("Use one stick per machine to avoid overwriting folder trees.",),
-    common_errors=("Removing the stick before the transfer finishes.",),
+    cautions=("Use one stick for this machine only.",),
     confidence=Confidence.CONFIRM_ON_MACHINE,
     sources=_VOYAGER_SOURCES,
 )

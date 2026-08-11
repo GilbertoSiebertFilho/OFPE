@@ -119,8 +119,8 @@ _add(
     minutes=20,
     steps=(
         "Open the AGCO Field Data Converter on a PC.",
-        "Load your file — it accepts ISOXML 2.0 through 4.3, shapefile in "
-        "WGS84, and AGCO KML, and handles A-B lines and curves.",
+        "Load your file. The converter takes every common format, "
+        "including guidance lines and curves.",
         "Convert to the format the terminal expects and write it to the stick.",
         "Plug the stick into the terminal and import from the data screen.",
         "Select the field, then pick the track under VarioGuide.",

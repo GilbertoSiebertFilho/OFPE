@@ -76,7 +76,7 @@ def _isoxml_pair(monitor_key: str, sources: tuple[str, ...], *, version_key=ANY_
         extensions=(".xml", ".bin"),
         media_path="TASKDATA\\ — created by the terminal on the stick",
         minutes=15,
-        prerequisites=("Close the running task so the last records are written.",),
+        prerequisites=("Close the running job first, so the last of it is saved.",),
         steps=(
             _FAT32,
             "Close the running task.",

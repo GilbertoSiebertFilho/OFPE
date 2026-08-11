@@ -486,7 +486,29 @@ def _add(**kwargs) -> None:
     procedure = Procedure(**kwargs)
     if procedure.objective not in OBJECTIVES:
         raise ValueError(f"unknown objective {procedure.objective!r}")
+    procedure = _attach_explanations(procedure)
     PROCEDURES.append(procedure)
+
+
+def _attach_explanations(procedure: Procedure) -> Procedure:
+    """Pair each plain instruction with the reason it matters.
+
+    Keeping steps short means the *why* has to live somewhere, and repeating it
+    by hand on two hundred procedures would guarantee it drifts. Instead, a
+    step that uses one of the shared instructions automatically brings its
+    explanation into "what usually goes wrong" -- which is exactly where
+    somebody who has already hit the problem will look.
+    """
+    extra = [
+        why
+        for instruction, why in _STEP_EXPLANATIONS
+        if instruction in procedure.steps and why not in procedure.common_errors
+    ]
+    if not extra:
+        return procedure
+    return Procedure(
+        **{**procedure.__dict__, "common_errors": procedure.common_errors + tuple(extra)}
+    )
 
 
 # Repeated wording, defined once so a wording fix lands everywhere.
@@ -537,22 +559,56 @@ def _mirror(
         )
 
 
+# --------------------------------------------------------------------------- #
+#  Shared wording                                                              #
+# --------------------------------------------------------------------------- #
+# A step is an instruction, not an explanation. Whoever is reading it is
+# standing at a machine, usually in a hurry, and is a farmer rather than an IT
+# technician: they need to know which button to press, not what a file system
+# is.
+#
+# So the *why* lives in `cautions` and `common_errors`, which is where somebody
+# who has already hit the problem goes looking. A technical word survives in a
+# step only when it is literally what the screen says -- "FAT32" is an option
+# you have to pick out of a menu, so it stays; "MBR partition" is background
+# knowledge that changes nothing about what you click, so it goes.
+
 _FAT32 = (
-    "Format the stick FAT32 with an MBR partition on a computer before you "
-    "start. exFAT, NTFS and sticks over 32 GB are the single most common reason "
-    "a display shows an empty import list."
+    "Use a USB stick of 32 GB or less. On a computer, right-click it, choose "
+    "Format, pick FAT32 from the file system list, and press Start."
 )
-_EJECT = (
-    "Eject the stick from the display's own menu before pulling it out. Pulling "
-    "it mid-write is how half-written data happens."
+_WRONG_STICK = (
+    "The stick is too big, or was never formatted. A new stick straight out of "
+    "the packet is usually not ready to use. When this is wrong the display "
+    "shows an empty list, which looks exactly like a missing file."
+)
+_EJECT = "Use the display's own eject button before pulling the stick out."
+_EJECT_WHY = (
+    "Pulling the stick out before the display has finished can leave files half "
+    "written, and a half-written file often still shows up in the list as if it "
+    "were fine."
 )
 _SHP_SET = (
-    "Copy all four shapefile parts (.shp, .shx, .dbf, .prj) with the same base "
-    "name. A lone .shp will not import."
+    "Copy all four parts of the map file -- the .shp, .shx, .dbf and .prj. They "
+    "share one name and only work together."
 )
-_NO_ACCENTS = (
-    "Keep file names short, with no accents and no spaces. Several displays "
-    "silently skip files they cannot render."
+_SHP_PARTIAL = (
+    "Copying only the .shp. It looks like one file but it is four, and the "
+    "display will not show it without the other three."
+)
+_NO_ACCENTS = "Keep file names short and plain -- no accents, no spaces."
+_NO_ACCENTS_WHY = (
+    "Some displays quietly skip files whose names they cannot read, so an "
+    "accent in a field name can make a file vanish from the list."
+)
+
+# Read by _attach_explanations at registration time, so every use of an
+# instruction carries its reason without anyone having to remember.
+_STEP_EXPLANATIONS = (
+    (_FAT32, _WRONG_STICK),
+    (_SHP_SET, _SHP_PARTIAL),
+    (_EJECT, _EJECT_WHY),
+    (_NO_ACCENTS, _NO_ACCENTS_WHY),
 )
 
 

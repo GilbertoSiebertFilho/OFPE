@@ -43,7 +43,6 @@ _add(
     ),
     common_errors=(
         "Burying the files two or three folders deep.",
-        "Copying only the .shp file.",
     ),
     confidence=Confidence.VERIFIED,
     sources=("Precision Planting 20|20 import documentation and help centre",),
@@ -66,7 +65,8 @@ _add(
         "Assign each boundary to the correct field.",
     ),
     verify=("The boundary draws around the field on the map page.",),
-    common_errors=("Line geometry instead of polygon.",),
+    common_errors=("The file draws the field as an outline rather than an area. It imports "
+        "and then behaves as if there is no boundary at all.",),
     confidence=Confidence.VERIFIED,
     sources=("Precision Planting 20|20 import documentation",),
 )

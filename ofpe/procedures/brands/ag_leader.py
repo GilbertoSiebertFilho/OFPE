@@ -41,7 +41,6 @@ _add(
         ".agsetup files are forward compatible but not backward. A file written "
         "by newer software may not open on an older display.",
     ),
-    common_errors=("Copying only the .shp file when importing a shapefile.",),
     confidence=Confidence.VERIFIED,
     sources=(
         "Ag Leader support portal, AgSetup file supported uses",
@@ -93,7 +92,7 @@ _add(
     prerequisites=("End the operation so the last records are written.",),
     steps=(
         _FAT32,
-        "End the running operation.",
+        "Finish the job on the display first.",
         "Plug the stick into the display.",
         "Tap the status indicator, top right.",
         "Choose Data Transfer.",
@@ -175,7 +174,8 @@ _add(
     cautions=(
         "Boundaries are setup data. They arrive in .agsetup, never in .agdata.",
     ),
-    common_errors=("Line geometry instead of polygon.",),
+    common_errors=("The file draws the field as an outline rather than an area. It imports "
+        "and then behaves as if there is no boundary at all.",),
     confidence=Confidence.CONFIRM_ON_MACHINE,
     sources=_AGL_SOURCES,
 )
@@ -245,7 +245,7 @@ _add(
     prerequisites=("Do this before a firmware update and before a trade-in.",),
     steps=(
         _FAT32,
-        "End the running operation.",
+        "Finish the job on the display first.",
         "Status indicator > Data Transfer.",
         "Export Setup — this is your fields, boundaries and patterns.",
         "Then Export Data — this is what the machine actually did.",

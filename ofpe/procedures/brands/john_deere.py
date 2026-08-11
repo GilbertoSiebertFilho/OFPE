@@ -27,8 +27,10 @@ _add(
     media_path="Rx\\  — at the ROOT of the stick, not inside another folder",
     minutes=10,
     prerequisites=(
-        "The prescription must be POLYGON geometry in WGS84, with at least one "
-        "NUMERIC column holding the rate.",
+        "The rate map has to be built for this, with the rates stored as "
+        "numbers and the field drawn as an area. If somebody else prepared "
+        "it, they will know whether it is right; if it draws with blank or "
+        "zero rates on the display, it is not.",
     ),
     steps=(
         _FAT32,
@@ -49,12 +51,15 @@ _add(
     ),
     cautions=(_NO_ACCENTS, _EJECT),
     common_errors=(
-        "Missing .prj, so the display has no projection and puts the field in "
-        "the wrong place.",
-        "Shapefile written in UTM instead of WGS84.",
-        "Rate column stored as TEXT rather than a number.",
+        "The .prj part is missing, so the display does not know where on Earth "
+        "the map belongs and draws it in the wrong place.",
+        "The map was saved using a different coordinate system, which puts the "
+        "field in the wrong place — sometimes in another country.",
+        "The rates in the file are stored as words rather than numbers. The map "
+        "draws, but every rate reads as zero or blank.",
         "The Rx folder nested inside another folder.",
-        "Line or point geometry instead of polygon.",
+        "The file draws lines or dots rather than areas, so the display has "
+        "nothing to apply a rate to.",
     ),
     confidence=Confidence.VERIFIED,
     sources=(
@@ -70,10 +75,10 @@ _add(
     file_format="Display data package (folders the display creates itself)",
     media_path="Work data -> JD-Data\\   |   Setup data -> JD4600\\",
     minutes=15,
-    prerequisites=("End or pause the job so everything is written to disk.",),
+    prerequisites=("Finish or pause the job first, so the last of it is saved.",),
     steps=(
         _FAT32,
-        "Use ONE stick per display. Mixing machines on one stick overwrites folders.",
+        "Use one stick for this machine only.",
         "End or pause the current job.",
         "Plug the stick into the display's USB port.",
         "Menu > File Manager.",
@@ -93,9 +98,8 @@ _add(
         "Always wait for the on-screen confirmation.",
     ),
     common_errors=(
-        "Pulling the stick out early.",
-        "Reusing one stick across several displays and overwriting folders.",
-        "Formatting the stick exFAT or NTFS.",
+        "Using the same stick on more than one machine. The second machine can "
+        "write over the first one's data without warning.",
     ),
     confidence=Confidence.VERIFIED,
     sources=("John Deere StellarSupport, Generation 4 Displays File Manager",),
@@ -324,7 +328,7 @@ _add(
     minutes=15,
     steps=(
         _FAT32,
-        "End the job so the last records are written.",
+        "Finish the job first, so the last of it is saved.",
         "Plug the stick into the 2630.",
         "Menu > GreenStar 3 > Data > Export.",
         "Select the profile and confirm.",
@@ -346,7 +350,8 @@ _add(
     extensions=(".shp", ".shx", ".dbf", ".prj"),
     media_path="Rx\\  — at the ROOT of the stick",
     minutes=10,
-    prerequisites=("Polygon geometry, WGS84, with a numeric rate column.",),
+    prerequisites=("The file has to be a proper rate map, not a picture of one. If you did "
+        "not build it yourself, the person who sent it will know.",),
     steps=(
         _FAT32,
         "Create a folder named exactly Rx at the ROOT of the stick.",
@@ -359,7 +364,7 @@ _add(
     verify=("The map draws with a sensible rate legend.",),
     cautions=(_NO_ACCENTS, _EJECT),
     common_errors=(
-        "Missing .prj.",
+        "The .prj part is missing, so the field lands in the wrong place.",
         "Rx folder nested inside another folder.",
     ),
     confidence=Confidence.VERIFIED,

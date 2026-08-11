@@ -265,3 +265,90 @@ def test_coverage_summary_is_sane():
     assert summary["monitors"] >= 20
     assert summary["version_specific"] >= 5
     assert set(summary["by_transport"]) >= {"usb", "cloud", "desktop"}
+
+
+# ------------------------------------------------------- plain language
+
+
+# Words a farmer standing at a machine cannot act on. They are fine in
+# `cautions` and `common_errors`, where somebody debugging a problem goes
+# looking -- but a step is an instruction, and an instruction you have to look
+# up is not one.
+#
+# "FAT32" is deliberately absent: it is a word you pick out of a menu, so it is
+# what the screen says rather than something to understand.
+_JARGON_BANNED_IN_STEPS = [
+    "MBR",
+    "GPT",
+    "NTFS",
+    "exFAT",
+    "WGS84",
+    "UTM",
+    "POLYGON",
+    "NUMERIC",
+    "partition table",
+    "coordinate system",
+]
+
+# A step longer than this has stopped being an instruction and started being a
+# paragraph. The explanation belongs in common_errors.
+_MAX_STEP_CHARS = 180
+
+
+def test_steps_avoid_words_a_producer_cannot_act_on():
+    offenders = []
+    for procedure in pr.PROCEDURES:
+        for number, step in enumerate(procedure.steps, 1):
+            for word in _JARGON_BANNED_IN_STEPS:
+                if word in step:
+                    offenders.append(
+                        f"{procedure.monitor_key}/{procedure.objective} "
+                        f"step {number}: {word!r} in {step[:70]!r}"
+                    )
+    assert not offenders, "jargon in steps:\n  " + "\n  ".join(sorted(set(offenders)))
+
+
+def test_steps_stay_short_enough_to_follow():
+    long_steps = sorted(
+        {
+            f"{len(step)} chars - {procedure.monitor_key}/{procedure.objective}: "
+            f"{step[:60]}..."
+            for procedure in pr.PROCEDURES
+            for step in procedure.steps
+            if len(step) > _MAX_STEP_CHARS
+        }
+    )
+    assert not long_steps, (
+        f"steps over {_MAX_STEP_CHARS} characters — move the explanation into "
+        "cautions or common_errors:\n  " + "\n  ".join(long_steps)
+    )
+
+
+def test_the_shared_instructions_carry_their_own_explanation():
+    """A short step is only safe if the reason lives somewhere findable."""
+    from ofpe.procedures._core import _FAT32, _SHP_SET, _STEP_EXPLANATIONS
+
+    pairs = dict(_STEP_EXPLANATIONS)
+    for procedure in pr.PROCEDURES:
+        for instruction, why in pairs.items():
+            if instruction in procedure.steps:
+                assert why in procedure.common_errors, (
+                    f"{procedure.monitor_key}/{procedure.objective} uses a "
+                    "shared instruction but lost its explanation"
+                )
+
+    # And the two that matter most are actually in wide use.
+    using_fat32 = [p for p in pr.PROCEDURES if _FAT32 in p.steps]
+    using_shp = [p for p in pr.PROCEDURES if _SHP_SET in p.steps]
+    assert len(using_fat32) > 100
+    assert len(using_shp) > 5
+
+
+def test_no_procedure_repeats_the_same_common_error():
+    """Auto-attached explanations must not duplicate a hand-written one."""
+    duplicated = [
+        f"{p.monitor_key}/{p.objective}"
+        for p in pr.PROCEDURES
+        if len(p.common_errors) != len(set(p.common_errors))
+    ]
+    assert not duplicated, f"duplicate common_errors in: {duplicated}"

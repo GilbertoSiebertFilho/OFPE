@@ -49,29 +49,29 @@ for _monitor in (
         media_path="n/a",
         minutes=5,
         steps=(
-            "Use a stick between 8 GB and 32 GB. Larger sticks are the most "
-            "common cause of an import list that comes up empty.",
+            "Pick a stick of 8 GB to 32 GB. Bigger ones often are not read at "
+            "all, however new they are.",
             "Plug it into a computer.",
-            "Right-click the drive in File Explorer and choose Format.",
-            "Set the file system to FAT32.",
-            "Tick Quick Format and press Start.",
-            "Give the stick a short label with no accents or spaces.",
-            "Copy your files on, following the folder layout for your display.",
-            "Safely eject from the computer before unplugging.",
+            "Open This PC, right-click the stick, and choose Format.",
+            "In the box that opens, set File system to FAT32.",
+            "Tick Quick Format, then press Start. It takes a few seconds.",
+            "Give it a short name — letters and numbers only.",
+            "Copy your files on, in the folder your display expects.",
+            "Click Eject on the computer before you unplug it.",
         ),
         verify=(
-            "The computer reports the drive as FAT32 in its properties.",
-            "The display lists your files when you open the import screen.",
+            "Right-click the stick and choose Properties: it should say FAT32.",
+            "Your files appear on the display when you open its import screen.",
         ),
         cautions=(
-            "Formatting erases the stick. Copy anything you need off it first.",
-            "Use one stick per machine. Sharing one stick across displays "
-            "overwrites folder trees that share a name.",
+            "Formatting wipes the stick. Copy anything you want to keep off it "
+            "first.",
+            "Use one stick per machine. Two machines sharing a stick can "
+            "overwrite each other's folders.",
+            "A stick works for years once it is set up like this — you only do "
+            "it once.",
         ),
         common_errors=(
-            "exFAT or NTFS instead of FAT32.",
-            "A stick larger than 32 GB.",
-            "A GPT partition table where the display expects MBR.",
         ),
         confidence=Confidence.VERIFIED,
         sources=("Manufacturer data-management documentation, consolidated",),
