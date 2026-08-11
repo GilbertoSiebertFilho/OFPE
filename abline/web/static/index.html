@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AB Line Platform</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"></span>
+    <span>AB Line Platform</span>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab active" role="tab" data-tab="ops" aria-selected="true">Operations</button>
+    <button class="tab" role="tab" data-tab="producer" aria-selected="false">Producer</button>
+  </nav>
+  <div class="stats" id="stats" aria-live="polite"></div>
+</header>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<!-- ================================================================= -->
+<!--  OPERATIONS                                                       -->
+<!-- ================================================================= -->
+<main id="panel-ops" class="panel active">
+
+  <div class="layout">
+
+    <aside class="sidebar">
+      <section class="card">
+        <h2>Machines</h2>
+        <p class="hint">A machine is a name and a working width. The width is what
+          spaces the lines, so get it right: header width on a combine, toolbar on
+          a planter, boom on a sprayer.</p>
+        <ul id="machine-list" class="list"></ul>
+        <details class="adder">
+          <summary>Add a machine</summary>
+          <form id="machine-form" class="form">
+            <label>Name <input name="name" required placeholder="S780 combine"></label>
+            <div class="row">
+              <label>Brand <input name="brand" placeholder="John Deere"></label>
+              <label>Model <input name="model" placeholder="S780"></label>
+            </div>
+            <div class="row">
+              <label>Type
+                <select name="category">
+                  <option value="combine">Combine</option>
+                  <option value="planter">Planter</option>
+                  <option value="seeder">Seeder / drill</option>
+                  <option value="sprayer">Sprayer</option>
+                  <option value="spreader">Spreader</option>
+                  <option value="tillage">Tillage</option>
+                  <option value="swather">Swather</option>
+                  <option value="tractor">Tractor</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+              <label>Working width (m)
+                <input name="working_width_m" type="number" step="0.01" min="0.01" required placeholder="12.2">
+              </label>
+            </div>
+            <div class="row">
+              <label>Overlap (m)
+                <input name="overlap_m" type="number" step="0.01" min="0" value="0">
+                <small>Subtracted from the width to get swath spacing.</small>
+              </label>
+              <label>Lateral offset (m)
+                <input name="lateral_offset_m" type="number" step="0.01" value="0">
+                <small>Implement offset from the antenna, + to the right.</small>
+              </label>
+            </div>
+            <label>Display / monitor
+              <select name="monitor_key" id="machine-monitor"><option value="">-- select --</option></select>
+              <small id="monitor-note" class="note"></small>
+            </label>
+            <button type="submit" class="primary">Add machine</button>
+          </form>
+        </details>
+      </section>
+
+      <section class="card">
+        <h2>Fields</h2>
+        <ul id="field-list" class="list"></ul>
+        <details class="adder">
+          <summary>Add a field by hand</summary>
+          <form id="field-form" class="form">
+            <label>Name <input name="name" required placeholder="Home quarter"></label>
+            <div class="row">
+              <label>Farm <input name="farm"></label>
+              <label>Grower <input name="grower"></label>
+            </div>
+            <label>Boundary — one <code>lat, lon</code> per line (optional)
+              <textarea name="boundary" rows="5" placeholder="-27.8412, -54.4820&#10;-27.8412, -54.4760&#10;-27.8455, -54.4760&#10;-27.8455, -54.4820"></textarea>
+            </label>
+            <button type="submit" class="primary">Add field</button>
+          </form>
+        </details>
+      </section>
+
+      <section class="card">
+        <h2>Import</h2>
+        <p class="hint">Shapefile (zip the whole set), ISOXML TASKDATA, KML/KMZ,
+          GeoJSON, or a track log as CSV.</p>
+        <form id="import-form" class="form">
+          <input type="file" name="file" required>
+          <label>Attach to machine
+            <select name="machine_id" class="machine-select"><option value="">-- none --</option></select>
+          </label>
+          <label class="check"><input type="checkbox" name="persist" checked> Save what it finds</label>
+          <button type="submit" class="primary">Import file</button>
+        </form>
+        <div id="import-result" class="result"></div>
+      </section>
+
+      <section class="card">
+        <h2>Fit from machine data</h2>
+        <p class="hint">Upload a recorded track — as-applied, yield, coverage —
+          and we work out the line the machine actually drove.</p>
+        <form id="fit-form" class="form">
+          <input type="file" name="file" required>
+          <label>Machine <select name="machine_id" class="machine-select" required><option value="">-- select --</option></select></label>
+          <label>Save into field <select name="field_id" class="field-select"><option value="">-- do not save --</option></select></label>
+          <label>Line name <input name="name" value="Fitted line"></label>
+          <label>Pattern
+            <select name="force_pattern">
+              <option value="">Decide automatically</option>
+              <option value="AB">Force straight AB</option>
+              <option value="CURVE">Force curve</option>
+            </select>
+          </label>
+          <button type="submit" class="primary">Fit line</button>
+        </form>
+        <div id="fit-result" class="result"></div>
+      </section>
+    </aside>
+
+    <section class="workspace">
+      <div class="card" id="field-detail">
+        <h2 id="field-title">Select a field</h2>
+        <p class="hint" id="field-sub">Pick a field on the left, or import one.</p>
+
+        <div id="field-body" hidden>
+          <div class="mapwrap">
+            <svg id="map" viewBox="0 0 800 520" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Field and guidance line preview"></svg>
+            <div class="maplegend">
+              <span><i class="sw boundary"></i> boundary</span>
+              <span><i class="sw ref"></i> reference line</span>
+              <span><i class="sw pass"></i> passes</span>
+            </div>
+          </div>
+          <div id="map-meta" class="meta"></div>
+
+          <h3>Generate a line</h3>
+          <form id="generate-form" class="form inline">
+            <label>Machine <select name="machine_id" class="machine-select" required><option value="">-- select --</option></select></label>
+            <label>Strategy
+              <select name="strategy">
+                <option value="min_passes">Fewest passes</option>
+                <option value="longest_edge">Along longest edge</option>
+              </select>
+            </label>
+            <label>Headland passes <input name="headland_passes" type="number" min="0" max="10" value="0"></label>
+            <button type="submit" class="primary">Generate from boundary</button>
+            <button type="button" id="btn-suggest" class="ghost">Score heading only</button>
+          </form>
+          <div id="heading-result" class="result"></div>
+
+          <details class="adder">
+            <summary>Enter A/B by hand</summary>
+            <form id="manual-form" class="form">
+              <label>Machine <select name="machine_id" class="machine-select" required><option value="">-- select --</option></select></label>
+              <label>Name <input name="name" placeholder="North AB"></label>
+              <label>Pattern
+                <select name="pattern" id="manual-pattern">
+                  <option value="AB">AB — two points</option>
+                  <option value="A_PLUS">A+ — point and heading</option>
+                  <option value="CURVE">Curve — many points</option>
+                  <option value="PIVOT">Pivot — centre and radius</option>
+                </select>
+              </label>
+              <label>Points — one <code>lat, lon</code> per line
+                <textarea name="points" rows="3" required placeholder="-27.8412, -54.4820&#10;-27.8455, -54.4820"></textarea>
+              </label>
+              <div class="row">
+                <label>Heading (deg true) <input name="heading_deg" type="number" step="0.01" placeholder="A+ only"></label>
+                <label>Radius (m) <input name="radius_m" type="number" step="0.1" placeholder="pivot only"></label>
+              </div>
+              <button type="submit" class="primary">Create line</button>
+            </form>
+          </details>
+
+          <h3>Lines in this field</h3>
+          <div id="line-list"></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- ================================================================= -->
+<!--  PRODUCER                                                         -->
+<!-- ================================================================= -->
+<main id="panel-producer" class="panel producer">
+
+  <div class="steps">
+
+    <section class="step">
+      <h2><span class="num">1</span> Pick your machine</h2>
+      <div id="producer-machines" class="machinegrid"></div>
+    </section>
+
+    <section class="step" id="step-lines" hidden>
+      <h2><span class="num">2</span> Pick the lines</h2>
+      <div id="producer-lines"></div>
+    </section>
+
+    <section class="step" id="step-download" hidden>
+      <h2><span class="num">3</span> Download and load it</h2>
+      <div id="producer-download"></div>
+    </section>
+
+  </div>
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

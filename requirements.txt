@@ -1,0 +1,12 @@
+# Runtime
+fastapi>=0.110
+uvicorn>=0.27
+python-multipart>=0.0.9   # file uploads on the import and fit endpoints
+pydantic>=2.6
+shapely>=2.0              # polygon clipping, buffering, parallel offsets
+pyproj>=3.6               # the per-field local transverse Mercator projection
+numpy>=1.26               # line fitting from recorded machine tracks
+
+# Development
+pytest>=8.0
+httpx>=0.27               # FastAPI's TestClient transport
