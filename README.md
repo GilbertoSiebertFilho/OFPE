@@ -14,6 +14,24 @@ Three tabs:
   format that display reads.
 - **Operations** — machine library, field import, line generation and fitting.
 
+## The Guide on its own — nothing to install
+
+The Guide is knowledge, not calculation: 341 procedures, no database, no server
+work. So it also exists as **one file**, **`OFPE-Guide.html`**. Double-click it
+and it opens in the browser. Copy it to a phone, mail it to an operator, put it
+on the USB stick that is going to the machine anyway — it works with no
+internet, no Python and no login, and each answer prints on one page.
+
+Rebuild it after editing any procedure:
+
+```
+.venv/bin/python tools/build_guide.py         # macOS / Linux
+.venv\Scripts\python tools\build_guide.py     # Windows
+```
+
+The full platform below adds the parts that genuinely need a server: the machine
+library, field import, and generating and fitting guidance lines.
+
 ## Running it
 
 **Windows** — double-click **`start.bat`**.
