@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from .geo import LatLon
-from .models import FieldRecord, GuidanceLine, Machine
+from .models import FieldRecord, GuidanceLine, Machine, new_id, utc_now
 
 __all__ = ["Database", "DEFAULT_DB_PATH"]
 
@@ -72,6 +72,31 @@ CREATE TABLE IF NOT EXISTS lines (
     published     INTEGER NOT NULL DEFAULT 1,
     created_at    TEXT NOT NULL
 );
+
+-- Corrections sent in from real machines.
+--
+-- This table is the only route by which a procedure's confidence can honestly
+-- improve. Everything in the knowledge base is either read from a manual or
+-- inferred; the one thing that settles what a menu actually says is somebody
+-- standing in front of it. So the report is deliberately cheap to file: four
+-- fields, none of them mandatory beyond the one that matters.
+CREATE TABLE IF NOT EXISTS procedure_reports (
+    id            TEXT PRIMARY KEY,
+    monitor_key   TEXT NOT NULL,
+    version_key   TEXT NOT NULL DEFAULT '',
+    objective     TEXT NOT NULL,
+    transport     TEXT NOT NULL,
+    kind          TEXT NOT NULL,
+    step_number   INTEGER,
+    what_happened TEXT NOT NULL DEFAULT '',
+    actual_text   TEXT NOT NULL DEFAULT '',
+    reporter      TEXT NOT NULL DEFAULT '',
+    status        TEXT NOT NULL DEFAULT 'new',
+    created_at    TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_reports_monitor ON procedure_reports(monitor_key);
+CREATE INDEX IF NOT EXISTS idx_reports_status ON procedure_reports(status);
 
 CREATE INDEX IF NOT EXISTS idx_lines_field ON lines(field_id);
 CREATE INDEX IF NOT EXISTS idx_lines_machine ON lines(machine_id);
@@ -331,6 +356,62 @@ class Database:
             )
         return cursor.rowcount > 0
 
+    # ----------------------------------------------------------------- reports
+
+    def save_report(self, report: dict[str, Any]) -> dict[str, Any]:
+        """Record a correction sent in from a machine."""
+        record = {
+            "id": report.get("id") or new_id(),
+            "monitor_key": report["monitor_key"],
+            "version_key": report.get("version_key") or "",
+            "objective": report["objective"],
+            "transport": report["transport"],
+            "kind": report["kind"],
+            "step_number": report.get("step_number"),
+            "what_happened": report.get("what_happened") or "",
+            "actual_text": report.get("actual_text") or "",
+            "reporter": report.get("reporter") or "",
+            "status": report.get("status") or "new",
+            "created_at": report.get("created_at") or utc_now(),
+        }
+        with self.connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO procedure_reports (id, monitor_key, version_key,
+                    objective, transport, kind, step_number, what_happened,
+                    actual_text, reporter, status, created_at)
+                VALUES (:id, :monitor_key, :version_key, :objective, :transport,
+                    :kind, :step_number, :what_happened, :actual_text,
+                    :reporter, :status, :created_at)
+                ON CONFLICT(id) DO UPDATE SET status=excluded.status
+                """,
+                record,
+            )
+        return record
+
+    def list_reports(self, *, status: str | None = None) -> list[dict[str, Any]]:
+        where = " WHERE status = ?" if status else ""
+        params = [status] if status else []
+        rows = self._conn.execute(
+            f"SELECT * FROM procedure_reports{where} ORDER BY created_at DESC",
+            params,
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def set_report_status(self, report_id: str, status: str) -> bool:
+        with self.connection() as conn:
+            cursor = conn.execute(
+                "UPDATE procedure_reports SET status = ? WHERE id = ?",
+                (status, report_id),
+            )
+        return cursor.rowcount > 0
+
+    def report_counts(self) -> dict[str, int]:
+        rows = self._conn.execute(
+            "SELECT status, COUNT(*) AS n FROM procedure_reports GROUP BY status"
+        ).fetchall()
+        return {row["status"]: row["n"] for row in rows}
+
     # ------------------------------------------------------------- convenience
 
     def producer_catalog(self) -> list[dict[str, Any]]:
@@ -403,6 +484,9 @@ class Database:
             "lines": count("lines"),
             "published_lines": self._conn.execute(
                 "SELECT COUNT(*) FROM lines WHERE published = 1"
+            ).fetchone()[0],
+            "open_reports": self._conn.execute(
+                "SELECT COUNT(*) FROM procedure_reports WHERE status = 'new'"
             ).fetchone()[0],
         }
 

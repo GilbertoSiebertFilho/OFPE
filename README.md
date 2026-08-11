@@ -45,6 +45,9 @@ Three things fall out of having the whole matrix:
   training an operator, for the folder in the workshop, for a machine handover.
 - **Every card suggests what is next.** The trip to the machine to load a
   prescription is also the moment to pull last week's work data off it.
+- **Every card can be corrected.** A button sends back what the screen actually
+  said. See below — this is the only honest route from "confirm the wording" to
+  "verified".
 
 ### Why the version step exists
 
@@ -100,6 +103,23 @@ Panorama · agrirouter
 Several brands run two platforms that do different jobs — CLAAS splits
 telematics from agronomy — so the procedure names the right one rather than the
 famous one.
+
+### Corrections from the field
+
+Folder paths and file formats are checked against manufacturer documentation.
+Menu names are not checkable that way: they move between software releases, and
+the only way anyone finds out is somebody standing in front of the screen. So
+148 of the 264 procedures carry **Confirm the menu wording on the machine** —
+that is an honest label, not a defect.
+
+The button on every procedure card closes that loop. It asks four short
+questions, only one of which is required, and files a correction that shows up
+in the Operations tab as a queue. `worked_fine` is one of the options and needs
+no text at all — a confirmation that the steps are right is as useful as a
+complaint, and much rarer.
+
+The form is deliberately short. A bad report beats no report, and a long form
+gets abandoned in a cab.
 
 ### Icons
 
@@ -294,6 +314,10 @@ common reason an import shows an empty list.
 | `GET /api/guide/monitors/{key}/objectives` | what this display on this release can do |
 | `GET /api/guide/procedure` | the resolved procedure, plus how it matched |
 | `GET /api/guide/search` | free-text jump — "2630", "Pro 700", "CEMIS" |
+| `GET /api/guide/coverage` | what is documented and what is missing |
+| `POST /api/guide/report` | file a correction from the machine |
+| `GET /api/guide/reports` | the correction queue |
+| `GET /handbook` | every procedure for one display, printable |
 
 Interactive docs at `/docs`.
 
@@ -302,7 +326,7 @@ Interactive docs at `/docs`.
 ## Tests
 
 ```bash
-python3 -m pytest tests/ -q      # 154 tests
+python3 -m pytest tests/ -q      # 162 tests
 ```
 
 The ones that earn their keep are the **coverage invariants** in
@@ -350,8 +374,9 @@ build time rather than when a producer clicks download.
   *is* documented for that display.
 - **Menu wording is the weakest claim.** Folder paths and file formats are
   verified against cited sources. Exact menu names drift between releases, which
-  is why each procedure carries a confidence flag and every card shows it.
-  Corrections from real machines are the fastest way to improve this.
+  is why 148 of 264 procedures are flagged "confirm on the machine" and every
+  card shows that flag. The correction button is the fix, and it needs people to
+  use it — the knowledge base cannot improve on this axis without field reports.
 - **No cloud APIs yet.** John Deere Operations Center exposes a guidance-line
   endpoint that creates AB lines directly, and Trimble has an equivalent. Both
   need a developer account and customer OAuth consent. That is the next step and

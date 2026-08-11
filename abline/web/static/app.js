@@ -116,8 +116,16 @@ async function refreshAll() {
 async function refreshStats() {
   try {
     const health = await api('/api/health');
-    $('#stats').textContent =
-      `${health.machines} machines · ${health.fields} fields · ${health.lines} lines`;
+    const bits = [
+      `${health.machines} machines`,
+      `${health.fields} fields`,
+      `${health.lines} lines`,
+    ];
+    if (health.open_reports) {
+      bits.push(`${health.open_reports} correction`
+        + (health.open_reports === 1 ? '' : 's'));
+    }
+    $('#stats').textContent = bits.join(' · ');
   } catch { /* the header count is decoration; failing it must not block work */ }
 }
 
@@ -382,7 +390,7 @@ function wireTabs() {
       $('#panel-ops').classList.toggle('active', which === 'ops');
       $('#panel-producer').classList.toggle('active', which === 'producer');
       if (which === 'producer') loadProducer();
-      if (which === 'ops') loadCoverage();
+      if (which === 'ops') { loadCoverage(); loadReports(); }
     });
   }
 }
@@ -1055,6 +1063,10 @@ function renderProcedure(data) {
       'Whole handbook for this display'),
     el('button', { class: 'ghost', onclick: copyLink }, 'Copy link to this procedure'),
     el('button', {
+      class: 'ghost report',
+      onclick: () => openReportForm(data),
+    }, 'This did not match my screen'),
+    el('button', {
       class: 'ghost',
       onclick: () => {
         guideReset('equipment');
@@ -1162,6 +1174,134 @@ async function restoreFromHash() {
   } catch (error) {
     toast(`That link did not resolve: ${error.message}`, true);
     return false;
+  }
+}
+
+/* ------------------------------------------------------------ corrections
+ *
+ * The one route by which a procedure's confidence honestly improves. Everything
+ * in the knowledge base was read from a manual or inferred; what settles an
+ * argument about a menu name is somebody standing in front of it. So the form
+ * is deliberately short — a bad report beats no report, and a long form gets
+ * abandoned in a cab.
+ */
+
+let reportKinds = null;
+
+async function openReportForm(data) {
+  const host = $('#g-result');
+  if ($('#report-form-card')) { $('#report-form-card').scrollIntoView({ behavior: 'smooth' }); return; }
+
+  if (!reportKinds) {
+    try { reportKinds = await api('/api/guide/report-kinds'); }
+    catch (error) { return toast(error.message, true); }
+  }
+
+  const card = el('div', { class: 'proc no-print', id: 'report-form-card' },
+    el('div', { class: 'proc-body' },
+      el('h4', {}, 'What did not match?'),
+      el('p', { class: 'hint' },
+        'Folder paths and file formats here are checked against manufacturer '
+        + 'documentation. Menu names move between software releases, and the '
+        + 'only way we find out is someone telling us.')));
+
+  const form = el('form', { class: 'form' });
+  const kindSelect = el('select', { name: 'kind', required: true });
+  for (const kind of reportKinds) {
+    kindSelect.append(el('option', { value: kind.key }, kind.label));
+  }
+  form.append(el('label', {}, 'What happened', kindSelect));
+  form.append(el('label', {}, 'What did the screen actually say?',
+    el('textarea', {
+      name: 'actual_text', rows: 3,
+      placeholder: 'e.g. the menu was called "Data Manager", not "File Manager"',
+    })));
+  form.append(el('div', { class: 'row' },
+    el('label', {}, 'Which step number?',
+      el('input', { name: 'step_number', type: 'number', min: 1, placeholder: 'optional' })),
+    el('label', {}, 'Your name',
+      el('input', { name: 'reporter', placeholder: 'optional' }))));
+  form.append(el('div', { class: 'proc-actions' },
+    el('button', { type: 'submit', class: 'primary' }, 'Send correction'),
+    el('button', {
+      type: 'button', class: 'ghost',
+      onclick: () => card.remove(),
+    }, 'Cancel')));
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const values = Object.fromEntries(new FormData(form));
+    try {
+      const result = await api('/api/guide/report', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          monitor_key: data.monitor.key,
+          objective: data.procedure.objective,
+          transport: data.procedure.transport,
+          version_key: data.version_key || '',
+          kind: values.kind,
+          step_number: values.step_number ? Number(values.step_number) : null,
+          actual_text: values.actual_text || '',
+          reporter: values.reporter || '',
+        }),
+      });
+      card.replaceChildren(el('div', { class: 'proc-body' },
+        el('div', { class: 'panelbox good' }, result.message)));
+      refreshStats();
+    } catch (error) { toast(error.message, true); }
+  });
+
+  card.querySelector('.proc-body').append(form);
+  host.append(card);
+  card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/* ------------------------------------------------------- correction queue */
+
+async function loadReports() {
+  try {
+    const data = await api('/api/guide/reports');
+    const host = $('#reports-list');
+    host.replaceChildren();
+    const open = data.counts.new || 0;
+    $('#reports-count').textContent = open
+      ? `${open} awaiting review`
+      : 'Nothing awaiting review';
+    if (!data.reports.length) {
+      host.append(el('p', { class: 'hint' },
+        'No corrections yet. The button on every procedure card is what feeds this.'));
+      return;
+    }
+    for (const report of data.reports) {
+      host.append(el('div', { class: `lineitem report-${report.status}` },
+        report.icon_url ? el('img', { class: 'covicon', src: report.icon_url, alt: '' }) : null,
+        el('span', { class: 'grow' },
+          el('span', { class: 'name' }, `${report.kind_label}`),
+          el('span', { class: 'sub' },
+            `${report.monitor_label} · ${report.objective_label} · ${report.version_label}`,
+            report.step_number ? ` · step ${report.step_number}` : '',
+            report.actual_text ? ` — "${report.actual_text}"` : '',
+            report.reporter ? ` (${report.reporter})` : '')),
+        el('span', { class: `badge ${report.status === 'new' ? 'needs_sample' : 'native'}` },
+          report.status),
+        report.status === 'new'
+          ? el('button', {
+              class: 'tiny',
+              onclick: async () => {
+                try {
+                  await api(`/api/guide/reports/${report.id}/status?status=fixed`,
+                            { method: 'POST' });
+                  loadReports();
+                  refreshStats();
+                } catch (error) { toast(error.message, true); }
+              },
+            }, 'Mark fixed')
+          : null));
+    }
+  } catch (error) {
+    $('#reports-list').replaceChildren(
+      el('p', { class: 'hint' }, `Could not load corrections: ${error.message}`));
   }
 }
 

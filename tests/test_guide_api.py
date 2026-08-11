@@ -215,3 +215,118 @@ def test_handbook_for_an_unknown_display_is_a_404(client):
 def test_handbook_without_a_version_says_so(client):
     html = client.get("/handbook", params={"monitor_key": "generic.isobus"}).text
     assert "All software versions" in html
+
+
+# -------------------------------------------------------------- corrections
+
+
+def test_report_kinds_are_offered(client):
+    kinds = client.get("/api/guide/report-kinds").json()
+    assert {k["key"] for k in kinds} >= {"menu_name", "folder", "did_not_work"}
+    assert all(k["label"] for k in kinds)
+
+
+def test_a_correction_can_be_filed_and_shows_up_in_the_queue(client):
+    response = client.post("/api/guide/report", json={
+        "monitor_key": "john_deere.gen4",
+        "objective": "import_guidance",
+        "transport": "usb",
+        "version_key": "gen4_11x",
+        "kind": "menu_name",
+        "step_number": 5,
+        "actual_text": 'The menu is called "Data Manager" on 11.x',
+        "reporter": "Gilberto",
+    })
+    assert response.status_code == 201, response.text
+
+    queue = client.get("/api/guide/reports").json()
+    assert queue["counts"]["new"] == 1
+    report = queue["reports"][0]
+    # Enriched server-side so the operations list needs no second lookup.
+    assert report["monitor_label"].startswith("John Deere")
+    assert report["objective_label"] == "Load guidance lines (AB / curves)"
+    assert report["version_label"] == "Gen 4 OS 11.x"
+    assert report["kind_label"] == "The menu was called something else"
+    assert report["step_number"] == 5
+
+
+def test_a_report_with_no_detail_is_refused(client):
+    """A report nobody can act on is worse than none: it looks like signal."""
+    response = client.post("/api/guide/report", json={
+        "monitor_key": "john_deere.gen4",
+        "objective": "import_guidance",
+        "transport": "usb",
+        "kind": "menu_name",
+    })
+    assert response.status_code == 422
+    assert "what actually happened" in response.json()["detail"]
+
+
+def test_confirming_a_procedure_works_needs_no_detail(client):
+    """'It worked' is valuable and must not be gated behind a text box."""
+    response = client.post("/api/guide/report", json={
+        "monitor_key": "case_ih.afs_pro_700",
+        "objective": "import_prescription",
+        "transport": "usb",
+        "kind": "worked_fine",
+    })
+    assert response.status_code == 201
+
+
+def test_reports_reject_unknown_targets(client):
+    base = {
+        "monitor_key": "john_deere.gen4",
+        "objective": "import_guidance",
+        "transport": "usb",
+        "kind": "menu_name",
+        "actual_text": "something",
+    }
+    assert client.post("/api/guide/report",
+                       json={**base, "monitor_key": "nope"}).status_code == 404
+    assert client.post("/api/guide/report",
+                       json={**base, "objective": "nope"}).status_code == 422
+    assert client.post("/api/guide/report",
+                       json={**base, "kind": "nope"}).status_code == 422
+
+
+def test_a_report_can_be_marked_fixed(client):
+    client.post("/api/guide/report", json={
+        "monitor_key": "raven.viper4", "objective": "import_guidance",
+        "transport": "usb", "kind": "did_not_work", "actual_text": "nothing listed",
+    })
+    report_id = client.get("/api/guide/reports").json()["reports"][0]["id"]
+
+    assert client.post(f"/api/guide/reports/{report_id}/status",
+                       params={"status": "fixed"}).status_code == 200
+    counts = client.get("/api/guide/reports").json()["counts"]
+    assert counts.get("new", 0) == 0 and counts["fixed"] == 1
+
+    assert client.post(f"/api/guide/reports/{report_id}/status",
+                       params={"status": "banana"}).status_code == 422
+    assert client.post("/api/guide/reports/nope/status",
+                       params={"status": "fixed"}).status_code == 404
+
+
+def test_open_reports_surface_in_health(client):
+    assert client.get("/api/health").json()["open_reports"] == 0
+    client.post("/api/guide/report", json={
+        "monitor_key": "topcon.x_family", "objective": "export_work_data",
+        "transport": "usb", "kind": "folder", "actual_text": "went elsewhere",
+    })
+    assert client.get("/api/health").json()["open_reports"] == 1
+
+
+def test_reports_can_be_filtered_by_status(client):
+    for kind in ("menu_name", "folder"):
+        client.post("/api/guide/report", json={
+            "monitor_key": "claas.cemis_1200", "objective": "import_guidance",
+            "transport": "usb", "kind": kind, "actual_text": "detail",
+        })
+    reports = client.get("/api/guide/reports").json()["reports"]
+    client.post(f"/api/guide/reports/{reports[0]['id']}/status",
+                params={"status": "reviewed"})
+
+    assert len(client.get("/api/guide/reports",
+                          params={"status": "new"}).json()["reports"]) == 1
+    assert len(client.get("/api/guide/reports",
+                          params={"status": "reviewed"}).json()["reports"]) == 1

@@ -768,6 +768,111 @@ def guide_procedure(
     }
 
 
+REPORT_KINDS = {
+    "menu_name": "The menu was called something else",
+    "folder": "The folder or file location was wrong",
+    "format": "The display rejected the file format",
+    "missing_step": "A step was missing or in the wrong order",
+    "did_not_work": "Followed it exactly and it did not work",
+    "worked_fine": "It worked — confirming the steps are right",
+}
+
+
+class ReportIn(BaseModel):
+    monitor_key: str
+    objective: str
+    transport: str
+    version_key: str = ""
+    kind: str
+    step_number: int | None = None
+    what_happened: str = ""
+    actual_text: str = ""
+    reporter: str = ""
+
+
+@guide.get("/report-kinds")
+def report_kinds() -> list[dict[str, str]]:
+    return [{"key": k, "label": v} for k, v in REPORT_KINDS.items()]
+
+
+@guide.post("/report", status_code=201)
+def submit_report(payload: ReportIn, db: Database = Depends(get_db)) -> dict[str, Any]:
+    """Record a correction from someone standing in front of the machine.
+
+    This is the only route by which a procedure's confidence honestly improves.
+    Everything in the knowledge base is read from a manual or inferred; what
+    settles the argument is what the screen actually said. So the endpoint
+    accepts almost anything -- a bare "did not work" with no detail is still
+    worth more than silence -- and validates only what it must.
+    """
+    try:
+        catalog_module.get_monitor(payload.monitor_key)
+    except KeyError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    if payload.objective not in OBJECTIVES:
+        raise HTTPException(422, f"unknown objective {payload.objective!r}")
+    if payload.kind not in REPORT_KINDS:
+        raise HTTPException(
+            422,
+            f"unknown report kind {payload.kind!r}. Options: "
+            + ", ".join(REPORT_KINDS),
+        )
+    if payload.kind != "worked_fine" and not (
+        payload.actual_text.strip() or payload.what_happened.strip()
+    ):
+        raise HTTPException(
+            422,
+            "tell us what actually happened, even in a few words — a report "
+            "with no detail cannot be acted on.",
+        )
+
+    record = db.save_report(payload.model_dump())
+    return {
+        "report": record,
+        "message": (
+            "Thank you — this goes to the office and is how the steps get "
+            "corrected for the next person."
+        ),
+    }
+
+
+@guide.get("/reports")
+def list_reports(
+    status: str | None = None, db: Database = Depends(get_db)
+) -> dict[str, Any]:
+    """The correction queue, for the operations side."""
+    reports = db.list_reports(status=status)
+    for report in reports:
+        monitor = catalog_module.MONITORS.get(report["monitor_key"])
+        report["monitor_label"] = monitor.label if monitor else report["monitor_key"]
+        report["icon_url"] = f"/icons/ui/{monitor.icon}" if monitor else ""
+        objective = OBJECTIVES.get(report["objective"])
+        report["objective_label"] = (
+            objective.label if objective else report["objective"]
+        )
+        report["kind_label"] = REPORT_KINDS.get(report["kind"], report["kind"])
+        report["version_label"] = next(
+            (
+                v.label
+                for v in procedures_module.versions_for(report["monitor_key"])
+                if v.key == report["version_key"]
+            ),
+            "Any version",
+        )
+    return {"reports": reports, "counts": db.report_counts()}
+
+
+@guide.post("/reports/{report_id}/status")
+def set_report_status(
+    report_id: str, status: str, db: Database = Depends(get_db)
+) -> dict[str, Any]:
+    if status not in ("new", "reviewed", "fixed", "rejected"):
+        raise HTTPException(422, f"unknown status {status!r}")
+    if not db.set_report_status(report_id, status):
+        raise HTTPException(404, f"no report with id {report_id!r}")
+    return {"report_id": report_id, "status": status}
+
+
 @guide.get("/coverage")
 def guide_coverage() -> dict[str, Any]:
     """What is documented and what is not.

@@ -457,3 +457,11 @@ body.handbook { background: var(--bg); }
 .covtable td.gaps { color: var(--ink-3); font-size: 12px; }
 .covicon { width: 34px; height: auto; aspect-ratio: 380/300; vertical-align: middle;
   margin-right: 8px; border-radius: 3px; }
+
+/* ----------------------------------------------------------- corrections */
+
+button.report { color: var(--warn); }
+button.report:hover { border-color: var(--warn); background: var(--warn-soft); }
+#report-form-card { margin-top: 14px; border-color: var(--warn); }
+.lineitem.report-new { border-left: 3px solid var(--warn); }
+.lineitem.report-fixed { opacity: .62; }
