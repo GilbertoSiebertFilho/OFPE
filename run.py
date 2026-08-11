@@ -94,6 +94,22 @@ def seed(db_path: str) -> None:
     )
 
 
+def _port_in_use(host: str, port: int) -> bool:
+    """Whether something is already listening there."""
+    import socket
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        # Without SO_REUSEADDR a port left in TIME_WAIT by a just-stopped
+        # server would look occupied, and restarting the app would wrongly
+        # report a conflict for a minute after every Ctrl+C.
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            probe.bind(("127.0.0.1" if host == "0.0.0.0" else host, port))
+        except OSError:
+            return True
+    return False
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--host", default="127.0.0.1")
@@ -101,22 +117,78 @@ def main() -> int:
     parser.add_argument("--db", default=os.environ.get("OFPE_DB", ""))
     parser.add_argument("--seed", action="store_true", help="load demo data and exit")
     parser.add_argument("--reload", action="store_true", help="restart on code changes")
+    parser.add_argument(
+        "--open", action="store_true", help="open a browser once the server is up"
+    )
+    parser.add_argument(
+        "--no-seed", action="store_true", help="start empty, skip the demo data"
+    )
     args = parser.parse_args()
 
     if args.db:
         os.environ["OFPE_DB"] = args.db
 
-    if args.seed:
-        from ofpe.db import DEFAULT_DB_PATH
+    from ofpe.db import DEFAULT_DB_PATH, Database
 
-        seed(args.db or str(DEFAULT_DB_PATH))
+    db_path = args.db or str(DEFAULT_DB_PATH)
+
+    if args.seed:
+        seed(db_path)
         return 0
+
+    # Seed on a first run so the app has something to show. Guarded on the
+    # database being completely empty, which is only ever true before anyone
+    # has used it -- adding demo machines to a working library would be a
+    # genuinely bad surprise.
+    if not args.no_seed:
+        database = Database(db_path)
+        empty = all(v == 0 for v in database.stats().values())
+        database.close()
+        if empty:
+            print("First run: loading demo machines, a field and some lines.\n")
+            seed(db_path)
+            print()
 
     import uvicorn
 
-    print(f"OFPE Field Data Platform -> http://{args.host}:{args.port}")
+    # Check the port before uvicorn does, because uvicorn's failure is a raw
+    # errno traceback. Someone who started the app by double-clicking an icon
+    # has almost always just left the first window open.
+    if _port_in_use(args.host, args.port):
+        print()
+        print(f"  Port {args.port} is already being used by something else.")
+        print()
+        print("  The usual cause is that the app is already running — look for")
+        print("  another window like this one, or just open the address below:")
+        print(f"      http://127.0.0.1:{args.port}")
+        print()
+        print("  If something else needs that port, start on a different one:")
+        print(f"      run.py --port {args.port + 1}")
+        print()
+        return 1
+
+    url = f"http://{'127.0.0.1' if args.host == '0.0.0.0' else args.host}:{args.port}"
+    if args.open:
+        # uvicorn.run blocks, so the browser has to be opened from a timer.
+        # A second is enough for the port to be listening; if it is not, the
+        # browser shows a refusal and a reload fixes it.
+        import threading
+        import webbrowser
+
+        threading.Timer(1.5, lambda: webbrowser.open(url)).start()
+
+    print("=" * 62)
+    print("  OFPE Field Data Platform")
+    print(f"  Open:  {url}")
+    print("  Stop:  press Ctrl+C in this window")
+    print("=" * 62)
+    print()
     uvicorn.run(
-        "ofpe.web.app:app", host=args.host, port=args.port, reload=args.reload
+        "ofpe.web.app:app",
+        host=args.host,
+        port=args.port,
+        reload=args.reload,
+        log_level="warning",
     )
     return 0
 

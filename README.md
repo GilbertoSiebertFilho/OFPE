@@ -14,18 +14,59 @@ Three tabs:
   format that display reads.
 - **Operations** — machine library, field import, line generation and fitting.
 
+## Running it
+
+**Windows** — double-click **`start.bat`**.
+**macOS / Linux** — run **`./start.sh`**.
+
+That is the whole thing. On the first run it builds a private Python
+environment beside the script, installs what it needs, loads a demo machine and
+field so there is something to look at, and opens your browser. Every run after
+that just starts, in a couple of seconds. Nothing it installs can affect any
+other Python on the machine; deleting the `.venv` folder undoes all of it.
+
+Leave the black window open while you use the app; closing it stops the server.
+
+You need Python 3.11 or newer. If it is missing, the launcher says so and links
+the installer — the one thing to remember there is to tick **"Add python.exe to
+PATH"** on the installer's first screen.
+
+To check everything works, double-click **`run-tests.bat`** (or run
+`.venv/bin/python -m pytest tests -q`). The suite runs against a temporary
+in-memory database and never touches your data.
+
+<details>
+<summary>Running it by hand instead</summary>
+
 ```bash
 pip install -r requirements.txt
-python3 run.py --seed      # demo machine, field and lines
-python3 run.py             # http://127.0.0.1:8000
+python3 run.py                 # seeds on first run, then serves
+python3 run.py --open          # ... and opens a browser
+python3 run.py --no-seed       # start with an empty library
+python3 run.py --port 8080     # if 8000 is taken
+python3 run.py --host 0.0.0.0  # reachable from the office network
+python3 run.py --seed          # reload the demo data and exit
 ```
 
-Optional, only if you change the terminal drawings:
+Only if you change the terminal drawings:
 
 ```bash
 pip install pillow
 python3 tools/generate_icons.py
 ```
+
+</details>
+
+## What to try first
+
+The **Guide** tab needs no data at all — the 264 procedures are built in. Pick
+a combine, pick a Gen 4, pick the 2025-3 software version, ask to load guidance
+lines, and read what comes back. Then change the version to OS 11.x and watch
+the answer change, which is the whole point of the version step.
+
+The demo data is there for the other two tabs: **Download lines** has three
+machines with generated AB lines ready to export, and **Operations** shows the
+coverage table and the corrections queue.
 
 ---
 
