@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field as PField
 
@@ -44,6 +44,7 @@ from ..models import (
     PatternType,
 )
 from ..readers import read_any
+from .handbook import render_handbook
 from ..writers import build_download
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -767,6 +768,51 @@ def guide_procedure(
     }
 
 
+@guide.get("/coverage")
+def guide_coverage() -> dict[str, Any]:
+    """What is documented and what is not.
+
+    Exposed because the honest answer to "do you cover my machine" is a number,
+    and because the gaps are the work queue.
+    """
+    summary = procedures_module.coverage()
+    per_monitor = []
+    for key, monitor in catalog_module.MONITORS.items():
+        if not monitor.is_terminal:
+            continue
+        objectives = procedures_module.available_objectives(key)
+        transports: set[str] = set()
+        for objective in objectives:
+            for transport in procedures_module.available_transports(key, objective.key):
+                transports.add(transport.value)
+        per_monitor.append(
+            {
+                "key": key,
+                "label": monitor.label,
+                "icon_url": f"/icons/ui/{monitor.icon}",
+                "versions": len(procedures_module.versions_for(key)),
+                "objectives": len(objectives),
+                "objectives_possible": len(OBJECTIVES),
+                "transports": sorted(transports),
+                "missing": sorted(
+                    {o.key for o in OBJECTIVES.values()}
+                    - {o.key for o in objectives}
+                ),
+            }
+        )
+    per_monitor.sort(key=lambda m: (-m["objectives"], m["label"]))
+
+    platforms = sorted(
+        {p.platform for p in procedures_module.iter_procedures() if p.platform}
+    )
+    return {
+        "summary": summary,
+        "objectives": [o.to_dict() for o in OBJECTIVES.values()],
+        "monitors": per_monitor,
+        "cloud_platforms": platforms,
+    }
+
+
 @guide.get("/search")
 def guide_search(q: str) -> list[dict[str, Any]]:
     """Free-text jump straight to a display, for people who know what they have.
@@ -848,6 +894,15 @@ def create_app() -> FastAPI:
     app.include_router(api)
     app.include_router(guide)
     app.include_router(producer)
+
+    @app.get("/handbook", include_in_schema=False)
+    def handbook(monitor_key: str, version: str | None = None) -> HTMLResponse:
+        """Every procedure for one display, on one printable page."""
+        try:
+            monitor = catalog_module.get_monitor(monitor_key)
+        except KeyError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        return HTMLResponse(render_handbook(monitor, version))
 
     if ICON_DIR.is_dir():
         app.mount("/icons", StaticFiles(directory=ICON_DIR), name="icons")

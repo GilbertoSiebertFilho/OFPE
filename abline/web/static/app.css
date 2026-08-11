@@ -391,3 +391,69 @@ ul.procnotes li { margin-bottom: 6px; line-height: 1.5; }
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 .toast.bad { background: var(--danger); color: #fff; }
+
+/* ------------------------------------------------------- related / links */
+
+.relatedgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.relatedcard {
+  text-align: left; padding: 10px 13px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--surface-2);
+}
+.relatedcard:hover { border-color: var(--accent); background: var(--accent-soft); }
+.relatedcard .rname { display: block; font-weight: 600; font-size: 14px; }
+.relatedcard .rsub { display: block; font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+
+.btnlink {
+  display: inline-block; font: inherit; font-weight: 550; text-decoration: none;
+  border-radius: 7px; padding: 8px 14px; border: 1px solid var(--line);
+  background: var(--surface-2); color: var(--ink);
+}
+.btnlink:hover { border-color: var(--accent); }
+
+/* ------------------------------------------------------------- handbook */
+
+body.handbook { background: var(--bg); }
+.hb-wrap { max-width: 980px; margin: 0 auto; padding: 28px 18px 70px; }
+.hb-cover { display: flex; gap: 22px; align-items: center; flex-wrap: wrap;
+  border-bottom: 2px solid var(--line); padding-bottom: 20px; margin-bottom: 22px; }
+.hb-cover img { width: 190px; height: auto; aspect-ratio: 380/300; }
+.hb-cover h1 { margin: 0; font-size: 28px; letter-spacing: -.02em; }
+.hb-sub { margin: 4px 0 12px; color: var(--ink-2); font-size: 16px; }
+.hb-meta { margin: 0; color: var(--ink-3); font-size: 13.5px; line-height: 1.7; }
+.hb-toc { background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 16px 22px; margin-bottom: 22px; }
+.hb-toc h2 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--ink-3); }
+.hb-toc ol { margin: 0; padding-left: 20px; }
+.hb-toc li { margin-bottom: 4px; }
+.hb-toc a { color: var(--accent); }
+.hb-actions { display: flex; gap: 12px; align-items: center; margin-bottom: 26px; }
+.hb-back { color: var(--ink-3); font-size: 14px; }
+.hb-direction { font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--ink-3); margin: 34px 0 12px; display: flex; align-items: center; gap: 12px; }
+.hb-direction::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.handbook-entry { margin-bottom: 20px; }
+.handbook-entry .proc-head { padding: 16px 20px; }
+
+@media print {
+  /* One procedure per page keeps a handbook usable in a cab. */
+  .handbook-entry { break-inside: auto; page-break-after: always; }
+  .handbook-entry:last-of-type { page-break-after: auto; }
+  .hb-cover { page-break-after: always; }
+  .hb-direction { break-after: avoid; page-break-after: avoid; }
+  .hb-wrap { padding: 0; max-width: none; }
+}
+
+/* ------------------------------------------------------- coverage table */
+
+.covtable { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+.covtable th {
+  text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--ink-3); border-bottom: 1px solid var(--line); padding: 6px 8px; font-weight: 600;
+}
+.covtable td { padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.covtable tr:hover td { background: var(--surface-2); }
+.covtable td.ok { color: var(--accent); font-weight: 650; }
+.covtable td.gaps { color: var(--ink-3); font-size: 12px; }
+.covicon { width: 34px; height: auto; aspect-ratio: 380/300; vertical-align: middle;
+  margin-right: 8px; border-radius: 3px; }

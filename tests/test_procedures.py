@@ -171,9 +171,29 @@ def test_no_version_chosen_still_returns_something():
 
 
 def test_missing_combination_offers_alternatives_rather_than_nothing():
-    result = pr.resolve("john_deere.gen4", "software_update", "usb", "gen4_11x")
+    """A dead end must still point somewhere useful.
+
+    The gap is found rather than hard-coded: naming one would turn this test
+    into a tripwire that fires the moment that gap gets documented, which is
+    the opposite of what it is guarding.
+    """
+    gap = next(
+        (
+            (monitor, objective.key, transport)
+            for monitor, profile in catalog_module.MONITORS.items()
+            if profile.is_terminal
+            for objective in pr.OBJECTIVES.values()
+            for transport in pr.Transport
+            if pr.resolve(monitor, objective.key, transport).procedure is None
+        ),
+        None,
+    )
+    if gap is None:
+        pytest.skip("every display now documents every objective on every route")
+
+    result = pr.resolve(*gap)
     assert result.procedure is None
-    assert result.alternatives, "a dead end must still point somewhere useful"
+    assert result.alternatives, f"{gap} is a dead end that points nowhere"
     assert "no procedure" in result.message.lower()
 
 

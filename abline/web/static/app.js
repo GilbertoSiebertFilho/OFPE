@@ -382,6 +382,7 @@ function wireTabs() {
       $('#panel-ops').classList.toggle('active', which === 'ops');
       $('#panel-producer').classList.toggle('active', which === 'producer');
       if (which === 'producer') loadProducer();
+      if (which === 'ops') loadCoverage();
     });
   }
 }
@@ -707,6 +708,61 @@ function renderProducerDownload() {
   host.append(card);
 }
 
+/* ---------------------------------------------------------- coverage panel
+ *
+ * Shown on the operations tab because it is a work queue, not a sales figure:
+ * the interesting column is what is missing.
+ */
+
+let coverageLoaded = false;
+
+async function loadCoverage() {
+  if (coverageLoaded) return;
+  try {
+    const data = await api('/api/guide/coverage');
+    coverageLoaded = true;
+    const s = data.summary;
+
+    $('#coverage-summary').replaceChildren(
+      el('span', {}, 'Procedures: ', el('b', {}, s.total)),
+      el('span', {}, 'Displays: ', el('b', {}, s.monitors)),
+      el('span', {}, 'Version-specific: ', el('b', {}, s.version_specific)),
+      el('span', {}, 'Verified: ', el('b', {}, s.by_confidence.verified || 0)),
+      el('span', {}, 'Cloud platforms: ', el('b', {}, data.cloud_platforms.length)),
+    );
+
+    const labels = {};
+    for (const objective of data.objectives) labels[objective.key] = objective.label;
+
+    const table = el('table', { class: 'covtable' },
+      el('thead', {}, el('tr', {},
+        el('th', {}, 'Display'),
+        el('th', {}, 'Jobs'),
+        el('th', {}, 'Routes'),
+        el('th', {}, 'Not documented yet'))));
+    const body = el('tbody', {});
+    for (const monitor of data.monitors) {
+      const complete = monitor.objectives === monitor.objectives_possible;
+      body.append(el('tr', {},
+        el('td', {},
+          el('img', { class: 'covicon', src: monitor.icon_url, alt: '', loading: 'lazy' }),
+          monitor.label),
+        el('td', { class: complete ? 'ok' : '' },
+          `${monitor.objectives}/${monitor.objectives_possible}`),
+        el('td', {}, monitor.transports.join(', ')),
+        el('td', { class: 'gaps' },
+          monitor.missing.length
+            ? monitor.missing.map(k => labels[k] || k).join(', ')
+            : '\u2014')));
+    }
+    table.append(body);
+    $('#coverage-table').replaceChildren(table);
+  } catch (error) {
+    $('#coverage-table').replaceChildren(
+      el('p', { class: 'hint' }, `Could not load coverage: ${error.message}`));
+  }
+}
+
 /* ============================================================== guide tab
  *
  * A six-step wizard. Each answer narrows the next, and choosing something
@@ -884,6 +940,11 @@ function markSelected(selector, label) {
 
 function renderProcedure(data) {
   const host = $('#g-result');
+  if (data.found && data.procedure) {
+    history.replaceState(null, '', procedureHash(
+      data.monitor.key, data.version_key,
+      data.procedure.objective, data.procedure.transport));
+  }
   host.replaceChildren();
   const section = $('#g-step-result');
   section.hidden = false;
@@ -937,6 +998,8 @@ function renderProcedure(data) {
       el('dd', {}, el('code', {}, p.media_path))));
   }
   addFact('Format the stick as', p.filesystem);
+  // A cloud route is useless advice without naming the portal to log into.
+  addFact('Platform', p.platform);
   addFact('Allow about', `${p.minutes} minutes`);
   if (facts.children.length) {
     body.append(el('h4', {}, 'The file'), facts);
@@ -967,14 +1030,37 @@ function renderProcedure(data) {
       el('ul', { class: 'procnotes' }, p.common_errors.map(x => el('li', {}, x)))));
   }
 
+  // What someone doing this usually needs next. The same trip to the machine
+  // is the moment to also pull last week's work data off it.
+  if (data.related && data.related.length) {
+    body.append(el('h4', {}, 'While you are at the machine'));
+    const list = el('div', { class: 'relatedgrid' });
+    for (const item of data.related) {
+      list.append(el('button', {
+        class: 'relatedcard no-print',
+        onclick: () => jumpTo(monitor, data.version_key, item.objective, item.transport),
+      },
+        el('span', { class: 'rname' }, item.objective_label),
+        el('span', { class: 'rsub' }, item.transport_label)));
+    }
+    body.append(list);
+  }
+
+  const handbookUrl = `/handbook?monitor_key=${encodeURIComponent(monitor.key)}`
+    + (data.version_key ? `&version=${encodeURIComponent(data.version_key)}` : '');
+
   body.append(el('div', { class: 'proc-actions no-print' },
     el('button', { class: 'primary', onclick: () => window.print() }, 'Print this procedure'),
+    el('a', { class: 'btnlink', href: handbookUrl, target: '_blank', rel: 'noopener' },
+      'Whole handbook for this display'),
+    el('button', { class: 'ghost', onclick: copyLink }, 'Copy link to this procedure'),
     el('button', {
       class: 'ghost',
       onclick: () => {
         guideReset('equipment');
         $('#g-step-result').hidden = true;
         $$('#g-equipment .chip').forEach(c => c.classList.remove('selected'));
+        history.replaceState(null, '', location.pathname);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       },
     }, 'Start over')));
@@ -985,6 +1071,98 @@ function renderProcedure(data) {
   }
   host.append(card);
   section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* Deep links.
+ *
+ * A procedure is the unit people share -- a dealer sends one to a producer, an
+ * agronomist pastes one into a message. Encoding the four coordinates in the
+ * URL fragment makes every answer addressable without a server round trip and
+ * without a database of saved links.
+ */
+
+function procedureHash(monitorKey, version, objective, transport) {
+  const parts = [`m=${monitorKey}`, `o=${objective}`, `t=${transport}`];
+  if (version) parts.push(`v=${version}`);
+  return '#' + parts.join('&');
+}
+
+function copyLink(event) {
+  const url = location.href;
+  const done = () => {
+    const button = event.target;
+    const original = button.textContent;
+    button.textContent = 'Link copied';
+    setTimeout(() => { button.textContent = original; }, 1800);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(done, () => toast(url, false));
+  } else {
+    // Plain http on a farm office LAN has no clipboard API; show it instead so
+    // it can still be copied by hand.
+    toast(url);
+  }
+}
+
+async function jumpTo(monitor, version, objectiveKey, transportKey) {
+  guideReset('monitor');
+  $('#g-step-monitor').hidden = false;
+  $('#g-monitors').replaceChildren(el('button', { class: 'monitorcard selected' },
+    el('img', { src: monitor.icon_url, alt: '' }),
+    el('span', { class: 'mbrand' }, monitor.brand),
+    el('span', { class: 'mname' }, monitor.model)));
+  guide.monitors = [monitor];
+  guide.monitor = monitor;
+
+  await selectVersionByKey(monitor, version);
+  const objective = findObjective(objectiveKey);
+  if (!objective) return;
+  selectObjective(objective);
+  await selectTransport(transportKey, transportLabel(objective, transportKey));
+}
+
+function findObjective(key) {
+  for (const group of guide.objectiveGroups) {
+    const hit = group.objectives.find(o => o.key === key);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+function transportLabel(objective, key) {
+  const hit = (objective.transports || []).find(t => t.key === key);
+  return hit ? hit.label : key;
+}
+
+async function selectVersionByKey(monitor, versionKey) {
+  const version = (monitor.versions || []).find(v => v.key === versionKey);
+  selectMonitor(monitor);
+  await selectVersion(version ? version.key : null,
+                      version ? version.label : 'I am not sure');
+}
+
+async function restoreFromHash() {
+  const raw = location.hash.replace(/^#/, '');
+  if (!raw) return false;
+  const params = new URLSearchParams(raw.replace(/&/g, '&'));
+  const monitorKey = params.get('m');
+  if (!monitorKey) return false;
+  try {
+    const monitor = await api(`/api/catalog/monitors/${encodeURIComponent(monitorKey)}`);
+    const versions = await api(`/api/guide/monitors?brand=${encodeURIComponent(monitor.brand)}`);
+    const full = versions.find(m => m.key === monitorKey) || monitor;
+    const objectiveKey = params.get('o');
+    const transportKey = params.get('t');
+    if (!objectiveKey || !transportKey) {
+      selectMonitor(full);
+      return true;
+    }
+    await jumpTo(full, params.get('v'), objectiveKey, transportKey);
+    return true;
+  } catch (error) {
+    toast(`That link did not resolve: ${error.message}`, true);
+    return false;
+  }
 }
 
 function wireGuideSearch() {
@@ -1024,5 +1202,7 @@ function wireGuideSearch() {
 }
 
 boot();
-loadGuide();
 wireGuideSearch();
+loadGuide().then(restoreFromHash);
+// Back/forward between shared procedures should work like any other page.
+window.addEventListener('hashchange', restoreFromHash);

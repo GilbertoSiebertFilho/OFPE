@@ -30,10 +30,21 @@ Six questions, each narrowing the next:
 equipment type → brand/display → software version → what you want to do → how it travels → the procedure
 ```
 
-**79+ procedures across 22 displays.** Every answer carries the file format, the
+**264 procedures across 23 displays.** Every answer carries the file format, the
 exact media path, the filesystem, numbered click-by-click steps, how to check it
 worked, what usually goes wrong, and the source the claim came from. The result
 card prints cleanly — that is the artefact you carry to the machine.
+
+Three things fall out of having the whole matrix:
+
+- **Every answer is a link.** The four coordinates live in the URL fragment, so
+  a procedure is something you paste into a message. Opening the link lands
+  straight on the card.
+- **Every display has a handbook.** `/handbook?monitor_key=…&version=…` renders
+  *every* procedure for one display as a single printable document — for
+  training an operator, for the folder in the workshop, for a machine handover.
+- **Every card suggests what is next.** The trip to the machine to load a
+  prescription is also the moment to pull last week's work data off it.
 
 ### Why the version step exists
 
@@ -68,11 +79,27 @@ names which releases *do* have specific instructions.
 |---|---|
 | **Into the monitor** | prescriptions, guidance lines, boundaries, client/farm/field setup |
 | **Out of the monitor** | work data (yield / as-applied), guidance lines, boundaries, full backup |
-| **On the monitor** | prepare the USB stick correctly |
+| **On the monitor** | update the display software, prepare the USB stick |
 
 Each is available by USB, by the manufacturer's cloud, or through their desktop
 software — whichever routes actually exist for that display. The wizard only
-offers combinations that resolve to a real procedure.
+offers combinations that resolve to a real procedure, and
+`test_nothing_offered_by_the_api_leads_to_a_dead_end` walks the entire catalog
+to keep that true.
+
+### Cloud platforms
+
+Fourteen covered, because "just use the cloud" is not advice until you say which
+portal to log into:
+
+John Deere Operations Center · AFS Connect · PLM Connect · Trimble Ag Software ·
+AgFiniti · Raven Slingshot · Topcon Agriculture Platform · CLAAS TELEMATICS /
+365FarmNet · Fendt Connect · Valtra Connect · MF Connect · IsoMatch FarmCentre ·
+Panorama · agrirouter
+
+Several brands run two platforms that do different jobs — CLAAS splits
+telematics from agronomy — so the procedure names the right one rather than the
+famous one.
 
 ### Icons
 
@@ -203,16 +230,27 @@ re-export to anything else. This is the cross-brand translator.
 ## How it fits together
 
 ```
-web/        FastAPI + a no-build browser client
-db          SQLite
-catalog     every brand, terminal, format, folder path, and how sure we are
-readers     someone else's file  ->  our objects
-writers     our objects          ->  someone else's file
-generate    authoring and expanding guidance patterns
-fitting     recovering a line from a track already driven
-models      the canonical objects everything speaks
-geo         projection and geodesy
+web/            FastAPI, the no-build browser client, and the handbook renderer
+db              SQLite
+procedures/     _core.py  types, registry, resolver
+                families.py  shapes shared by whole families of displays
+                brands/   the knowledge, one module per manufacturer family
+catalog         every brand, terminal, format, folder path, and how sure we are
+readers         someone else's file  ->  our objects
+writers         our objects          ->  someone else's file
+generate        authoring and expanding guidance patterns
+fitting         recovering a line from a track already driven
+models          the canonical objects everything speaks
+geo             projection and geodesy
 ```
+
+`procedures/` is split so a brand module reads as pure knowledge — what the menu
+says, where the folder is — with no machinery in the way. Twenty-odd ISOBUS
+terminals genuinely behave identically, so that behaviour is written once in
+`families.py`; writing it out twenty times would be twenty chances to introduce
+a difference that is not real. Rebadged displays (the G5 and the Gen 4, the
+IntelliView IV and the AFS Pro 700) are copied with `_mirror` rather than
+aliased, so that when one eventually diverges the fix is editing one entry.
 
 Readers and writers only ever talk to `models`, so adding a brand means adding one
 writer and one catalog entry — nothing else changes.
@@ -264,7 +302,7 @@ Interactive docs at `/docs`.
 ## Tests
 
 ```bash
-python3 -m pytest tests/ -q      # 135 tests
+python3 -m pytest tests/ -q      # 154 tests
 ```
 
 The ones that earn their keep are the **coverage invariants** in
@@ -304,11 +342,12 @@ build time rather than when a producer clicks download.
   latitude slot is rejected. A swap where both values land inside ±90 — most of
   Europe, much of Brazil — is indistinguishable from a real position. The map
   preview is what catches those.
-- **Procedure coverage is uneven.** Prescriptions and guidance are well
-  covered; boundary import, full backups and software updates are thin, and
-  cloud routes exist for only a few brands. Nothing is invented to fill a gap —
-  a combination with no procedure says so and lists what *is* documented for
-  that display.
+- **Coverage is now broad but not uniform.** All ten objectives are documented
+  across the major displays; the thin spots are AgOpenGPS (a PC application, so
+  several jobs do not apply) and the specialist consoles. The Operations tab
+  shows the remaining gaps as a table — that table is the work queue. Nothing is
+  invented to fill a gap: a combination with no procedure says so and lists what
+  *is* documented for that display.
 - **Menu wording is the weakest claim.** Folder paths and file formats are
   verified against cited sources. Exact menu names drift between releases, which
   is why each procedure carries a confidence flag and every card shows it.
