@@ -349,7 +349,147 @@ _GS3_2630_EXPORT = ProcedureWalk(
 )
 
 
-WALKTHROUGHS: tuple[ProcedureWalk, ...] = (_GS3_2630_EXPORT,)
+_GS3_2630_LATLON = ProcedureWalk(
+    monitor_key="john_deere.gs3_2630",
+    objective="import_guidance",
+    transport="manual",
+    folder="john_deere_gs3_2630",
+    evidence=(
+        "Photographed on a John Deere combine, GS3 2630 build 3.36.1073, "
+        "typing an AB line in as coordinates. The line in the photos runs "
+        "almost due north: both ends share a longitude and only the latitude "
+        "changes."
+    ),
+    steps=(
+        WalkStep(
+            text=(
+                "Have the four numbers written down before you climb in: "
+                "latitude and longitude for the A end, and for the B end. "
+                "Decimal degrees, minus signs included."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "On the GreenStar run page, set «Client», «Farm» and «Field» "
+                "first. The line is filed under them, and a line saved to the "
+                "wrong field is lost until you go looking."
+            ),
+            button="ab_cfa.jpg",
+            screen_name="The GreenStar run page",
+            screen="ab_run_page.jpg",
+            look_for=(
+                "The right-hand column: «Client», «Farm», «Field», then "
+                "«Tracking Mode», then the «Set Track 0» button underneath."
+            ),
+        ),
+        WalkStep(
+            text="Set «Tracking Mode» to «Straight Track».",
+            button="ab_mode.jpg",
+        ),
+        WalkStep(
+            text="Press «Set Track 0».",
+            button="ab_settrack.jpg",
+        ),
+        WalkStep(
+            text=(
+                "Press «New» to start a fresh track. Skip this only if you "
+                "mean to overwrite the track already in the «Current Track 0» "
+                "box."
+            ),
+            button="ab_new.jpg",
+            screen_name="Set Track 0",
+            screen="ab_set_track.jpg",
+            look_for=(
+                "«Current Track 0» and «Method» across the top, the four "
+                "coordinate boxes below, «Cancel» and «Accept» at the bottom."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "Open the «Method» list and choose «Lat/Lon». That is the one "
+                "that lets you type all four numbers."
+            ),
+            button="ab_method.jpg",
+            screen_name="The Method list",
+            screen="ab_methods.jpg",
+            look_for=(
+                "Five methods: «A + B», «A + Heading», «Lat/Lon», «Auto B», "
+                "«Lat/Lon + Heading». The first two need you to drive the line; "
+                "«Lat/Lon» does not."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "Four boxes appear — «Lat.» and «Lon.» under «Point A», and the "
+                "same pair under «Point B». Press the first one."
+            ),
+            button="ab_points.jpg",
+        ),
+        WalkStep(
+            text=(
+                "A keyboard opens with the current value in it. The same "
+                "keyboard serves all four boxes — only the number it is filling "
+                "changes, so check you are on the box you meant."
+            ),
+            screen_name="The keyboard",
+            screen="ab_keyboard.jpg",
+            look_for=(
+                "The value sits at the top. «C» clears it, the arrow rubs out "
+                "one character. «Accept», bottom right, puts it in the box."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "Type the number and press «Accept». The minus sign is on the "
+                "number row, just right of the 0 — you need it for south "
+                "latitudes and west longitudes."
+            ),
+            button="ab_minus.jpg",
+        ),
+        WalkStep(
+            text=(
+                "Do the other three boxes the same way: Point A «Lon.», then "
+                "Point B «Lat.» and «Lon.»."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "Check the readout before you commit. «Heading» is the "
+                "direction the line came out at, and «Point A Lat» and "
+                "«Point A Lon» repeat what you typed."
+            ),
+            button="ab_readout.jpg",
+        ),
+        WalkStep(
+            text=(
+                "Set «Track Spacing» to your working width. The passes either "
+                "side of the line are spaced by this, and it is the number "
+                "people forget."
+            ),
+        ),
+        WalkStep(
+            text="Press «Accept».",
+        ),
+        WalkStep(
+            text=(
+                "If it asks «You are about to overwrite the current track 0. "
+                "Continue?», read it properly. «Accept» replaces that field's "
+                "Track 0 and the old one is gone; «Cancel» backs out."
+            ),
+            button="ab_overwrite.jpg",
+            screen_name="The overwrite warning",
+            screen="ab_overwrite_screen.jpg",
+            look_for=(
+                "It only appears when the field already has a Track 0. If you "
+                "pressed «New» earlier and still see this, you are about to "
+                "replace a line somebody drove."
+            ),
+        ),
+    ),
+)
+
+
+WALKTHROUGHS: tuple[ProcedureWalk, ...] = (_GS3_2630_EXPORT, _GS3_2630_LATLON)
 
 _BY_PROCEDURE = {
     (w.monitor_key, w.objective, w.transport): w for w in WALKTHROUGHS

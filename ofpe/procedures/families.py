@@ -446,6 +446,7 @@ def _point_routes(
     media_path: str = "",
     filesystem: str = "FAT32",
     skip: tuple[str, ...] = (),
+    manual_note: str = "",
 ) -> None:
     """Import and export of marked points, by file and by hand.
 
@@ -582,7 +583,8 @@ def _point_routes(
                 "If your display does let you key in a latitude directly, it is "
                 "usually under the field or flag setup rather than on the run "
                 "screen. Worth two minutes of looking before you drive out.",
-            ),
+            )
+            + ((manual_note,) if manual_note else ()),
             common_errors=(
                 "Marking the point from the cab while the machine is a few metres "
                 "past it. The display marks the antenna, not the drawbar.",

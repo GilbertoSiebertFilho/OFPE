@@ -482,6 +482,63 @@ _add(
     ),
 )
 
+# The 2630 had no import_guidance at all -- a real hole, since typing an AB
+# line in is the one route that needs no file, no computer and no signal. The
+# photographs fill it.
+_2630_LATLON = walkthrough_for("john_deere.gs3_2630", "import_guidance", "manual")
+
+_add(
+    monitor_key="john_deere.gs3_2630",
+    objective="import_guidance",
+    transport=Transport.MANUAL,
+    file_format="None — you type four numbers in",
+    media_path="",
+    filesystem="n/a",
+    minutes=15,
+    prerequisites=(
+        "Latitude and longitude for both ends of the line, written down as "
+        "decimal degrees with minus signs. In Brazil both numbers are "
+        "negative.",
+        "This makes a straight AB line. A curve cannot be typed in — that one "
+        "has to be driven.",
+    ),
+    steps=_2630_LATLON.step_texts(),
+    verify=(
+        "The line draws through the ground you meant. If it is in another "
+        "district, check the minus signs before anything else.",
+        "«Heading» on the Set Track 0 screen matches the direction you expect "
+        "the line to run.",
+        "Drive to the A end with the steering off and confirm the machine sits "
+        "where you think it should.",
+    ),
+    cautions=(
+        "The two ends should be far apart — the length of the field, not a few "
+        "metres. A short baseline magnifies any error in the numbers across "
+        "the rest of the field.",
+        "This is the only route that works with no file, no computer and no "
+        "signal, which makes it worth knowing even if you normally import.",
+        "«Lat/Lon + Heading» is the other typed method: coordinates for the A "
+        "end plus a bearing, for when you know the direction rather than a "
+        "second point.",
+    ),
+    common_errors=(
+        "Latitude and longitude the wrong way round.",
+        "Dropping the minus sign, which throws the line into another "
+        "hemisphere.",
+        "Typing degrees and minutes instead of decimal degrees. 27 50.7 S and "
+        "-27.845 are the same place written two ways, and the display only "
+        "takes the second.",
+        "Pressing «Accept» through the overwrite warning without reading it, "
+        "and losing the Track 0 that field already had.",
+        "Leaving «Track Spacing» at whatever it was, so every pass after the "
+        "first is the wrong distance out.",
+    ),
+    confidence=Confidence.VERIFIED,
+    sources=(
+        "Photographed on a John Deere combine, GS3 2630 build 3.36.1073",
+    ),
+)
+
 _add(
     monitor_key="john_deere.g5",
     objective="import_prescription",
@@ -1066,7 +1123,15 @@ _mirror(
 _point_routes("john_deere.g5", ("John Deere StellarSupport, G5 data management",),
               vocabulary="Flag", file_kind="shapefile", skip=("manual",),
               media_path="Setup file folder written by Operations Center")
+_2630_POINT_NOTE = (
+    "This 2630 does take typed coordinates, but for a LINE rather than a "
+    "point: «Set Track 0» with the «Lat/Lon» method. If what you want is a "
+    "line through the position, use the guidance answer instead — it is "
+    "photographed step by step."
+)
+
 _point_routes("john_deere.gs3_2630",
               ("John Deere StellarSupport, legacy display data management",),
               vocabulary="Flag", file_kind="shapefile",
-              media_path="GS3_2630\\<Profile>\\RCD\\")
+              media_path="GS3_2630\\<Profile>\\RCD\\",
+              manual_note=_2630_POINT_NOTE)

@@ -37,6 +37,12 @@ PHOTOS = {
     "export_typed": "ae31cc95-IMG_2431.HEIC",
     "transferring": "035e2d8b-IMG_2432.HEIC",
     "complete": "5d36c192-IMG_2433.HEIC",
+    # Typing an AB line straight in as latitude and longitude
+    "ab_run_page": "968629e2-IMG_2437.HEIC",
+    "ab_set_track": "33b24b7b-IMG_2438.HEIC",
+    "ab_methods": "b0b425d0-IMG_2439.HEIC",
+    "ab_keyboard": "a74d152f-IMG_2440.HEIC",
+    "ab_overwrite_screen": "2e4d30fc-IMG_2444.HEIC",
 }
 
 # Fractions of each photograph, read off the images themselves.
@@ -53,6 +59,15 @@ CROPS = {
     "btn_begin": ("export_typed", (0.450, 0.793, 0.590, 0.878)),
     "warn_donot": ("transferring", (0.140, 0.270, 0.700, 0.395)),
     "btn_accept": ("complete", (0.552, 0.820, 0.675, 0.925)),
+    "ab_cfa": ("ab_run_page", (0.695, 0.118, 0.912, 0.395)),
+    "ab_mode": ("ab_run_page", (0.695, 0.398, 0.912, 0.482)),
+    "ab_settrack": ("ab_run_page", (0.690, 0.495, 0.890, 0.560)),
+    "ab_method": ("ab_set_track", (0.470, 0.278, 0.700, 0.368)),
+    "ab_new": ("ab_set_track", (0.230, 0.385, 0.450, 0.455)),
+    "ab_points": ("ab_set_track", (0.205, 0.630, 0.670, 0.795)),
+    "ab_readout": ("ab_set_track", (0.465, 0.470, 0.700, 0.635)),
+    "ab_minus": ("ab_keyboard", (0.180, 0.425, 0.900, 0.520)),
+    "ab_overwrite": ("ab_overwrite_screen", (0.265, 0.400, 0.695, 0.710)),
 }
 
 # A phone photograph of a screen is far more resolution than anyone needs and
