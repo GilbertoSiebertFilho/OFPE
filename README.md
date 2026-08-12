@@ -14,6 +14,34 @@ Three tabs:
   format that display reads.
 - **Operations** — machine library, field import, line generation and fitting.
 
+## The link to send a producer
+
+**https://gilbertosiebertfilho.github.io/OFPE/**
+
+One address, always current. Every push rebuilds it, so a correction made today
+reaches everyone who opens it tomorrow — nothing to download, no version to be
+on the wrong side of, and nothing for a producer to install. It opens on a
+phone in a cab.
+
+The build runs the test suite first and **stops if anything fails**, leaving the
+last good page up. A stale answer is survivable; a broken one, read by somebody
+about to press buttons on a machine, is not.
+
+<details>
+<summary>Turning it on the first time (one click, once)</summary>
+
+GitHub needs telling that this repository publishes from a workflow:
+
+**Settings → Pages → Build and deployment → Source: GitHub Actions**
+
+Then push anything, or run **Actions → Publish the guide → Run workflow**. The
+address above goes live a minute later.
+
+This works because the repository is public. GitHub Pages on a *private*
+repository needs a paid plan — so if this is ever made private, the link stops
+working until either the plan changes or the repository goes public again.
+</details>
+
 ## The Guide on its own — nothing to install
 
 The Guide is knowledge, not calculation: 341 procedures, no database, no server

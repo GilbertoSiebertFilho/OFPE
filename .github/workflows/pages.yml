@@ -1,0 +1,77 @@
+# Publish the guide to GitHub Pages on every push.
+#
+# The point of this file is a link that never goes stale. A producer bookmarks
+# one address; every correction pushed here reaches them the next time they
+# open it, with nothing to download and no version to be on the wrong side of.
+#
+# The tests run BEFORE the site is built, and a failure stops the deploy. That
+# ordering is the whole safety argument: this page is read in a cab by somebody
+# about to press buttons on a machine, so shipping a broken build is worse than
+# shipping yesterday's good one. The live site simply stays as it was until the
+# build is green again.
+name: Publish the guide
+
+on:
+  push:
+    branches: [main]
+  # So the site can be rebuilt without inventing a commit.
+  workflow_dispatch:
+
+# Read the repository, write a Pages deployment. Nothing else.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race. Queue instead of cancelling, so a push during a
+# build still reaches the site rather than being quietly dropped.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - name: Test
+        # If the knowledge base is broken, the site keeps the last good build.
+        run: python -m pytest tests -q
+
+      - name: Build the guide
+        run: python tools/build_guide.py
+
+      - name: Assemble the site
+        # The guide is the whole site: one self-contained page, no assets to
+        # copy, nothing to link. Naming it index.html makes the bare repository
+        # address the address a producer types.
+        run: |
+          mkdir -p site
+          cp OFPE-Guide.html site/index.html
+          cp OFPE-Guide.html site/OFPE-Guide.html
+          # Sent to a phone, the page should be saveable as a file too.
+          echo "OFPE Monitor Guide — built $(date -u '+%Y-%m-%d %H:%M UTC')" \
+            > site/build.txt
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
