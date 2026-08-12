@@ -284,27 +284,42 @@ header { position: relative; }
 /* ------------------------------------------------------------ breadcrumb */
 /* Answered questions collapse to one line, so on a phone the screen shows
    the steps rather than the wizard that produced them. */
+/* One way back, not five ways to delete an answer.
+   The chips used to carry a × that cleared that step and everything after it:
+   a small target, and an interaction you can get wrong with a glove on. A Back
+   button is one press with an obvious meaning, so the answers beside it stop
+   being controls and go back to being what they always were -- a reminder of
+   where you are. */
 .trail {
-  display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 4px;
-  position: sticky; top: 0; z-index: 5; padding: 10px 0;
+  display: flex; align-items: center; gap: 12px; margin: 0 0 4px;
+  position: sticky; top: 0; z-index: 5; padding: 9px 0;
   background: var(--ground); border-bottom: 1px solid var(--line-soft);
 }
 .trail:empty { display: none; }
-.trail button {
-  font: inherit; font-size: .82rem; padding: 5px 11px; cursor: pointer;
-  border: 1px solid var(--line); border-radius: 99px;
-  background: var(--surface-2); color: var(--ink-2);
+.backbtn {
+  font: inherit; font-weight: 620; font-size: .88rem; cursor: pointer;
+  padding: 9px 16px 9px 12px; min-height: 44px; flex: none;
+  display: inline-flex; align-items: center; gap: 7px;
+  border: 1.5px solid var(--line); border-radius: 99px;
+  background: var(--surface); color: var(--ink);
 }
-.trail button:hover { border-color: var(--accent-line); color: var(--ink); }
-.trail button::after { content: " ×"; color: var(--ink-3); }
-/* On a phone five wrapped chips would eat half the screen, so the trail
-   becomes one scrolling row. */
-@media (max-width: 640px) {
-  .trail { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-  .trail::-webkit-scrollbar { display: none; }
-  .trail button { flex: none; max-width: 47vw; white-space: nowrap;
-    overflow: hidden; text-overflow: ellipsis; }
+.backbtn:hover { border-color: var(--accent-line); color: var(--accent); }
+.backbtn svg { width: 15px; height: 15px; fill: currentColor; }
+/* The end of the trail is the part you are working on, so when it does not
+   fit, the start goes -- but a whole answer at a time. Sliding the line
+   sideways under one ellipsis cuts words in half ("...ll off work data"),
+   which costs a glance to decode; dropping "Combine harvester" entirely does
+   not. Which crumbs survive is decided in fitCrumbs, after measuring. */
+.crumbs {
+  font-size: .84rem; color: var(--ink-3);
+  flex: 1 1 auto; min-width: 0; overflow: hidden;
+  display: flex; align-items: baseline; gap: 7px; white-space: nowrap;
 }
+.crumbs > * { flex: none; }
+/* The last crumb is the one worth keeping, so it is also the only one allowed
+   to shrink -- and it ellipsises at its end, where a cut reads as a cut. */
+.crumbs > .now { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; }
+.crumbs .dot { opacity: .55; }
 
 /* ----------------------------------------------------------------- steps */
 .q { margin: 28px 0 0; }
@@ -830,21 +845,82 @@ function render() {
   drawRoutes();
 }
 
+/* Undo the last answer given. Backing out of an answer whose route was chosen
+   for it -- because only one was documented -- has to clear the job as well,
+   or drawRoutes would helpfully pick that route again and nothing would move. */
+function back() {
+  const answeredKeys = ORDER.filter(answered);
+  if (!answeredKeys.length) return;
+  const last = answeredKeys[answeredKeys.length - 1];
+  if (last === 'route' && routesFor(S.mon, S.ver, S.job).length <= 1) {
+    reset('job');
+  } else {
+    reset(last);
+  }
+  scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function drawTrail() {
   const t = $('#trail'); t.replaceChildren();
-  const add = (label, back) => t.append(el('button', {
-    onclick: () => { reset(back); scrollTo({ top: 0, behavior: 'smooth' }); },
-    title: 'Change this answer',
-  }, label));
-  if (S.equip) add(D.equipment[S.equip], 'equip');
-  if (S.mon) add(monByKey[S.mon].model, 'mon');
+  const crumbs = [];
+  if (S.equip) crumbs.push(D.equipment[S.equip]);
+  if (S.mon) crumbs.push(monByKey[S.mon].model);
   if (answered('ver') && S.mon) {
     const v = monByKey[S.mon].versions.find(x => x.key === S.ver);
-    add(v ? v.label : 'Any version', 'ver');
+    crumbs.push(v ? v.label : 'Any version');
   }
-  if (S.job) add(jobLabel(S.job, S.mon), 'job');
+  if (S.job) crumbs.push(jobLabel(S.job, S.mon));
   if (answered('route') && routesFor(S.mon, S.ver, S.job).length > 1)
-    add(D.transports[S.route].label, 'route');
+    crumbs.push(D.transports[S.route].label);
+  if (!crumbs.length) return;
+
+  const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  arrow.setAttribute('viewBox', '0 0 24 24');
+  arrow.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', 'M15.4 4.6 8 12l7.4 7.4 1.4-1.4L10.8 12l6-6z');
+  arrow.append(path);
+
+  const more = el('span', { class: 'dot', hidden: true, 'aria-hidden': 'true' }, '…');
+  const spans = crumbs.map((c, i) =>
+    el('span', { class: i === crumbs.length - 1 ? 'now' : '' }, c));
+  const dots = spans.map(() => el('span', { class: 'dot', 'aria-hidden': 'true' }, '·'));
+  const box = el('div', { class: 'crumbs' }, more);
+  spans.forEach((s, i) => {
+    box.append(s);
+    if (i < spans.length - 1) box.append(dots[i]);
+  });
+
+  t.append(
+    el('button', { class: 'backbtn', type: 'button', onclick: back },
+      arrow, 'Back'),
+    box);
+  fitCrumbs(box, spans, dots, more);
+}
+
+/* Drop leading crumbs, whole, until the line fits -- the last one always
+   stays, because "where you are" is the part the trail exists to say. Runs
+   after the row is in the document: it is a measurement, not a guess.
+
+   Measured against what the crumbs would like to be, not what they currently
+   are. The last one is allowed to shrink, so the row never reports an
+   overflow -- it just squeezes that crumb down to "Pull ..." while three
+   crumbs nobody needed keep their full width. scrollWidth on a clipped span
+   still gives the width of the text inside it. */
+function fitCrumbs(box, spans, dots, more) {
+  const GAP = 7;
+  const wanted = () => {
+    let w = -GAP;
+    for (const c of box.children) if (!c.hidden)
+      w += GAP + Math.max(c.scrollWidth, Math.ceil(c.getBoundingClientRect().width));
+    return w;
+  };
+  for (let i = 0; i < spans.length - 1; i++) {
+    if (wanted() <= box.clientWidth) return;
+    spans[i].hidden = true;
+    dots[i].hidden = true;
+    more.hidden = false;
+  }
 }
 
 const show = (id, on) => { $(id).hidden = !on; };
@@ -1127,6 +1203,10 @@ function showResult(t) {
   host.append(card);
   host.hidden = false;
 }
+
+/* fitCrumbs measured the width it had at the time. Turning the phone sideways
+   gives it a different one, so measure again. */
+addEventListener('resize', drawTrail);
 
 /* Paper has no disclosure triangles, and a printed page of collapsed rows
    would quietly drop the cautions and the failure modes -- the parts somebody
