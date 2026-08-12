@@ -500,6 +500,8 @@ _add(
     filesystem="n/a",
     minutes=15,
     prerequisites=(
+        "NO USB stick needed. Nothing is plugged into the display and no file "
+        "is involved — you type the line in and it is done.",
         "FOUR numbers, not two: Lat A and Long A for one end of the line, "
         "Lat B and Long B for the other. All in decimal degrees with minus "
         "signs — in Brazil both are negative.",
@@ -521,6 +523,8 @@ _add(
         "the rest of the field.",
         "This is the only route that works with no file, no computer and no "
         "signal, which makes it worth knowing even if you normally import.",
+        "If somebody has already put the line on a USB stick for you, take the "
+        "USB route instead — it is fewer presses and no typing to get wrong.",
         "«Lat/Lon + Heading» is the other typed method: coordinates for the A "
         "end plus a bearing, for when you know the direction rather than a "
         "second point.",
@@ -538,6 +542,58 @@ _add(
         "and losing the Track 0 that field already had.",
         "Leaving «Track Spacing» at whatever it was, so every pass after the "
         "first is the wrong distance out.",
+    ),
+    confidence=Confidence.VERIFIED,
+    sources=(
+        "Photographed on a John Deere combine, GS3 2630 build 3.36.1073",
+    ),
+)
+
+_2630_IMPORT_LINES = walkthrough_for(
+    "john_deere.gs3_2630", "import_guidance", "usb"
+)
+
+_add(
+    monitor_key="john_deere.gs3_2630",
+    objective="import_guidance",
+    transport=Transport.USB,
+    file_format="A profile written by John Deere software — not loose files",
+    media_path="GS3_2630\\<Profile>\\  — the structure the software writes",
+    minutes=15,
+    prerequisites=(
+        "A USB stick with the lines already on it, as a profile. If all you "
+        "have is coordinates on paper, use the type-it-in route instead — it "
+        "needs no stick at all.",
+        "The profile has to come out of John Deere software. Copying a "
+        "shapefile or a bare folder onto the stick will not do it.",
+    ),
+    steps=_2630_IMPORT_LINES.step_texts(),
+    verify=(
+        "«Available Tracks» counted more than zero before you accepted the "
+        "filter.",
+        "«Data Transfer Complete» appeared and you pressed «Accept».",
+        "The track appears in the guidance list under the right field, and "
+        "drives where you expect with the steering off.",
+    ),
+    cautions=(
+        "«Import Guidance Lines» is the bottom row and brings in only the "
+        "lines. «Import Data» above it brings in everything on the stick, "
+        "which is a different job.",
+        "The display warns that boundary locations must be accurate for "
+        "section control to work. Check anything that came in on the map "
+        "before you rely on it.",
+        "The display will not run GreenStar with a stick plugged in. Pull it "
+        "out when the transfer is done.",
+    ),
+    common_errors=(
+        "Loose files on the stick instead of a profile, so the "
+        "«Import Profile Name (On USB)» list comes up empty.",
+        "Blaming the display for an empty list. That box reads the stick, not "
+        "the monitor.",
+        "Filtering down to nothing and pressing on anyway. «Available Tracks» "
+        "reads 0 and there is nothing to import.",
+        "Ticking nothing in the track list, so «Selected» stays at 0 and the "
+        "import brings in no lines.",
     ),
     confidence=Confidence.VERIFIED,
     sources=(

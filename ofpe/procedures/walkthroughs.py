@@ -501,7 +501,158 @@ _GS3_2630_LATLON = ProcedureWalk(
 )
 
 
-WALKTHROUGHS: tuple[ProcedureWalk, ...] = (_GS3_2630_EXPORT, _GS3_2630_LATLON)
+_GS3_2630_IMPORT_LINES = ProcedureWalk(
+    monitor_key="john_deere.gs3_2630",
+    objective="import_guidance",
+    transport="usb",
+    folder="john_deere_gs3_2630",
+    evidence=(
+        "Photographed on a John Deere combine, GS3 2630 build 3.36.1073, "
+        "importing a profile called AB_Test_Combine off a stick."
+    ),
+    steps=(
+        WalkStep(
+            text=(
+                "This route needs a USB stick with the lines already on it. If "
+                "you have coordinates on paper and no stick, use the "
+                "type-it-in route instead."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "The stick must carry a profile — the folder structure John "
+                "Deere software writes. Loose files will not be seen."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "Plug the stick in. The «Data Transfer» page comes up on its "
+                "own; you do not go hunting for it."
+            ),
+            screen_name="Data Transfer",
+            screen="gl_data_transfer.jpg",
+            look_for=(
+                "Four rows. «Import Guidance Lines» is the bottom one. Do not "
+                "press «Import Data» above it — that brings in everything, not "
+                "just the lines."
+            ),
+        ),
+        WalkStep(
+            text="Press «Import Guidance Lines», the bottom row.",
+            button="gl_row_import.jpg",
+        ),
+        WalkStep(
+            text=(
+                "«Import Profile Name (On USB)» lists the profiles it found on "
+                "the stick. Pick yours."
+            ),
+            button="gl_box_profile.jpg",
+            screen_name="Import Guidance Lines",
+            screen="gl_profile.jpg",
+            look_for=(
+                "The box says (On USB) — this list is the stick's contents, "
+                "not the display's. An empty list means the stick is wrong, "
+                "not the display."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "Read the note about boundaries. Anything that comes in with "
+                "the lines is worth checking on the map before you rely on "
+                "section control."
+            ),
+            button="gl_note_boundary.jpg",
+        ),
+        WalkStep(
+            text="Press «Begin Transfer».",
+            button="gl_begin.jpg",
+        ),
+        WalkStep(
+            text=(
+                "A filter appears: «Client», «Farm», «Field» and "
+                "«Tracking Mode». Narrow it down, or leave any of them on "
+                "«<All>» to take the lot."
+            ),
+            screen_name="The filter",
+            screen="gl_filter.jpg",
+            look_for=(
+                "«Reset» clears the filter back to «<All>». Watch "
+                "«Available Tracks» at the bottom — it counts what your filter "
+                "actually matches."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "«Tracking Mode» sorts by the kind of line: «AB Curves», "
+                "«Adaptive Curves», «Circle Track», «Straight Track»."
+            ),
+            screen_name="The line types",
+            screen="gl_modes.jpg",
+            look_for=(
+                "Useful when a field has years of lines on it and you only "
+                "want the straight ones."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "Check «Available Tracks» before you go on. Zero means the "
+                "filter is too tight, not that the stick is empty."
+            ),
+            button="gl_available.jpg",
+        ),
+        WalkStep(
+            text="Press «Accept».",
+        ),
+        WalkStep(
+            text=(
+                "Now the tracks themselves, each with a tick box. They are "
+                "named by date, so the newest is usually the one you want."
+            ),
+            button="gl_tracklist.jpg",
+            screen_name="The track list",
+            screen="gl_tracks.jpg",
+            look_for=(
+                "The header repeats the Client, Farm, Field and Tracking Mode "
+                "you filtered on. «Selected» at the bottom counts your ticks."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "Tick what you want. «Select All» takes everything listed, "
+                "«Clear All» unticks it again."
+            ),
+            button="gl_selectall.jpg",
+        ),
+        WalkStep(
+            text="Press «Accept» to bring them in.",
+        ),
+        WalkStep(
+            text=(
+                "«Data Transfer Complete» appears. Press «Accept» and pull the "
+                "stick out — the display will not run GreenStar with it in."
+            ),
+            screen_name="Data Transfer Complete",
+            screen="gl_complete.jpg",
+            look_for=(
+                "The USB port is on the right-hand side of the display, behind "
+                "the flap."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "On the run page, set the field and pick your track from the "
+                "guidance list before you engage the steering."
+            ),
+        ),
+    ),
+)
+
+
+WALKTHROUGHS: tuple[ProcedureWalk, ...] = (
+    _GS3_2630_EXPORT,
+    _GS3_2630_LATLON,
+    _GS3_2630_IMPORT_LINES,
+)
 
 _BY_PROCEDURE = {
     (w.monitor_key, w.objective, w.transport): w for w in WALKTHROUGHS

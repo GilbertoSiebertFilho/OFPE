@@ -605,19 +605,50 @@ def test_asking_without_an_equipment_type_still_offers_everything():
 
 
 def test_a_display_specific_job_name_only_applies_to_that_display():
-    """The 2630's only guidance route is typed coordinates, so it says so.
+    """Renaming a job is scoped to one display, and falls back everywhere else.
 
-    Naming it globally would be a lie on every display that takes a file.
+    The table is empty at the moment -- the 2630 lost its rename when it gained
+    a second guidance route -- so the mechanism is exercised against a name
+    injected here rather than whatever happens to be configured. A test that
+    asserted today's contents would fail the next time a rename is added or
+    withdrawn, which is not what it is for.
     """
-    assert (
-        pr.objective_label("import_guidance", "john_deere.gs3_2630")
-        == "Load guidance lines (lat and long)"
-    )
-    assert (
-        pr.objective_label("import_guidance", "john_deere.gen4")
-        == pr.OBJECTIVES["import_guidance"].label
-    )
-    assert pr.objective_label("import_guidance") == pr.OBJECTIVES["import_guidance"].label
+    injected = ("john_deere.gs3_2630", "import_guidance")
+    pr.OBJECTIVE_LABELS[injected] = "Load guidance lines (test)"
+    try:
+        assert pr.objective_label(*reversed(injected)) == "Load guidance lines (test)"
+        assert (
+            pr.objective_label("import_guidance", "john_deere.gen4")
+            == pr.OBJECTIVES["import_guidance"].label
+        )
+        assert (
+            pr.objective_label("import_guidance")
+            == pr.OBJECTIVES["import_guidance"].label
+        )
+    finally:
+        del pr.OBJECTIVE_LABELS[injected]
+
+
+def test_a_job_with_two_routes_keeps_its_plain_name():
+    """A rename that names one route is a lie once a second route exists.
+
+    The 2630 takes a guidance line two ways now -- typed coordinates and a USB
+    profile -- so calling the job "lat and long" would be wrong half the time.
+    The route question, one press later, is where that distinction belongs.
+    """
+    routes = {
+        p.transport.value
+        for p in pr.PROCEDURES
+        if p.monitor_key == "john_deere.gs3_2630"
+        and p.objective == "import_guidance"
+    }
+    assert {"manual", "usb"} <= routes, routes
+    for monitor_key, objective_key in pr.OBJECTIVE_LABELS:
+        offered = pr.available_transports(monitor_key, objective_key)
+        assert len(offered) == 1, (
+            f"{monitor_key}/{objective_key} is renamed for one route but has "
+            f"{len(offered)}: {[t.value for t in offered]}"
+        )
 
 
 def test_every_renamed_job_points_at_a_real_display_and_objective():

@@ -126,9 +126,9 @@ class Transport(str, Enum):
                 "Slower, but it is the only route for the closed formats."
             ),
             Transport.MANUAL: (
-                "No file and no computer -- key it straight into the display. "
-                "Quickest for one or two points, and the only route that works "
-                "with a flat tyre and no signal."
+                "No file, no computer and no USB stick — key it straight into "
+                "the display. The only route that still works with a flat tyre "
+                "and no signal."
             ),
         }[self]
 
@@ -275,8 +275,10 @@ def in_scope(objective_key: str, equipment: str | None) -> bool:
 # says so -- somebody with a shapefile and no coordinates learns that from the
 # menu rather than after eight presses.
 OBJECTIVE_LABELS: dict[tuple[str, str], str] = {
-    ("john_deere.gs3_2630", "import_guidance"):
-        "Load guidance lines (lat and long)",
+    # The 2630 briefly carried "Load guidance lines (lat and long)" here,
+    # because typing coordinates was the only documented route. It has a USB
+    # route now, so the name would be wrong half the time -- and the route
+    # question, one press later, is where that distinction belongs anyway.
 }
 
 

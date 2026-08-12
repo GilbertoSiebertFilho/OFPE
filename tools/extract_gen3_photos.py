@@ -14,7 +14,9 @@ they are the strongest evidence in this guide: not what the display is
 documented to do, but what it actually showed on the day.
 """
 
+import io
 import pathlib
+import zipfile
 
 import pillow_heif
 from PIL import Image
@@ -45,6 +47,21 @@ PHOTOS = {
     "ab_overwrite_screen": "2e4d30fc-IMG_2444.HEIC",
 }
 
+# The guidance-line import arrived as screen grabs inside a zip rather than as
+# loose photos. Read it in place, so the extraction stays reproducible from the
+# file that was actually sent.
+ZIPPED = (
+    "6f959927-AB_lin_pendrive.zip",
+    {
+        "gl_data_transfer": "Screenshot 2026-08-12 120937.png",
+        "gl_profile": "Screenshot 2026-08-12 121327.png",
+        "gl_filter": "Screenshot 2026-08-12 121415.png",
+        "gl_modes": "Screenshot 2026-08-12 121708.png",
+        "gl_tracks": "Screenshot 2026-08-12 124222.png",
+        "gl_complete": "Screenshot 2026-08-12 124509.png",
+    },
+)
+
 # Fractions of each photograph, read off the images themselves.
 CROPS = {
     "btn_menu": ("run_page", (0.770, 0.808, 0.850, 0.862)),
@@ -68,6 +85,13 @@ CROPS = {
     "ab_readout": ("ab_set_track", (0.465, 0.470, 0.700, 0.635)),
     "ab_minus": ("ab_keyboard", (0.180, 0.425, 0.900, 0.520)),
     "ab_overwrite": ("ab_overwrite_screen", (0.265, 0.400, 0.695, 0.710)),
+    "gl_row_import": ("gl_data_transfer", (0.155, 0.735, 0.630, 0.845)),
+    "gl_box_profile": ("gl_profile", (0.150, 0.190, 0.730, 0.300)),
+    "gl_note_boundary": ("gl_profile", (0.160, 0.430, 0.740, 0.545)),
+    "gl_begin": ("gl_profile", (0.450, 0.735, 0.605, 0.845)),
+    "gl_available": ("gl_filter", (0.320, 0.610, 0.560, 0.680)),
+    "gl_tracklist": ("gl_tracks", (0.125, 0.355, 0.760, 0.455)),
+    "gl_selectall": ("gl_tracks", (0.270, 0.895, 0.580, 0.985)),
 }
 
 # A phone photograph of a screen is far more resolution than anyone needs and
@@ -80,9 +104,17 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     loaded = {}
 
+    archive_name, members = ZIPPED
+    with zipfile.ZipFile(SRC / archive_name) as archive:
+        inside = {pathlib.PurePosixPath(n).name: n for n in archive.namelist()}
+        for name, member in members.items():
+            with archive.open(inside[member]) as handle:
+                loaded[name] = Image.open(io.BytesIO(handle.read())).convert("RGB")
+
     for name, filename in PHOTOS.items():
-        image = Image.open(SRC / filename).convert("RGB")
-        loaded[name] = image
+        loaded[name] = Image.open(SRC / filename).convert("RGB")
+
+    for name, image in loaded.items():
         shrunk = image.copy()
         shrunk.thumbnail((SCREEN_WIDTH, SCREEN_WIDTH), Image.LANCZOS)
         path = OUT / f"{name}.jpg"
