@@ -73,16 +73,12 @@ jobs:
       - name: Install the model
         run: |
           pip install -r requirements.txt
+          pip install lameenc
           if [ "${{ inputs.backend }}" = "kitten" ]; then
             pip install https://github.com/KittenML/KittenTTS/releases/download/0.8.1/kittentts-0.8.1-py3-none-any.whl
           else
             pip install pocket-tts
           fi
-
-      - name: Check ffmpeg
-        # Present on ubuntu-latest; if that ever changes, fail here with a
-        # clear reason rather than half way through a two-hour render.
-        run: ffmpeg -version | head -1
 
       - name: Read the steps
         run: |

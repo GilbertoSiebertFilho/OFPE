@@ -161,12 +161,39 @@ def write_wav(path: pathlib.Path, samples, sample_rate: int) -> float:
     return len(frames) / 2 / sample_rate
 
 
-def to_mp3(wav: pathlib.Path, mp3: pathlib.Path) -> None:
-    subprocess.run(
-        ["ffmpeg", "-loglevel", "error", "-y", "-i", str(wav),
-         "-ac", "1", "-b:a", f"{MP3_KBPS}k", str(mp3)],
-        check=True,
-    )
+def have_encoder() -> str:
+    """Which MP3 encoder is available, if any.
+
+    lameenc first: it is a pip wheel, so it is there for anyone who installed
+    the requirements, on any machine. ffmpeg is the fallback for a box that
+    has it -- and only a fallback, because the GitHub runner image does not.
+    """
+    try:
+        import lameenc  # noqa: F401
+        return "lameenc"
+    except ImportError:
+        return "ffmpeg" if shutil.which("ffmpeg") else ""
+
+
+def to_mp3(wav: pathlib.Path, mp3: pathlib.Path, encoder: str) -> None:
+    if encoder == "ffmpeg":
+        subprocess.run(
+            ["ffmpeg", "-loglevel", "error", "-y", "-i", str(wav),
+             "-ac", "1", "-b:a", f"{MP3_KBPS}k", str(mp3)],
+            check=True,
+        )
+        return
+    import lameenc
+
+    with wave.open(str(wav), "rb") as w:
+        rate = w.getframerate()
+        pcm = w.readframes(w.getnframes())
+    enc = lameenc.Encoder()
+    enc.set_bit_rate(MP3_KBPS)
+    enc.set_in_sample_rate(rate)
+    enc.set_channels(1)
+    enc.set_quality(2)
+    mp3.write_bytes(bytes(enc.encode(pcm)) + bytes(enc.flush()))
 
 
 # --------------------------------------------------------------------------- #
@@ -180,8 +207,9 @@ def render(backend_key: str, model: str, voice: str, clean: bool,
     voice = voice or cls.default_voice
     ext = ".wav" if backend_key == "tone" else ".mp3"
 
-    if ext == ".mp3" and not shutil.which("ffmpeg"):
-        sys.exit("ffmpeg is needed to encode the clips and is not on PATH.")
+    encoder = have_encoder() if ext == ".mp3" else ""
+    if ext == ".mp3" and not encoder:
+        sys.exit("No MP3 encoder. `pip install lameenc`, or put ffmpeg on PATH.")
 
     lines = vc.lines()
     out.mkdir(parents=True, exist_ok=True)
@@ -225,7 +253,7 @@ def render(backend_key: str, model: str, voice: str, clean: bool,
             seconds = write_wav(scratch, tts.say(lines[clip]), tts.sample_rate)
             target = out / (clip + ext)
             if ext == ".mp3":
-                to_mp3(scratch, target)
+                to_mp3(scratch, target, encoder)
             else:
                 shutil.copyfile(scratch, target)
             clips[clip] = {"s": round(seconds, 2), "b": target.stat().st_size}
