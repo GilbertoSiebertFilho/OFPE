@@ -43,9 +43,25 @@ function el(tag, attrs = {}, ...children) {
 
 // A step names buttons in «guillemets»; each becomes a key cap. Split rather
 // than replace, so nothing in the source text is ever treated as markup.
-function screenKeys(text) {
-  return text.split(/«([^»]*)»/)
-    .map((part, i) => (i % 2 ? el('b', { class: 'key' }, part) : part));
+function screenKeys(text, icons = {}) {
+  const parts = text.split(/«([^»]*)»/);
+  const out = [];
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 2 === 0) { if (parts[i]) out.push(parts[i]); continue; }
+    const icon = icons[parts[i].toLowerCase()];
+    const cap = el('b', { class: 'key' + (icon ? ' hasicon' : '') },
+      icon ? el('img', { src: icon.url, alt: '', title: icon.code }) : null,
+      parts[i]);
+    // Punctuation right after a cap must not wrap onto its own line.
+    const tail = (parts[i + 1] || '').match(/^[,.;:!?)]+/);
+    if (tail) {
+      parts[i + 1] = parts[i + 1].slice(tail[0].length);
+      out.push(el('span', { class: 'nb' }, cap, tail[0]));
+    } else {
+      out.push(cap);
+    }
+  }
+  return out;
 }
 
 let toastTimer = null;
@@ -1037,8 +1053,9 @@ function renderProcedure(data) {
   }
 
   body.append(el('h4', {}, 'Step by step'));
+  const screenIcons = data.screen_icons || {};
   body.append(el('ol', { class: 'procsteps' },
-    p.steps.map(s => el('li', {}, screenKeys(s)))));
+    p.steps.map(s => el('li', {}, screenKeys(s, screenIcons)))));
 
   if (p.verify.length) {
     body.append(el('h4', {}, 'Check it worked'));

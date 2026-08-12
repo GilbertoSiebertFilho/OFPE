@@ -211,6 +211,13 @@ button:disabled { opacity: .5; cursor: not-allowed; }
    the eye can jump straight to the word it has to find on the glass. */
 .key { font-weight: 700; white-space: nowrap; padding: 1px 5px; margin: 0 1px;
   border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); }
+/* An icon in the cap is the real glyph from the display, so it keeps a light
+   plate under it in both themes -- inverting it would stop it matching. */
+.key.hasicon { display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 6px 2px 3px; vertical-align: -5px; }
+.nb { white-space: nowrap; }
+.key.hasicon img { width: 22px; height: 22px; display: block; border-radius: 3px;
+  background: #f4f5f1; }
 
 /* -------------------------------------------------------------- producer */
 

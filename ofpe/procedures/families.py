@@ -445,11 +445,18 @@ def _point_routes(
     file_kind: str = "isoxml",
     media_path: str = "",
     filesystem: str = "FAT32",
+    skip: tuple[str, ...] = (),
 ) -> None:
     """Import and export of marked points, by file and by hand.
 
     ``filesystem`` exists because not every target is a USB stick: AgOpenGPS is
     an application on a PC, where demanding a FAT32 stick would be nonsense.
+
+    ``skip`` drops a route this display documents better in its own module. The
+    by-hand route in particular ends in "look under the field or flag setup" --
+    honest for a display we have not read a manual for, and no longer good
+    enough once we have. A brand that can name the screen should say so, and
+    skipping is how it takes over without leaving two answers to one question.
     """
     on_a_stick = filesystem.upper().startswith("FAT")
 
@@ -539,49 +546,50 @@ def _point_routes(
         sources=sources,
     )
 
-    _add(
-        monitor_key=monitor_key,
-        objective="import_point",
-        transport=Transport.MANUAL,
-        file_format="None -- nothing to prepare",
-        media_path="",
-        filesystem="n/a",
-        minutes=5,
-        prerequisites=(
-            "Read this before you start: almost every display can mark where "
-            "the machine IS, but very few can be given a latitude and then "
-            "guide you to it. So the reliable way to hit an exact point by hand "
-            "is to get there first, then mark it.",
-        ),
-        steps=(
-            "Put the coordinates into the map app on your phone and drive to "
-            "the spot. Any phone map takes decimal degrees.",
-            "Stop with the machine sitting on the point.",
-            f"On the display, add a {vocabulary.lower()} at the current "
-            "position -- usually one button on the map or run screen.",
-            "Give it a name you will recognise later, not the default.",
-            "Repeat for each point.",
-        ),
-        verify=(
-            f"The {vocabulary.lower()} shows on the map at the machine.",
-            "Drive away and back: it should stay put.",
-        ),
-        cautions=(
-            _COORD_FORMAT,
-            "This is accurate to wherever you stopped the machine, which is "
-            "fine for a sample point and not fine for a trial plot corner. For "
-            "anything that has to be exact, use a file.",
-            "If your display does let you key in a latitude directly, it is "
-            "usually under the field or flag setup rather than on the run "
-            "screen. Worth two minutes of looking before you drive out.",
-        ),
-        common_errors=(
-            "Marking the point from the cab while the machine is a few metres "
-            "past it. The display marks the antenna, not the drawbar.",
-        ),
-        confidence=Confidence.CONFIRM_ON_MACHINE,
-        sources=sources,
-    )
+    if "manual" not in skip:
+        _add(
+            monitor_key=monitor_key,
+            objective="import_point",
+            transport=Transport.MANUAL,
+            file_format="None -- nothing to prepare",
+            media_path="",
+            filesystem="n/a",
+            minutes=5,
+            prerequisites=(
+                "Read this before you start: almost every display can mark where "
+                "the machine IS, but very few can be given a latitude and then "
+                "guide you to it. So the reliable way to hit an exact point by hand "
+                "is to get there first, then mark it.",
+            ),
+            steps=(
+                "Put the coordinates into the map app on your phone and drive to "
+                "the spot. Any phone map takes decimal degrees.",
+                "Stop with the machine sitting on the point.",
+                f"On the display, add a {vocabulary.lower()} at the current "
+                "position -- usually one button on the map or run screen.",
+                "Give it a name you will recognise later, not the default.",
+                "Repeat for each point.",
+            ),
+            verify=(
+                f"The {vocabulary.lower()} shows on the map at the machine.",
+                "Drive away and back: it should stay put.",
+            ),
+            cautions=(
+                _COORD_FORMAT,
+                "This is accurate to wherever you stopped the machine, which is "
+                "fine for a sample point and not fine for a trial plot corner. For "
+                "anything that has to be exact, use a file.",
+                "If your display does let you key in a latitude directly, it is "
+                "usually under the field or flag setup rather than on the run "
+                "screen. Worth two minutes of looking before you drive out.",
+            ),
+            common_errors=(
+                "Marking the point from the cab while the machine is a few metres "
+                "past it. The display marks the antenna, not the drawbar.",
+            ),
+            confidence=Confidence.CONFIRM_ON_MACHINE,
+            sources=sources,
+        )
 
     _add(
         monitor_key=monitor_key,

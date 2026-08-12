@@ -759,10 +759,20 @@ def guide_procedure(
         ),
         "Any version",
     )
+    # The icons a step can name, keyed by the exact on-screen label so the
+    # front end can match them against a step's « » without knowing anything
+    # about which display it is looking at.
+    folder = procedures_module.folder_for(monitor_key)
+    screen_icons = {
+        label: {"url": f"/icons/{folder}/{icon.file}", "code": icon.code}
+        for label, icon in procedures_module.icons_for(monitor_key).items()
+    }
     return {
         "monitor": monitor.to_dict(),
         "version_key": version,
         "version_label": version_label,
+        "screen_icons": screen_icons,
+        "screen_icon_credit": procedures_module.icon_credit(monitor_key),
         **resolution.to_dict(),
     }
 

@@ -33,7 +33,7 @@ def _section(title: str, items, css_class: str = "") -> str:
     )
 
 
-def _screen_keys(text: str) -> str:
+def _screen_keys(text: str, icons: dict | None = None) -> str:
     """Draw «Label» as a key cap.
 
     Escaping happens per fragment rather than on the whole string, so the
@@ -48,7 +48,16 @@ def _screen_keys(text: str) -> str:
         if not sep:  # unclosed; treat the remainder as plain text
             out.append(escape(pr.LABEL_OPEN + label))
             return "".join(out)
-        out.append(f"<b class='key'>{escape(label)}</b>")
+        icon = (icons or {}).get(label.lower())
+        if icon:
+            cap = (
+                f"<b class='key hasicon'>"
+                f"<img src='/icons/{icon[0]}/{icon[1].file}' alt='' "
+                f"title='{escape(icon[1].code)}'>{escape(label)}</b>"
+            )
+        else:
+            cap = f"<b class='key'>{escape(label)}</b>"
+        out.append(cap)
     out.append(escape(rest))
     return "".join(out)
 
@@ -80,7 +89,12 @@ def _procedure_block(procedure: pr.Procedure, index: int, version_label: str) ->
     fact("Platform", procedure.platform)
     fact("Allow about", f"{procedure.minutes} minutes")
 
-    steps = "".join(f"<li>{_screen_keys(s)}</li>" for s in procedure.steps)
+    folder = pr.folder_for(procedure.monitor_key)
+    icons = {
+        label: (folder, icon)
+        for label, icon in pr.icons_for(procedure.monitor_key).items()
+    }
+    steps = "".join(f"<li>{_screen_keys(s, icons)}</li>" for s in procedure.steps)
     caveat = (
         f"<div class='panelbox'>{escape(procedure.confidence.description)}</div>"
         if procedure.confidence is not pr.Confidence.VERIFIED

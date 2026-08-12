@@ -8,6 +8,8 @@ files a bug because there is nothing visibly broken to point at.
 
 from __future__ import annotations
 
+import pathlib
+
 import pytest
 
 from ofpe import catalog as catalog_module
@@ -422,3 +424,54 @@ def test_no_procedure_repeats_the_same_common_error():
         if len(p.common_errors) != len(set(p.common_errors))
     ]
     assert not duplicated, f"duplicate common_errors in: {duplicated}"
+
+
+# --------------------------------------------------------------------------- #
+#  On-screen application icons                                                 #
+# --------------------------------------------------------------------------- #
+
+def test_every_declared_icon_file_exists():
+    """A missing file is a broken image on a page somebody is reading in a cab."""
+    root = pathlib.Path(__file__).resolve().parent.parent / "assets" / "icons"
+    missing = [
+        f"{monitor_key}: {folder}/{icon.file}"
+        for monitor_key, (folder, icons) in pr.SCREEN_ICONS.items()
+        for icon in icons
+        if not (root / folder / icon.file).is_file()
+    ]
+    assert not missing, "declared icons with no file:\n  " + "\n  ".join(missing)
+
+
+def test_icons_are_credited_to_a_source():
+    """Reproducing a manufacturer's glyph is only defensible if we say so."""
+    for monitor_key in pr.SCREEN_ICONS:
+        credit = pr.icon_credit(monitor_key)
+        assert credit, f"{monitor_key} shows icons with no credit"
+        assert "manual" in credit.lower(), monitor_key
+
+
+def test_a_step_that_names_an_app_can_find_its_icon():
+    """The label is the key, so a wording change must not silently drop the icon.
+
+    Renaming «File Manager» to «File manager» in a step would leave the icon
+    behind with nothing to attach to, and the loss would be invisible -- the page
+    would simply show one fewer picture. This is the guard against that.
+    """
+    from ofpe.procedures._core import labels_in
+
+    for monitor_key in pr.SCREEN_ICONS:
+        icons = pr.icons_for(monitor_key)
+        named = {
+            label.lower()
+            for procedure in pr.PROCEDURES
+            if procedure.monitor_key == monitor_key
+            for step in procedure.steps
+            for label in labels_in(step)
+        }
+        # Not every icon has to be used, but the two that carry the navigation
+        # must be reachable, or no step on this display shows a picture at all.
+        for essential in ("menu", "file manager"):
+            assert essential in icons, f"{monitor_key} has no {essential} icon"
+        assert named & set(icons), (
+            f"{monitor_key} declares icons but no step names any of them"
+        )

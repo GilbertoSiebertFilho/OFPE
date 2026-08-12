@@ -19,6 +19,42 @@ from .._core import (
 #  JOHN DEERE                                                                 #
 # =========================================================================== #
 
+# The Generation 4 operator manual (RE338096, 080714) states its USB rules
+# outright, and two of them contradict what everyone assumes:
+#
+#   "Capacity - There are no specific limits to the memory capacity of the
+#    drive"       -- so the 32 GB rule people carry over from the 2630 is not a
+#                    Gen 4 rule, and a big stick is not the problem here.
+#   "Maximum Dimensions - 9.2 mm thick by 21.7 mm wide"
+#                 -- a physical limit. A fat stick does not fit the port, which
+#                    looks exactly like a stick that "does not work".
+#
+# So Gen 4 gets its own media step rather than the shared one.
+_GEN4_STICK = (
+    "Format the stick FAT32. On a computer, right-click it, choose Format, "
+    "pick FAT32 from the list, and press Start."
+)
+_GEN4_STICK_SIZE = (
+    "There is no size limit on a Gen 4 — 4 GB or bigger is what John Deere "
+    "suggests, so several backups fit."
+)
+_GEN4_SLIM = (
+    "The port is narrow: the stick must be no thicker than 9.2 mm and no wider "
+    "than 21.7 mm. A chunky one will not physically go in."
+)
+_GEN4_WAIT = (
+    "After plugging in, give it about 10 seconds. A large stick takes a moment "
+    "to be recognised, and people give up too early."
+)
+_GEN4_NTFS = (
+    "The stick was formatted NTFS. This display does not read NTFS at all — it "
+    "takes FAT or FAT32 only, and an NTFS stick simply never appears."
+)
+_GEN4_FAT = (
+    "A stick straight out of the packet is often NTFS. Formatting it FAT32 is "
+    "the one thing that has to be done first."
+)
+
 _add(
     monitor_key="john_deere.gen4",
     objective="import_prescription",
@@ -36,20 +72,22 @@ _add(
         "display cannot open a zip.",
     ),
     steps=(
-        _FAT32,
+        _GEN4_STICK,
+        _GEN4_SLIM,
         "At the ROOT of the stick create a folder named exactly Rx — capital "
         "R, small x, nothing else.",
         "Copy all four parts into Rx — the .shp, .shx, .dbf and .prj. Several "
         "fields can share one Rx folder.",
         "With the machine running, plug the stick into the display's USB port.",
-        "Wait a few seconds. The display puts «USB Drive Options» on screen by "
-        "itself — you do not go looking for it.",
-        "Press «Import Data», then «USB Drive».",
+        _GEN4_WAIT,
+        "The display puts «USB Drive Options» on screen by itself. Press "
+        "«Import Data», then «USB Drive».",
+        "If that screen does not appear, go the long way: press «Menu», open "
+        "the «System» tab, and select «File Manager».",
         "Press «Next», then pick the folder holding the prescription.",
         "Press «Import», then «OK». Taking 5 to 15 seconds to open is normal, "
         "not a fault.",
-        "Now tell the machine to use it: press the menu button, then "
-        "«Work Setup».",
+        "Now tell the machine to use it: press «Menu», then «Work Setup».",
         "On «Work Summary» set «Crop Type» and «Variety», then press "
         "«Target Rate/Rx» and choose your prescription.",
         "Press the «Rate Column» box and pick your rate from the "
@@ -74,6 +112,9 @@ _add(
         "display.",
     ),
     common_errors=(
+        _GEN4_NTFS,
+        "The stick is physically too fat for the port. It looks like a display "
+        "fault and is not one.",
         "The folder is named anything other than Rx — rx, RX, Prescriptions. "
         "The display simply does not see it.",
         "The Rx folder sits inside another folder instead of at the root.",
@@ -89,11 +130,12 @@ _add(
     ),
     confidence=Confidence.VERIFIED,
     sources=(
+        "Generation 4 CommandCenter operator manual RE338096 (080714), "
+        "File Manager 35-1 and USB Drive 35-2",
         "John Deere Gen 4 on-screen help — File Manager: Import Data",
         "John Deere Gen 4 on-screen help — Work Setup: Select Prescription, "
         "Prescription Rate Setup",
         "John Deere developer documentation, prescription file requirements",
-        "Gen 4 CommandCenter release notes 18-2 (File Manager load time)",
     ),
 )
 
@@ -106,19 +148,23 @@ _add(
     minutes=15,
     prerequisites=("Finish or pause the job first, so the last of it is saved.",),
     steps=(
-        _FAT32,
-        "Use one stick for this machine only — see the warning below.",
+        _GEN4_STICK,
+        "Use a fresh stick, or one that holds only this display's data. Read "
+        "the warning below before reusing one.",
         "End or pause the current job so the last of it is written.",
-        "Plug the stick into the display's USB port.",
-        "The display puts up «USB Drive Options». Press «Export Data». If you "
-        "have dismissed that screen, press the menu button and open "
-        "«File Manager» instead.",
-        "Choose what to send. «Work Data» is the record of what the machine "
-        "did; the display writes it into a folder called JD-Data.",
+        "Plug the stick into the display's USB port and give it 10 seconds.",
+        "Press «Menu», open the «System» tab, and select «File Manager». The "
+        "«USB Drive Options» screen offers the same thing if it appears on its "
+        "own.",
+        "Press «Export Data».",
+        "Tick what you want to send. «Work Data» is what the machine did, and "
+        "goes into a folder called JD-Data.",
+        "Note that ticking an option sends everything inside it. You are not "
+        "picking single fields.",
         "If the office also needs your client, farm and field list, export "
         "«Setup Data» as well. That one writes into JD4600.",
-        "You can name the folder it writes into. A name with the machine and "
-        "the date saves an argument later.",
+        "Leave «Delete files after transfer» alone unless you mean it — and "
+        "know that it only clears screenshots and error logs.",
         "Wait for the progress bar to finish completely.",
         _EJECT,
     ),
@@ -128,12 +174,19 @@ _add(
         "right before you wipe the stick.",
     ),
     cautions=(
+        "The manual is blunt about this: exporting to a stick that already "
+        "holds Generation 4 information OVERWRITES what is on it. Last week's "
+        "export is gone, with no second chance. Empty the stick to a computer "
+        "first.",
         "Exporting with the job still open can produce an incomplete file. "
         "Wait for the on-screen confirmation.",
-        "John Deere's own instruction is one stick per display. Two machines "
-        "sharing a stick can overwrite each other's folders.",
+        "«Delete files after transfer» does not clear your setup data or your "
+        "guidance lines — only screenshots and error logs. Those are removed "
+        "through «Fields» and the guidance application instead.",
     ),
     common_errors=(
+        "Reusing a stick that already carries a Gen 4 export, and losing the "
+        "earlier one.",
         "Using the same stick on more than one machine. The second machine can "
         "write over the first one's data without warning.",
         "Pulling the stick during the progress bar. The folder exists, looks "
@@ -141,9 +194,9 @@ _add(
     ),
     confidence=Confidence.VERIFIED,
     sources=(
-        "John Deere Gen 4 on-screen help — File Manager",
-        "Gen 4 release notes: exported Work data goes to JD-Data, Setup data "
-        "to JD4600; use a separate USB per CommandCenter",
+        "Generation 4 CommandCenter operator manual RE338096 (080714), "
+        "File Manager 35-1: Export Data, Remove Data",
+        "Gen 4 release notes: Work data goes to JD-Data, Setup data to JD4600",
     ),
 )
 
@@ -901,11 +954,93 @@ for _jd_monitor in ("john_deere.gen4", "john_deere.g5"):
         sources=("John Deere Operations Center documentation",),
     )
 
+# The shared by-hand route ends in "drive to the spot with your phone, then
+# mark where you are" -- honest for a display whose manual we have not read.
+# The Gen 4 manual names the screen outright, so this display answers for
+# itself and skips the generic version rather than offering two answers.
+_GEN4_LATLON_SOURCES = (
+    "Generation 4 CommandCenter operator manual RE338096 (080714), "
+    "Guidance 25-5 Set Guidance Track and 25-6 Straight Track",
+)
+
+_add(
+    monitor_key="john_deere.gen4",
+    objective="import_point",
+    transport=Transport.MANUAL,
+    file_format="None — you type the numbers in",
+    media_path="",
+    filesystem="n/a",
+    minutes=10,
+    prerequisites=(
+        "This display really does take coordinates typed in, which most do "
+        "not. It does it while defining a guidance track, so what you get is a "
+        "line through your point rather than a loose flag.",
+        "Have the numbers written down as decimal degrees before you climb in.",
+    ),
+    steps=(
+        "Press «Menu», open the «Applications» tab, and select «Fields».",
+        "Set the «Client», «Farm» and «Field» this point belongs to. Get this "
+        "right first — the coordinates are filed under it.",
+        "Go to the main guidance page and press «SET TRACK».",
+        "On the «Guidance Track List», press the add button to make a new "
+        "track.",
+        "Choose «Straight Track». It now asks how to define Track 0, and two of "
+        "the methods let you type coordinates instead of driving.",
+        "EITHER pick «Lat/Long» and type latitude and longitude for both the A "
+        "and the B point — use this when you have two known corners.",
+        "OR pick «Lat/Long + Heading» and type latitude and longitude for the A "
+        "point only, then a heading in degrees — use this when you have one "
+        "point and know the direction.",
+        "Key the numbers in as decimal degrees, minus signs included.",
+        "Save the track with a name you will recognise next season.",
+    ),
+    verify=(
+        "The track draws through the point you meant, not somewhere else in the "
+        "district. If it is far away, check the minus signs first.",
+        "Drive to the A end and confirm the machine is where you expect on the "
+        "ground.",
+    ),
+    cautions=(
+        "Write coordinates as plain decimal degrees — -27.845123, -54.477456 — "
+        "with south and west negative. Degrees-and-minutes is a different "
+        "notation and lands the point kilometres away.",
+        "A Gen 4 stores data as latitude and longitude, not against the field "
+        "name — the manual says so. The name is only a filter, which is why a "
+        "typo in the coordinates cannot be fixed by renaming anything.",
+        "Track 0 can be defined mid-job, planting included, though some buttons "
+        "are unavailable while you are creating it.",
+        "If you only need a rough position and not a line, the simpler route is "
+        "to drive to the spot with a phone map and mark a flag there.",
+    ),
+    common_errors=(
+        "Latitude and longitude the wrong way round. In this part of the world "
+        "latitude is the smaller number and both are negative.",
+        "Dropping the minus sign, which puts the field in the northern "
+        "hemisphere.",
+        "Using the «Quick Line» softkey by mistake. It makes a line with no "
+        "setup and no name, and pressing it again OVERWRITES the last one. To "
+        "keep a Quick Line, open the guidance track list, press edit, and "
+        "rename it.",
+    ),
+    confidence=Confidence.VERIFIED,
+    sources=_GEN4_LATLON_SOURCES,
+)
+
 _point_routes("john_deere.gen4", ("John Deere StellarSupport, Gen 4 File Manager",),
               vocabulary="Flag", file_kind="shapefile",
-              media_path="Setup file folder written by Operations Center")
+              media_path="Setup file folder written by Operations Center",
+              skip=("manual",))
+# The G5 runs the same operating system and the same guidance application, so
+# the track methods are the same screens.
+_mirror(
+    "john_deere.gen4",
+    "john_deere.g5",
+    [("import_point", Transport.MANUAL)],
+    extra_sources=("John Deere G5 and Generation 4 compatibility chart",),
+)
+
 _point_routes("john_deere.g5", ("John Deere StellarSupport, G5 data management",),
-              vocabulary="Flag", file_kind="shapefile",
+              vocabulary="Flag", file_kind="shapefile", skip=("manual",),
               media_path="Setup file folder written by Operations Center")
 _point_routes("john_deere.gs3_2630",
               ("John Deere StellarSupport, legacy display data management",),

@@ -25,4 +25,11 @@ Layout::
 
 from ._core import *  # noqa: F401,F403
 from ._core import __all__  # noqa: F401
+from .screens import (  # noqa: F401
+    SCREEN_ICONS,
+    ScreenIcon,
+    folder_for,
+    icon_credit,
+    icons_for,
+)
 from . import brands  # noqa: F401  (populates the registry on import)

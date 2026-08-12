@@ -37,6 +37,26 @@ for key, m in cat.MONITORS.items():
         raw = (ROOT / "assets" / "icons" / "ui" / m.icon).read_bytes()
         icons[m.icon] = "data:image/png;base64," + base64.b64encode(raw).decode()
 
+# The application icons a step can name. Embedded like everything else so the
+# page keeps working with no network; keyed by the lower-cased on-screen label,
+# which is exactly what a step's « » contains.
+screen_icons, credits = {}, {}
+for key in monitors:
+    found = pr.icons_for(key["key"])
+    if not found:
+        continue
+    folder = pr.folder_for(key["key"])
+    table = {}
+    for label, icon in found.items():
+        path = ROOT / "assets" / "icons" / folder / icon.file
+        table[label] = {
+            "src": "data:image/png;base64," + base64.b64encode(
+                path.read_bytes()).decode(),
+            "code": icon.code,
+        }
+    screen_icons[key["key"]] = table
+    credits[key["key"]] = pr.icon_credit(key["key"])
+
 procedures = []
 for p in pr.PROCEDURES:
     d = p.to_dict()
@@ -63,6 +83,8 @@ DATA = {
     "confidence": {c.value: {"label": c.label, "desc": c.description}
                    for c in pr.Confidence},
     "procedures": procedures,
+    "screenIcons": screen_icons,
+    "iconCredits": credits,
     "relatedOrder": list(pr._core._RELATED_ORDER),
 }
 
@@ -326,6 +348,15 @@ ol.steps li:last-child { padding-bottom: 0; }
   border: 1px solid var(--line); box-shadow: 0 1px 0 var(--line);
 }
 .note .key { background: var(--surface); }
+.key.hasicon { display: inline-flex; align-items: center; gap: .3em;
+  padding: .12em .45em .12em .3em; vertical-align: -.32em; }
+/* The manual prints these as grey-on-white glyphs. On a dark ground they need
+   lifting off the page, not inverting -- an inverted icon stops matching the
+   display. So the cap keeps a light plate under it in both themes. */
+.key.hasicon img { width: 1.55em; height: 1.55em; display: block;
+  border-radius: 3px; background: #f4f5f1; }
+.nb { white-space: nowrap; }
+.srcline p { margin: 0 0 5px; } .srcline p:last-child { margin: 0; }
 
 .note { border-left: 3px solid var(--line); background: var(--surface-2); padding: 12px 15px; border-radius: 0 9px 9px 0; }
 .note.ok   { border-color: var(--ok);   background: var(--ok-soft); }
@@ -388,9 +419,31 @@ const el = (t, a = {}, ...kids) => {
 };
 
 /* A step names buttons in «guillemets»; each becomes a key cap. Split rather
-   than replace, so nothing in the source text is ever treated as markup. */
-const keys = text => text.split(/«([^»]*)»/)
-  .map((part, i) => i % 2 ? el('b', { class: 'key' }, part) : part);
+   than replace, so nothing in the source text is ever treated as markup.
+   If the display has a picture of that button, it goes inside the cap: the
+   operator is hunting for a glyph on the glass, and the word alone makes them
+   read every icon on the page to find it. */
+const keys = (text, monitorKey) => {
+  const icons = D.screenIcons[monitorKey] || {};
+  const parts = text.split(/«([^»]*)»/);
+  const out = [];
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 2 === 0) { if (parts[i]) out.push(parts[i]); continue; }
+    const icon = icons[parts[i].toLowerCase()];
+    const cap = el('b', { class: 'key' + (icon ? ' hasicon' : '') },
+      icon ? el('img', { src: icon.src, alt: '', title: icon.code }) : null,
+      parts[i]);
+    /* Punctuation right after a cap must not wrap onto its own line. */
+    const tail = (parts[i + 1] || '').match(/^[,.;:!?)]+/);
+    if (tail) {
+      parts[i + 1] = parts[i + 1].slice(tail[0].length);
+      out.push(el('span', { class: 'nb' }, cap, tail[0]));
+    } else {
+      out.push(cap);
+    }
+  }
+  return out;
+};
 
 const CONF_TONE = { verified: 'ok', file_verified: 'check', confirm_on_machine: 'check' };
 
@@ -589,11 +642,12 @@ function showResult(t) {
     if (!items || !items.length) return;
     body.append(el('h4', {}, title));
     body.append(el('div', { class: 'note ' + cls },
-      el('ul', {}, items.map(i => el('li', {}, keys(i))))));
+      el('ul', {}, items.map(i => el('li', {}, keys(i, S.mon))))));
   };
   block('Before you start', p.pre, '');
   body.append(el('h4', {}, 'Step by step'));
-  body.append(el('ol', { class: 'steps' }, p.steps.map(s => el('li', {}, keys(s)))));
+  body.append(el('ol', { class: 'steps' },
+    p.steps.map(s => el('li', {}, keys(s, S.mon)))));
   block('Check it worked', p.ok, 'ok');
   block('Worth knowing', p.care, 'care');
   block('What usually goes wrong', p.bad, 'stop');
@@ -613,7 +667,12 @@ function showResult(t) {
         scrollTo({ top: 0, behavior: 'smooth' }); } }, 'Start over')));
 
   card.append(body);
-  if (p.src.length) card.append(el('div', { class: 'srcline' }, 'Sources: ' + p.src.join(' · ')));
+  const lines = [];
+  if (p.src.length) lines.push('Sources: ' + p.src.join(' · '));
+  if (D.iconCredits[S.mon] && card.querySelector('.key img'))
+    lines.push(D.iconCredits[S.mon]);
+  if (lines.length)
+    card.append(el('div', { class: 'srcline' }, lines.map(x => el('p', {}, x))));
   host.append(card);
   host.hidden = false;
 }
@@ -705,9 +764,13 @@ def build() -> None:
     documentation. Exact menu names move between software releases, which is
     why each answer says whether it is verified or worth confirming on the
     machine.</p>
-  <p>The terminal drawings are our own schematics of each display's shape. They
-    are not photographs and carry no manufacturer logos or marks; model names
-    appear as text reference only.</p>
+  <p>Two kinds of picture appear here, and they are not the same kind of thing.
+    The drawing of each display is our own schematic of its shape &mdash; not a
+    photograph, and carrying no manufacturer logo or mark. The small icons
+    inside a step are different: they are the actual application icons from the
+    display, reproduced from the manufacturer's operator manual, because an icon
+    only earns its place by matching the glyph on the glass. Each answer that
+    shows one credits the manual it came from, with the illustration number.</p>
 </footer>
 
 </div>
