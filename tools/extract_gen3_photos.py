@@ -25,11 +25,18 @@ SRC = pathlib.Path("/root/.claude/uploads/7a096789-f953-5630-8f5c-81fa45bf776a")
 OUT = pathlib.Path("/workspace/ofpe/assets/photos/john_deere_gs3_2630")
 
 PHOTOS = {
+    # Finding the software version
     "run_page": "2ca73cad-IMG_2446.HEIC",
     "menu": "d997b41b-IMG_2447.HEIC",
     "display_main": "dfabd381-IMG_2448.HEIC",
     "diagnostics": "54d6cfcb-IMG_2449.HEIC",
     "about": "38006fb5-IMG_2450.HEIC",
+    # Pulling the work data off on a stick
+    "data_transfer": "ff215c51-IMG_2429.HEIC",
+    "export_named": "618600d5-IMG_2430.HEIC",
+    "export_typed": "ae31cc95-IMG_2431.HEIC",
+    "transferring": "035e2d8b-IMG_2432.HEIC",
+    "complete": "5d36c192-IMG_2433.HEIC",
 }
 
 # Fractions of each photograph, read off the images themselves.
@@ -39,6 +46,13 @@ CROPS = {
     "btn_diagnostics": ("display_main", (0.728, 0.572, 0.815, 0.676)),
     "btn_about": ("about", (0.540, 0.228, 0.680, 0.290)),
     "the_answer": ("about", (0.290, 0.758, 0.570, 0.860)),
+    "row_export": ("data_transfer", (0.255, 0.275, 0.700, 0.375)),
+    "note_greenstar": ("data_transfer", (0.270, 0.755, 0.660, 0.815)),
+    "box_name": ("export_named", (0.150, 0.370, 0.680, 0.450)),
+    "note_remains": ("export_named", (0.120, 0.505, 0.520, 0.555)),
+    "btn_begin": ("export_typed", (0.450, 0.793, 0.590, 0.878)),
+    "warn_donot": ("transferring", (0.140, 0.270, 0.700, 0.395)),
+    "btn_accept": ("complete", (0.552, 0.820, 0.675, 0.925)),
 }
 
 # A phone photograph of a screen is far more resolution than anyone needs and

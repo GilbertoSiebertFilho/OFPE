@@ -522,3 +522,58 @@ def test_version_help_names_the_field_it_is_hunting_for():
         assert help_.field_label in help_.steps[-1].text, (
             f"{key}: the final step does not name {help_.field_label!r}"
         )
+
+
+def test_walkthrough_photos_exist():
+    root = pathlib.Path(__file__).resolve().parent.parent / "assets" / "photos"
+    missing = []
+    for walk in pr.WALKTHROUGHS:
+        for number, step in enumerate(walk.steps, 1):
+            for kind, name in (("button", step.button), ("screen", step.screen)):
+                if name and not (root / walk.folder / name).is_file():
+                    missing.append(
+                        f"{walk.monitor_key}/{walk.objective} step {number} "
+                        f"{kind}: {name}"
+                    )
+    assert not missing, "missing photos:\n  " + "\n  ".join(missing)
+
+
+def test_a_walkthrough_owns_the_steps_of_the_procedure_it_documents():
+    """One source of truth for a photographed job.
+
+    The photos are matched to steps by position, so a procedure that keeps its
+    own copy of the text would slide out of alignment the first time either side
+    is edited -- and the failure is silent: photos simply illustrate the wrong
+    instruction. So the procedure reads its steps from the walk-through, and
+    this is the guard that it still does.
+    """
+    for walk in pr.WALKTHROUGHS:
+        result = pr.resolve(
+            walk.monitor_key, walk.objective, walk.transport, None
+        )
+        assert result.procedure is not None, (
+            f"{walk.monitor_key}/{walk.objective} has photos but no procedure"
+        )
+        assert result.procedure.steps == walk.step_texts(), (
+            f"{walk.monitor_key}/{walk.objective}: the procedure's steps have "
+            "drifted from the photographed ones. Set "
+            "steps=<walk>.step_texts() rather than repeating them."
+        )
+
+
+def test_a_photographed_procedure_is_allowed_to_claim_verified():
+    """Photographs are the strongest evidence here, so they must count.
+
+    _demote_unread_menu_paths downgrades anything that names no button. A
+    photographed job that happened to describe a press without quoting a label
+    would be demoted despite being the best-evidenced answer we have, so this
+    catches that going unnoticed.
+    """
+    for walk in pr.WALKTHROUGHS:
+        result = pr.resolve(
+            walk.monitor_key, walk.objective, walk.transport, None
+        )
+        assert result.procedure.confidence is pr.Confidence.VERIFIED, (
+            f"{walk.monitor_key}/{walk.objective} is photographed but sits at "
+            f"{result.procedure.confidence.value}"
+        )

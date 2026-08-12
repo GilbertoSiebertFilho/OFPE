@@ -90,6 +90,30 @@ for entry in monitors:
         ],
     }
 
+# Photographs for the answers somebody has actually shot in a cab. Keyed the
+# same way a procedure is resolved, and indexed by step, because the walk-through
+# owns those steps -- there is no second list to fall out of step with.
+walk_photos = {}
+for walk in pr.WALKTHROUGHS:
+    shots = ROOT / "assets" / "photos" / walk.folder
+
+    def _shot(name: str) -> str:
+        return "data:image/jpeg;base64," + base64.b64encode(
+            (shots / name).read_bytes()).decode()
+
+    walk_photos["|".join((walk.monitor_key, walk.objective, walk.transport))] = {
+        "evidence": walk.evidence,
+        "steps": [
+            {
+                "button": _shot(s.button) if s.button else "",
+                "screen": _shot(s.screen) if s.screen else "",
+                "screenName": s.screen_name,
+                "lookFor": s.look_for,
+            }
+            for s in walk.steps
+        ],
+    }
+
 procedures = []
 for p in pr.PROCEDURES:
     d = p.to_dict()
@@ -118,6 +142,7 @@ DATA = {
     "procedures": procedures,
     "screenIcons": screen_icons,
     "versionHelp": version_help,
+    "walkPhotos": walk_photos,
     "iconCredits": credits,
     "relatedOrder": list(pr._core._RELATED_ORDER),
 }
@@ -818,9 +843,29 @@ function showResult(t) {
       el('ul', {}, items.map(i => el('li', {}, keys(i, S.mon))))));
   };
   block('Before you start', p.pre, '');
+  /* When somebody has photographed this exact job, the photos belong beside
+     the steps they were taken at -- not in a gallery at the bottom, which
+     nobody looks at while their hands are busy. */
+  const walk = D.walkPhotos[[S.mon, S.job, p.t].join('|')];
   body.append(el('h4', {}, 'Step by step'));
-  body.append(el('ol', { class: 'steps' },
-    p.steps.map(s => el('li', {}, keys(s, S.mon)))));
+  if (walk) body.append(el('p', { class: 'evidence' }, walk.evidence));
+  body.append(el('ol', { class: 'steps' }, p.steps.map((s, i) => {
+    const item = el('li', {}, keys(s, S.mon));
+    const shot = walk && walk.steps[i];
+    if (shot && shot.button) {
+      item.append(el('img', { class: 'vbtn', src: shot.button, alt: '' }));
+    }
+    if (shot && shot.screen) {
+      item.append(el('button', {
+        class: 'vshot noprint', type: 'button',
+        onclick: () => openShot(shot.screen, shot.lookFor),
+      }, el('img', { src: shot.screen, alt: '' }),
+         el('span', {},
+           el('b', {}, shot.screenName || 'This screen'),
+           el('span', { class: 'vsub' }, 'Tap to see it on a real machine'))));
+    }
+    return item;
+  })));
   block('Check it worked', p.ok, 'ok');
   block('Worth knowing', p.care, 'care');
   block('What usually goes wrong', p.bad, 'stop');

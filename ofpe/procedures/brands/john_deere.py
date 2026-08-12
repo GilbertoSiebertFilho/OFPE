@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ..families import _point_routes
+from ..walkthroughs import walkthrough_for
 from .._core import (
     ANY_VERSION,
     _mirror,
@@ -435,27 +436,50 @@ _add(
     ),
 )
 
+# Photographed in the cab rather than reconstructed, so the steps are read from
+# the walk-through instead of written twice. The earlier version of this entry
+# sent people through Menu > GreenStar 3 > Data > Export; the display does not
+# work that way. Plugging the stick in brings the page up by itself.
+_2630_EXPORT = walkthrough_for("john_deere.gs3_2630", "export_work_data", "usb")
+
 _add(
     monitor_key="john_deere.gs3_2630",
     objective="export_work_data",
     transport=Transport.USB,
-    file_format="GS3 data package",
-    media_path="GS3_2630\\<Profile>\\RCD\\",
-    minutes=15,
-    steps=(
-        _FAT32,
-        "Finish the job first, so the last of it is saved.",
-        "Plug the stick into the 2630.",
-        "Press «Menu», open «GreenStar 3», go to «Data», then press «Export».",
-        "Select the profile and confirm.",
-        "Wait for the confirmation message before removing the stick.",
-        "At the office, upload the whole GS3_2630 folder to Operations Center.",
+    file_format="GS3 data package written by the display",
+    media_path="GS3_2630\\<Profile>\\RCD\\  — the display builds this itself",
+    minutes=20,
+    prerequisites=(
+        "An EMPTY stick. Copy anything already on it to a computer and delete "
+        "the rest before you go out.",
     ),
-    verify=("Operations Center shows the job with the expected area and date.",),
-    cautions=("Upload the entire folder, not selected files inside it.",),
-    common_errors=("Uploading only the RCD contents without the parent folders.",),
-    confidence=Confidence.CONFIRM_ON_MACHINE,
-    sources=("John Deere StellarSupport, legacy display data management",),
+    steps=_2630_EXPORT.step_texts(),
+    verify=(
+        "«Data Transfer Complete» appeared and you pressed «Accept». Without "
+        "that message the export did not finish, whatever the bar looked like.",
+        "On a computer, the stick holds a GS3_2630 folder with your profile "
+        "name inside it, and it is not empty.",
+        "Operations Center shows the job with the expected area and date.",
+    ),
+    cautions=(
+        "Exporting copies your data; it does not empty the display. The screen "
+        "says so: «Note: Data remains on the display.»",
+        "The display will not run GreenStar while a stick is plugged in. Pull "
+        "it out when the transfer is done or you cannot go back to work.",
+        "Upload the entire GS3_2630 folder, not selected files inside it.",
+    ),
+    common_errors=(
+        "Using a stick that already has an export on it. Start empty — it "
+        "removes any question about which folder is this season's.",
+        "Pulling the stick or switching off while the red warning is on "
+        "screen. The folder exists afterwards and is incomplete.",
+        "Walking away at the progress bar and never pressing «Accept».",
+        "Uploading only the RCD contents without the parent folders.",
+    ),
+    confidence=Confidence.VERIFIED,
+    sources=(
+        "Photographed on a John Deere combine, GS3 2630 build 3.36.1073",
+    ),
 )
 
 _add(

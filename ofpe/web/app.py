@@ -777,6 +777,23 @@ def guide_procedure(
             ],
         }
 
+    walk = procedures_module.walkthrough_for(monitor_key, objective, transport)
+    photographed = None
+    if walk:
+        base = f"/photos/{walk.folder}"
+        photographed = {
+            "evidence": walk.evidence,
+            "steps": [
+                {
+                    "button": f"{base}/{s.button}" if s.button else "",
+                    "screen": f"{base}/{s.screen}" if s.screen else "",
+                    "screen_name": s.screen_name,
+                    "look_for": s.look_for,
+                }
+                for s in walk.steps
+            ],
+        }
+
     version_label = next(
         (
             v.label
@@ -800,6 +817,7 @@ def guide_procedure(
         "screen_icons": screen_icons,
         "screen_icon_credit": procedures_module.icon_credit(monitor_key),
         "version_walkthrough": version_walkthrough,
+        "photographed": photographed,
         **resolution.to_dict(),
     }
 
