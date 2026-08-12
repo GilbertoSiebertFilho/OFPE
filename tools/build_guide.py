@@ -158,38 +158,41 @@ CSS = r"""
 /* Palette taken from the terminal drawings the page carries: the bezel
    graphite, the field green, and the amber of a guidance line. The accent is
    literally the colour of the thing this guide is about. Neutrals are biased
-   green rather than the usual warm cream, so they sit with the artwork. */
+   green rather than the usual warm cream, so they sit with the artwork.
+   Kept close to paper: this is read in a bright cab, off a phone held at
+   arm's length, and a heavy ground makes the steps harder to pick out than a
+   near-white one. */
 :root {
-  --ground:      #eef0ea;
+  --ground:      #f6f7f3;
   --surface:     #ffffff;
-  --surface-2:   #e4e8df;
-  --line:        #c9cfc2;
-  --line-soft:   #dde2d7;
-  --ink:         #171b15;
-  --ink-2:       #4b5347;
-  --ink-3:       #757e70;
+  --surface-2:   #f0f2ec;
+  --line:        #dde1d6;
+  --line-soft:   #ebeee6;
+  --ink:         #1a1f18;
+  --ink-2:       #59614f;
+  --ink-3:       #868e7f;
   --accent:      #8a5a00;      /* amber, darkened to hold contrast on paper */
   --accent-ink:  #ffffff;
-  --accent-soft: #fbf0d8;
-  --accent-line: #d59b1f;
+  --accent-soft: #fdf6e7;
+  --accent-line: #d9a233;
   --ok:          #1f6146;
-  --ok-soft:     #e0efe6;
+  --ok-soft:     #eef6f1;
   --warn:        #8a5a00;
-  --warn-soft:   #fbf0d8;
+  --warn-soft:   #fdf6e7;
   --stop:        #99302a;
-  --stop-soft:   #f8e7e5;
-  --shadow:      0 1px 2px rgba(23,27,21,.07), 0 6px 18px rgba(23,27,21,.06);
+  --stop-soft:   #fcf0ee;
+  --shadow:      0 1px 2px rgba(26,31,24,.04), 0 4px 14px rgba(26,31,24,.05);
   --step:  clamp(1rem, .96rem + .2vw, 1.09rem);
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --ground:      #12150f;
-    --surface:     #1b1f18;
-    --surface-2:   #242920;
-    --line:        #353c30;
-    --line-soft:   #2b3126;
+    --ground:      #1b1f19;
+    --surface:     #242923;
+    --surface-2:   #2c322a;
+    --line:        #3d443a;
+    --line-soft:   #333a31;
     --ink:         #e9ede4;
     --ink-2:       #b2bba9;
     --ink-3:       #848d7d;
@@ -207,8 +210,8 @@ CSS = r"""
   }
 }
 :root[data-theme="dark"] {
-  --ground:#12150f; --surface:#1b1f18; --surface-2:#242920; --line:#353c30;
-  --line-soft:#2b3126; --ink:#e9ede4; --ink-2:#b2bba9; --ink-3:#848d7d;
+  --ground:#1b1f19; --surface:#242923; --surface-2:#2c322a; --line:#3d443a;
+  --line-soft:#333a31; --ink:#e9ede4; --ink-2:#b2bba9; --ink-3:#848d7d;
   --accent:#f5ba42; --accent-ink:#1a1403; --accent-soft:#2e2611;
   --accent-line:#f5ba42; --ok:#6cc196; --ok-soft:#14291f; --warn:#e0ab54;
   --warn-soft:#2c2411; --stop:#e58a80; --stop-soft:#2e1a18;
@@ -419,27 +422,68 @@ ol.steps li:last-child { padding-bottom: 0; }
   border-radius: 3px; background: #f4f5f1; }
 .nb { white-space: nowrap; }
 
-/* ---------------------------------------------- finding the version */
+/* -------------------------------------------- what is not on screen yet */
+/* The answer is the file and the steps. Everything else -- what to have ready,
+   how to check, what goes wrong, where it came from -- is reference: needed
+   sometimes, in the way always. So it collapses to a row you can open, with a
+   count, which is enough to know whether it is worth opening. */
+.more { display: flex; flex-direction: column; gap: 7px; margin-top: 22px; }
+.more details {
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+  overflow: hidden;
+}
+.more summary {
+  cursor: pointer; list-style: none; padding: 12px 15px;
+  display: flex; align-items: center; gap: 10px; font-size: .93rem;
+}
+.more summary::-webkit-details-marker { display: none; }
+.more summary::before {
+  content: "+"; font-family: var(--mono); font-weight: 700; color: var(--accent);
+  width: 1em; text-align: center; flex: none;
+}
+.more details[open] summary::before { content: "\2013"; }
+.more details[open] summary { border-bottom: 1px solid var(--line-soft); }
+.more summary:hover { color: var(--accent); }
+.more .n { margin-left: auto; color: var(--ink-3); font-size: .82rem;
+  font-family: var(--mono); }
+.more .inner { padding: 13px 15px 15px; }
+.more ul { margin: 0; padding-left: 19px; }
+.more li { margin-bottom: 8px; } .more li:last-child { margin-bottom: 0; }
+.more .src { font-size: .84rem; color: var(--ink-2); }
+.more .src p { margin: 0 0 7px; } .more .src p:last-child { margin: 0; }
+/* A dot carries the tone the coloured panel used to. Quieter, same meaning. */
+.more .dot { width: 8px; height: 8px; border-radius: 50%; flex: none;
+  background: var(--ink-3); }
+.more .dot.ok { background: var(--ok); }
+.more .dot.care { background: var(--warn); }
+.more .dot.stop { background: var(--stop); }
+@media print {
+  .more details { border: 0; break-inside: avoid; }
+  .more summary { padding: 0; font-weight: 700; }
+  .more summary::before, .more .n, .more .dot { display: none; }
+  .more .inner { padding: 6px 0 12px; }
+}
+
+/* --------------------------------------------- an openable panel */
 /* Question three is where people stall, so the answer lives inside the
    question rather than a page away. Closed by default: somebody who knows
    their version should not have to scroll past a walk-through to answer. */
-.vhelp { margin: 14px 0 4px; border: 1.5px solid var(--line);
+.panel { margin: 14px 0 4px; border: 1px solid var(--line);
   border-radius: 11px; background: var(--surface); overflow: hidden; }
-.vhelp > summary {
-  cursor: pointer; padding: 13px 16px; font-weight: 620; list-style: none;
-  display: flex; align-items: center; gap: 9px; background: var(--surface-2);
+.panel > summary {
+  cursor: pointer; padding: 14px 16px; font-weight: 620; list-style: none;
+  display: flex; align-items: center; gap: 9px;
 }
-.vhelp > summary::-webkit-details-marker { display: none; }
-.vhelp > summary::before {
+.panel[open] > summary { border-bottom: 1px solid var(--line-soft); }
+.panel > summary:hover { color: var(--accent); }
+.panel > summary::-webkit-details-marker { display: none; }
+.panel > summary::before {
   content: "▸"; color: var(--accent); font-size: .9em; transition: transform .15s;
 }
-.vhelp[open] > summary::before { transform: rotate(90deg); }
-.vhelp .vbody { padding: 16px; }
-.vhelp .evidence {
-  margin: 0 0 14px; font-size: .85rem; color: var(--ink-2);
-  border-left: 3px solid var(--ok); background: var(--ok-soft);
-  padding: 10px 13px; border-radius: 0 8px 8px 0;
-}
+.panel[open] > summary::before { transform: rotate(90deg); }
+.panel .vbody { padding: 16px; }
+.panel .vbody > .qnote { margin: 0 0 16px; }
+.panel .more { margin-top: 18px; }
 ol.vsteps { counter-reset: v; list-style: none; margin: 0; padding: 0; }
 ol.vsteps > li {
   counter-increment: v; position: relative; padding: 0 0 18px 44px;
@@ -527,7 +571,10 @@ ol.vsteps > li::before {
 .srcline { padding: 13px 20px; border-top: 1px solid var(--line); background: var(--surface-2); font-size: .76rem; color: var(--ink-3); }
 
 footer { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--line-soft); color: var(--ink-3); font-size: .82rem; }
-footer p { margin: 0 0 7px; max-width: 64ch; }
+footer p { margin: 0 0 10px; max-width: 64ch; }
+footer .panel { background: none; border-color: var(--line-soft); }
+footer .vbody { padding: 4px 16px 14px; }
+footer .vbody p:last-child { margin: 0; }
 
 /* ----------------------------------------------------------------- print */
 @media print {
@@ -725,7 +772,9 @@ function drawVersionHelp() {
   if (!help) return;
 
   const body = el('div', { class: 'vbody' });
-  body.append(el('p', { class: 'evidence' }, help.evidence));
+  body.append(el('p', { class: 'qnote' },
+    'Look for the ', el('b', { class: 'key' }, help.field),
+    ' line — it reads like ', el('b', { class: 'key' }, help.example), '.'));
 
   const list = el('ol', { class: 'vsteps' });
   help.steps.forEach((s, i) => {
@@ -748,16 +797,22 @@ function drawVersionHelp() {
   });
   body.append(list);
 
-  if (help.readsAs) body.append(el('p', { class: 'qnote' }, help.readsAs));
-  if (help.alsoShows.length) {
-    body.append(el('h4', {}, 'Worth writing down while you are there'));
-    body.append(el('div', { class: 'note' },
-      el('ul', {}, help.alsoShows.map(x => el('li', {}, x)))));
-  }
+  const extras = el('div', { class: 'more' });
+  const shelf = (title, items, cls) => {
+    if (!items.length) return;
+    extras.append(el('details', {},
+      el('summary', {}, el('span', { class: 'dot ' + (cls || '') }), title,
+        el('span', { class: 'n' }, items.length)),
+      el('div', { class: 'inner' },
+        el('ul', {}, items.map(x => el('li', {}, x))))));
+  };
+  shelf('Which option do I pick?', help.readsAs ? [help.readsAs] : [], 'care');
+  shelf('Worth writing down while you are there', help.alsoShows, '');
+  shelf('Where this comes from', [help.evidence], '');
+  if (extras.children.length) body.append(extras);
 
-  host.append(el('details', { class: 'vhelp' },
-    el('summary', {}, 'Show me where to find it — the ',
-      el('b', { class: 'key' }, help.field), ' line'),
+  host.append(el('details', { class: 'panel' },
+    el('summary', {}, 'Find your monitor version here'),
     body));
 }
 
@@ -829,12 +884,10 @@ function showResult(t) {
           el('span', { class: 'tag' }, D.transports[p.t].label)))));
 
   const body = el('div', { class: 'body' });
+  /* A version fallback changes what the steps are worth, so it stays on
+     screen. The confidence wording is a qualifier and moves to the tag's
+     tooltip and the reference stack below. */
   if (r.msg) body.append(el('div', { class: 'note care' }, r.msg));
-  /* Say plainly how much of this was read off a manual and how much is our
-     reading of it, before anyone stands in a cab hunting for a button. */
-  if (p.conf !== 'verified')
-    body.append(el('div', { class: 'note ' + (p.conf === 'file_verified' ? '' : 'care') },
-      D.confidence[p.conf].desc));
 
   const facts = el('dl', { class: 'facts' });
   const fact = (k, v, code) => { if (!v || /^n\/a/i.test(v)) return;
@@ -848,13 +901,13 @@ function showResult(t) {
   fact('Allow about', p.min + ' minutes');
   if (facts.children.length) { body.append(el('h4', {}, 'The file'), facts); }
 
+  /* Collected, then rendered as one stack of openable rows after the steps. */
+  const later = [];
   const block = (title, items, cls) => {
     if (!items || !items.length) return;
-    body.append(el('h4', {}, title));
-    body.append(el('div', { class: 'note ' + cls },
-      el('ul', {}, items.map(i => el('li', {}, keys(i, S.mon))))));
+    later.push({ title, items, cls });
   };
-  block('Before you start', p.pre, '');
+  block('Before you start', p.pre, 'care');
   /* When somebody has photographed this exact job, the photos belong beside
      the steps they were taken at -- not in a gallery at the bottom, which
      nobody looks at while their hands are busy. */
@@ -878,9 +931,33 @@ function showResult(t) {
     }
     return item;
   })));
+  if (p.conf !== 'verified')
+    block('How sure is this?', [D.confidence[p.conf].desc], 'care');
   block('Check it worked', p.ok, 'ok');
-  block('Worth knowing', p.care, 'care');
+  block('Worth knowing', p.care, '');
   block('What usually goes wrong', p.bad, 'stop');
+
+  const more = el('div', { class: 'more' });
+  later.forEach(b => more.append(el('details', {},
+    el('summary', {},
+      el('span', { class: 'dot ' + b.cls }),
+      b.title,
+      el('span', { class: 'n' }, b.items.length)),
+    el('div', { class: 'inner' },
+      el('ul', {}, b.items.map(i => el('li', {}, keys(i, S.mon))))))));
+
+  const sources = [];
+  if (p.src.length) sources.push('Sources: ' + p.src.join(' · '));
+  if (D.iconCredits[S.mon] && more.querySelector('.key img'))
+    sources.push(D.iconCredits[S.mon]);
+  /* Where the claim comes from belongs with the other reference material, not
+     in a grey footer that reads as boilerplate and gets skipped. */
+  if (sources.length) {
+    more.append(el('details', {},
+      el('summary', {}, el('span', { class: 'dot' }), 'Where this comes from'),
+      el('div', { class: 'inner src' }, sources.map(x => el('p', {}, x)))));
+  }
+  if (more.children.length) body.append(more);
 
   const related = D.relatedOrder
     .filter(k => k !== S.job && jobsFor(S.mon, S.ver, S.equip).includes(k))
@@ -899,15 +976,24 @@ function showResult(t) {
         scrollTo({ top: 0, behavior: 'smooth' }); } }, 'Start over')));
 
   card.append(body);
-  const lines = [];
-  if (p.src.length) lines.push('Sources: ' + p.src.join(' · '));
-  if (D.iconCredits[S.mon] && card.querySelector('.key img'))
-    lines.push(D.iconCredits[S.mon]);
-  if (lines.length)
-    card.append(el('div', { class: 'srcline' }, lines.map(x => el('p', {}, x))));
   host.append(card);
   host.hidden = false;
 }
+
+/* Paper has no disclosure triangles, and a printed page of collapsed rows
+   would quietly drop the cautions and the failure modes -- the parts somebody
+   pinned it to the wall for. Open everything for the print, then put back
+   exactly what the reader had open. */
+addEventListener('beforeprint', () => {
+  document.querySelectorAll('details').forEach(d => {
+    if (!d.open) { d.dataset.wasShut = '1'; d.open = true; }
+  });
+});
+addEventListener('afterprint', () => {
+  document.querySelectorAll('details[data-was-shut]').forEach(d => {
+    d.open = false; delete d.dataset.wasShut;
+  });
+});
 
 /* Printing can be blocked when the page is embedded. Say so plainly rather
    than leaving a button that quietly does nothing. */
@@ -1005,18 +1091,24 @@ def build() -> None:
 </dialog>
 
 <footer>
-  <p><strong>{len(procedures)} procedures across {len(monitors)} displays.</strong>
-    Folder paths and file formats are checked against manufacturer
-    documentation. Exact menu names move between software releases, which is
-    why each answer says whether it is verified or worth confirming on the
-    machine.</p>
-  <p>Two kinds of picture appear here, and they are not the same kind of thing.
-    The drawing of each display is our own schematic of its shape &mdash; not a
-    photograph, and carrying no manufacturer logo or mark. The small icons
-    inside a step are different: they are the actual application icons from the
-    display, reproduced from the manufacturer's operator manual, because an icon
-    only earns its place by matching the glyph on the glass. Each answer that
-    shows one credits the manual it came from, with the illustration number.</p>
+  <p><strong>{len(procedures)} procedures across {len(monitors)} displays.</strong></p>
+  <details class="panel">
+    <summary>How to read these answers</summary>
+    <div class="vbody">
+      <p>Folder paths and file formats are checked against manufacturer
+        documentation. Exact menu names move between software releases, which is
+        why each answer says whether it is verified or worth confirming on the
+        machine.</p>
+      <p>Two kinds of picture appear here, and they are not the same kind of
+        thing. The drawing of each display is our own schematic of its shape
+        &mdash; not a photograph, and carrying no manufacturer logo or mark. The
+        small icons inside a step are different: they are the actual application
+        icons from the display, reproduced from the manufacturer's operator
+        manual, because an icon only earns its place by matching the glyph on
+        the glass. Each answer that shows one credits the manual it came
+        from.</p>
+    </div>
+  </details>
 </footer>
 
 </div>
