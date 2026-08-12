@@ -130,8 +130,10 @@ DATA = {
     "monitors": monitors,
     "icons": icons,
     "objectives": {k: {"label": o.label, "dir": o.direction.value,
-                       "desc": o.description}
+                       "desc": o.description, "notFor": list(o.not_for)}
                    for k, o in pr.OBJECTIVES.items()},
+    "objectiveLabels": {f"{m}|{o}": label
+                        for (m, o), label in pr.OBJECTIVE_LABELS.items()},
     "objectiveOrder": list(pr.OBJECTIVES),
     "directions": {d.value: d.label for d in pr.Direction},
     "transports": {t.value: {"label": t.label, "desc": t.description}
@@ -593,8 +595,14 @@ const monByKey = Object.fromEntries(D.monitors.map(m => [m.key, m]));
    never offers a choice that leads to an empty page. */
 const forMonitor = k => D.procedures.filter(p => p.m === k);
 const versionOk = (p, v) => p.v.includes('*') || !v || p.v.includes(v);
-const jobsFor = (k, v) => D.objectiveOrder.filter(o =>
-  forMonitor(k).some(p => p.o === o && versionOk(p, v)));
+/* Filtered by the machine as well as the display: the same box is bolted to a
+   combine and to a sprayer, and a combine applies nothing, so offering it a
+   prescription is offering a job that cannot happen. */
+const jobsFor = (k, v, equip) => D.objectiveOrder.filter(o =>
+  !(equip && (D.objectives[o].notFor || []).includes(equip))
+  && forMonitor(k).some(p => p.o === o && versionOk(p, v)));
+/* Where one display makes a job specific, name it that way. */
+const jobLabel = (o, k) => D.objectiveLabels[k + '|' + o] || D.objectives[o].label;
 const routesFor = (k, v, o) => ['usb', 'cloud', 'desktop', 'manual'].filter(t =>
   forMonitor(k).some(p => p.o === o && p.t === t && versionOk(p, v)));
 
@@ -648,7 +656,7 @@ function drawTrail() {
     const v = monByKey[S.mon].versions.find(x => x.key === S.ver);
     add(v ? v.label : 'Any version', 'ver');
   }
-  if (S.job) add(D.objectives[S.job].label, 'job');
+  if (S.job) add(jobLabel(S.job, S.mon), 'job');
   if (answered('route') && routesFor(S.mon, S.ver, S.job).length > 1)
     add(D.transports[S.route].label, 'route');
 }
@@ -768,14 +776,14 @@ function drawJobs() {
   show('#q4', answered('ver') && !answered('job'));
   if (!answered('ver') || answered('job')) return;
   const host = $('#jobs'); host.replaceChildren();
-  const keys = jobsFor(S.mon, S.ver);
+  const keys = jobsFor(S.mon, S.ver, S.equip);
   Object.entries(D.directions).forEach(([dir, dirLabel]) => {
     const inDir = keys.filter(k => D.objectives[k].dir === dir);
     if (!inDir.length) return;
     const g = el('div', { class: 'jobgroup' }, el('h3', {}, dirLabel));
     inDir.forEach(k => g.append(el('button', {
       class: 'job', onclick: () => { S.job = k; S.route = null; step(); },
-    }, el('b', {}, D.objectives[k].label),
+    }, el('b', {}, jobLabel(k, S.mon)),
        el('span', {}, D.objectives[k].desc))));
     host.append(g);
   });
@@ -807,7 +815,7 @@ function showResult(t) {
     el('div', { class: 'chead' },
       el('img', { src: D.icons[m.icon], alt: '' }),
       el('div', { class: 't' },
-        el('h2', {}, obj.label),
+        el('h2', {}, jobLabel(S.job, S.mon)),
         el('p', {}, m.label + ' · ' + D.directions[obj.dir]),
         el('div', { class: 'tags' },
           el('span', { class: 'tag ' + CONF_TONE[p.conf],
@@ -870,12 +878,14 @@ function showResult(t) {
   block('Worth knowing', p.care, 'care');
   block('What usually goes wrong', p.bad, 'stop');
 
-  const related = D.relatedOrder.filter(k => k !== S.job && jobsFor(S.mon, S.ver).includes(k)).slice(0, 4);
+  const related = D.relatedOrder
+    .filter(k => k !== S.job && jobsFor(S.mon, S.ver, S.equip).includes(k))
+    .slice(0, 4);
   if (related.length) {
     body.append(el('h4', { class: 'noprint' }, 'While you are at the machine'));
     body.append(el('div', { class: 'next noprint' }, related.map(k =>
       el('button', { onclick: () => { S.job = k; S.route = null; step(); } },
-        el('b', {}, D.objectives[k].label),
+        el('b', {}, jobLabel(k, S.mon)),
         el('span', {}, D.directions[D.objectives[k].dir])))));
   }
 

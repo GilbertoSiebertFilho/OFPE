@@ -363,9 +363,21 @@ _GS3_2630_LATLON = ProcedureWalk(
     steps=(
         WalkStep(
             text=(
-                "Have the four numbers written down before you climb in: "
-                "latitude and longitude for the A end, and for the B end. "
-                "Decimal degrees, minus signs included."
+                "You need FOUR numbers, not two. Write them down before you "
+                "climb in: Lat A, Long A, Lat B, Long B."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "A and B are the two ends of the line. Lat A and Long A fix "
+                "where it starts; Lat B and Long B fix where it points. Miss "
+                "one and the display has no line."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "All four in decimal degrees, minus signs included — like "
+                "-27.845123 and -54.477456."
             ),
         ),
         WalkStep(

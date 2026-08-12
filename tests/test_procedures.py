@@ -577,3 +577,55 @@ def test_a_photographed_procedure_is_allowed_to_claim_verified():
             f"{walk.monitor_key}/{walk.objective} is photographed but sits at "
             f"{result.procedure.confidence.value}"
         )
+
+
+# --------------------------------------------------------------------------- #
+#  What a machine can actually be asked to do                                  #
+# --------------------------------------------------------------------------- #
+
+def test_a_combine_is_not_offered_a_prescription():
+    """It harvests. It does not apply seed, fertiliser or chemical.
+
+    The display is the same box on a combine and on a sprayer, so filtering by
+    display alone cannot catch this -- the machine underneath is what rules the
+    job out, and that is the wizard's first question.
+    """
+    for monitor in ("john_deere.gs3_2630", "john_deere.gen4", "case_ih.afs_pro_700"):
+        offered = {o.key for o in pr.available_objectives(monitor, None, "combine")}
+        assert "import_prescription" not in offered, monitor
+        # And the same display on a sprayer still gets it.
+        on_sprayer = {o.key for o in pr.available_objectives(monitor, None, "sprayer")}
+        assert "import_prescription" in on_sprayer, monitor
+
+
+def test_asking_without_an_equipment_type_still_offers_everything():
+    """The filter narrows an answer; it must not require one."""
+    everything = {o.key for o in pr.available_objectives("john_deere.gs3_2630")}
+    assert "import_prescription" in everything
+
+
+def test_a_display_specific_job_name_only_applies_to_that_display():
+    """The 2630's only guidance route is typed coordinates, so it says so.
+
+    Naming it globally would be a lie on every display that takes a file.
+    """
+    assert (
+        pr.objective_label("import_guidance", "john_deere.gs3_2630")
+        == "Load guidance lines (lat and long)"
+    )
+    assert (
+        pr.objective_label("import_guidance", "john_deere.gen4")
+        == pr.OBJECTIVES["import_guidance"].label
+    )
+    assert pr.objective_label("import_guidance") == pr.OBJECTIVES["import_guidance"].label
+
+
+def test_every_renamed_job_points_at_a_real_display_and_objective():
+    for (monitor_key, objective_key), label in pr.OBJECTIVE_LABELS.items():
+        assert monitor_key in catalog_module.MONITORS, monitor_key
+        assert objective_key in pr.OBJECTIVES, objective_key
+        assert label, f"{monitor_key}/{objective_key} renamed to nothing"
+        offered = {o.key for o in pr.available_objectives(monitor_key)}
+        assert objective_key in offered, (
+            f"{monitor_key} renames {objective_key} but does not offer it"
+        )

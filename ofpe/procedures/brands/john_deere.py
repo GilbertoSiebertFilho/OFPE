@@ -496,9 +496,9 @@ _add(
     filesystem="n/a",
     minutes=15,
     prerequisites=(
-        "Latitude and longitude for both ends of the line, written down as "
-        "decimal degrees with minus signs. In Brazil both numbers are "
-        "negative.",
+        "FOUR numbers, not two: Lat A and Long A for one end of the line, "
+        "Lat B and Long B for the other. All in decimal degrees with minus "
+        "signs — in Brazil both are negative.",
         "This makes a straight AB line. A curve cannot be typed in — that one "
         "has to be driven.",
     ),
@@ -522,6 +522,8 @@ _add(
         "second point.",
     ),
     common_errors=(
+        "Having only one pair of coordinates. Two numbers give you a point, "
+        "not a line — you need both ends.",
         "Latitude and longitude the wrong way round.",
         "Dropping the minus sign, which throws the line into another "
         "hemisphere.",

@@ -698,18 +698,27 @@ def guide_monitors(
 
 @guide.get("/monitors/{monitor_key}/objectives")
 def guide_objectives(
-    monitor_key: str, version: str | None = None
+    monitor_key: str,
+    version: str | None = None,
+    equipment: str | None = None,
 ) -> dict[str, Any]:
-    """What this display, on this release, can actually be asked to do."""
+    """What this display, on this release, on this machine, can be asked to do.
+
+    ``equipment`` narrows it further than the display can: a combine and a
+    sprayer may run the same box, but only one of them applies a product.
+    """
     try:
         monitor = catalog_module.get_monitor(monitor_key)
     except KeyError as exc:
         raise HTTPException(404, str(exc)) from exc
 
-    objectives = procedures_module.available_objectives(monitor_key, version)
+    objectives = procedures_module.available_objectives(
+        monitor_key, version, equipment
+    )
     grouped: dict[str, list[dict[str, Any]]] = {}
     for obj in objectives:
         entry = obj.to_dict()
+        entry["label"] = procedures_module.objective_label(obj.key, monitor_key)
         entry["transports"] = [
             {"key": t.value, "label": t.label, "description": t.description}
             for t in procedures_module.available_transports(

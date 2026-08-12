@@ -62,6 +62,8 @@ __all__ = [
     "LABEL_OPEN",
     "LABEL_CLOSE",
     "labels_in",
+    "OBJECTIVE_LABELS",
+    "objective_label",
 ]
 
 ANY_VERSION = "*"
@@ -209,6 +211,19 @@ class Objective:
     description: str
     typical_formats: str = ""
 
+    not_for: tuple[str, ...] = ()
+    """Equipment types this job does not exist on.
+
+    A combine harvests; it does not apply seed, fertiliser or chemical, so
+    offering it a variable-rate prescription is offering a job that cannot
+    happen. The display is the same box on a sprayer and on a combine -- what
+    rules the job out is the machine it is bolted to, which is the first
+    question the wizard asks anyway.
+    """
+
+    def applies_to(self, equipment: str | None) -> bool:
+        return not equipment or equipment not in self.not_for
+
     def to_dict(self) -> dict:
         return {
             "key": self.key,
@@ -217,7 +232,28 @@ class Objective:
             "direction_label": self.direction.label,
             "description": self.description,
             "typical_formats": self.typical_formats,
+            "not_for": list(self.not_for),
         }
+
+
+# Where a display offers exactly one route to a job, the generic name hides
+# the thing the operator needs to know before choosing it. On a 2630 the only
+# documented way to get an AB line in is to type four coordinates, so the job
+# says so -- somebody with a shapefile and no coordinates learns that from the
+# menu rather than after eight presses.
+OBJECTIVE_LABELS: dict[tuple[str, str], str] = {
+    ("john_deere.gs3_2630", "import_guidance"):
+        "Load guidance lines (lat and long)",
+}
+
+
+def objective_label(objective_key: str, monitor_key: str | None = None) -> str:
+    """What to call this job, on this display."""
+    if monitor_key:
+        specific = OBJECTIVE_LABELS.get((monitor_key, objective_key))
+        if specific:
+            return specific
+    return OBJECTIVES[objective_key].label
 
 
 OBJECTIVES: dict[str, Objective] = {
@@ -227,6 +263,7 @@ OBJECTIVES: dict[str, Objective] = {
             key="import_prescription",
             label="Load a variable-rate prescription",
             direction=Direction.TO_MONITOR,
+            not_for=("combine", "forage"),
             description=(
                 "A rate map the machine follows: seed, fertiliser, chemical. "
                 "The most common file anyone loads."
@@ -790,18 +827,26 @@ def versions_for(monitor_key: str) -> tuple[MonitorVersion, ...]:
 
 
 def available_objectives(
-    monitor_key: str, version_key: str | None = None
+    monitor_key: str,
+    version_key: str | None = None,
+    equipment: str | None = None,
 ) -> list[Objective]:
     """Objectives this display can actually do, in the order people want them.
 
     Filtered by version so the wizard never offers a job that has no procedure
-    behind it -- an empty result page is worse than a shorter menu.
+    behind it -- an empty result page is worse than a shorter menu -- and by
+    equipment, because the display is the same box on a combine and on a
+    sprayer while the machine underneath it is not.
     """
     keys: set[str] = set()
     for procedure in _by_monitor().get(monitor_key, []):
         if _version_matches(procedure, version_key):
             keys.add(procedure.objective)
-    return [o for o in OBJECTIVES.values() if o.key in keys]
+    return [
+        o
+        for o in OBJECTIVES.values()
+        if o.key in keys and o.applies_to(equipment)
+    ]
 
 
 def available_transports(
