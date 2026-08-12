@@ -28,14 +28,22 @@ last good page up. A stale answer is survivable; a broken one, read by somebody
 about to press buttons on a machine, is not.
 
 <details>
-<summary>Turning it on the first time (one click, once)</summary>
+<summary>Turning it on the first time</summary>
 
-GitHub needs telling that this repository publishes from a workflow:
+**Settings → Pages → Build and deployment → Source.** Either value works, and
+they behave differently enough to be worth knowing:
 
-**Settings → Pages → Build and deployment → Source: GitHub Actions**
+- **GitHub Actions** — the workflow builds the page and deploys it. Tests run
+  first, so a broken build never reaches the site. This is the one to use.
+- **Deploy from a branch → `main` → `/ (root)`** — GitHub serves the repository
+  directory as it stands. `index.html` sends visitors to the guide, and the
+  page updates whenever a rebuilt `OFPE-Guide.html` is committed. No tests
+  gate it, and nothing rebuilds on its own.
 
-Then push anything, or run **Actions → Publish the guide → Run workflow**. The
-address above goes live a minute later.
+If the Source is left on a branch, the workflow's deploy step fails with
+`404 ... Ensure GitHub Pages has been enabled` — the build was fine, but there
+is no Actions deployment target to publish into. Switching the dropdown fixes
+it; nothing needs changing in the repository.
 
 This works because the repository is public. GitHub Pages on a *private*
 repository needs a paid plan — so if this is ever made private, the link stops
