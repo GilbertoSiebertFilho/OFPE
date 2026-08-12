@@ -53,8 +53,12 @@ for _monitor in (
         # display's are: a name you have to find on a screen reads faster as a
         # cap than as a word inside a sentence.
         steps=(
-            "Pick a stick of 8 GB to 32 GB. Bigger ones often are not read at "
-            "all, however new they are.",
+            # It is the ceiling that bites, not the floor. John Deere's own
+            # Gen 4 manual suggests 4 GB and up, and a procedure file is
+            # measured in kilobytes -- telling somebody their 4 GB stick is
+            # too small sends them to buy one they did not need.
+            "Pick a stick of 32 GB or less — 4 GB is plenty. Bigger ones "
+            "often are not read at all, however new they are.",
             "Plug it into a computer.",
             "Open «This PC», right-click the stick, and choose «Format».",
             "In the box that opens, set «File system» to «FAT32».",

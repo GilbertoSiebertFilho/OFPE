@@ -403,7 +403,7 @@ _add(
             "Send it to the machine wirelessly if the machine has JDLink, which "
             "skips the USB stick entirely -- this is the easiest route.",
             "Otherwise export a setup file from Operations Center onto a USB "
-            "stick (8-32 GB).",
+            "stick (4-32 GB is fine; the 32 GB ceiling is the part that matters).",
             "In the display: Menu > System > File Manager > Import Data, pick "
             "the profile, and confirm the preview lists your tracks.",
             _USB_EJECT,
