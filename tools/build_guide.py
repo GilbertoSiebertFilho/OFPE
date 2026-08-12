@@ -9,6 +9,7 @@ the terminal drawings into that file.
 
 import base64
 import json
+import os
 import pathlib
 import sys
 
@@ -114,17 +115,65 @@ for walk in pr.WALKTHROUGHS:
         ],
     }
 
+# Recorded speech, if any has been made. tools/render_voice.py renders every
+# line the page can say to an MP3 named after the line itself, so the page
+# never has to work out a file name -- it is handed the names here, and the
+# two cannot drift apart. With no recordings the keys are simply absent and
+# the page falls back to the phone's own speech engine, which is exactly what
+# it did before any of this existed.
+#
+# The tone backend exists to test the player without model weights. Shipping
+# a page that points at tones would be worse than shipping no audio at all,
+# so it takes an environment variable to do it, deliberately, rather than a
+# forgotten flag.
+voice_dir = ROOT / "voice"
+voice_manifest = voice_dir / "manifest.json"
+voice_clips: dict[str, dict] = {}
+voice_meta: dict[str, str] = {}
+if voice_manifest.exists():
+    _m = json.loads(voice_manifest.read_text())
+    if pr.voice.shippable(_m, bool(os.environ.get("OFPE_FAKE_VOICE"))):
+        voice_clips = _m.get("clips", {})
+        voice_meta = {"dir": "voice/", "ext": "." + _m.get("format", "mp3"),
+                      "model": _m.get("model", ""), "voice": _m.get("voice", "")}
+    else:
+        print(f"  voice/: {_m.get('backend')} recordings are not speech — "
+              "not embedding (OFPE_FAKE_VOICE=1 overrides, for a test build)")
+
+
+def clip_ids(steps) -> list[str]:
+    """The recording for each step, or "" where none was made."""
+    out = []
+    for step in steps:
+        spoken = pr.voice.spoken(step)
+        clip = pr.voice.clip_id(spoken) if spoken else ""
+        out.append(clip if clip in voice_clips else "")
+    return out
+
+
 procedures = []
 for p in pr.PROCEDURES:
     d = p.to_dict()
-    procedures.append({
+    entry = {
         "m": d["monitor_key"], "o": d["objective"], "t": d["transport"],
         "v": d["version_keys"], "fmt": d["file_format"], "ext": d["extensions"],
         "path": d["media_path"], "fs": d["filesystem"], "plat": d["platform"],
         "min": d["minutes"], "pre": d["prerequisites"], "steps": d["steps"],
         "ok": d["verify"], "care": d["cautions"], "bad": d["common_errors"],
         "conf": d["confidence"], "src": d["sources"],
-    })
+    }
+    if voice_clips:
+        entry["say"] = clip_ids(d["steps"])
+    procedures.append(entry)
+
+# "Step 4." is its own recording rather than part of the step's, so that the
+# same sentence at position 2 of one procedure and position 7 of another is
+# one file instead of two.
+voice_numbers = []
+if voice_clips:
+    for n in range(1, pr.voice.longest_procedure() + 1):
+        clip = pr.voice.clip_id(pr.voice.step_prefix(n))
+        voice_numbers.append(clip if clip in voice_clips else "")
 
 DATA = {
     "monitors": monitors,
@@ -148,6 +197,8 @@ DATA = {
     "walkPhotos": walk_photos,
     "iconCredits": credits,
     "relatedOrder": list(pr._core._RELATED_ORDER),
+    "voice": voice_meta,
+    "voiceNums": voice_numbers,
 }
 
 # --------------------------------------------------------------------------- #
@@ -690,15 +741,32 @@ const keys = (text, monitorKey) => {
 const CONF_TONE = { verified: 'ok', file_verified: 'check', confirm_on_machine: 'check' };
 
 /* ----------------------------------------------------- reading it aloud */
-/* Somebody with both hands in a machine cannot scroll. The browser speaks the
-   steps, one at a time, highlighting the one it is on so a glance finds the
-   place again.
-   speechSynthesis is not everywhere -- some Android browsers ship no voice at
-   all -- so the control only appears when the engine is really there, rather
-   than offering a button that does nothing. */
-const say = { steps: [], at: -1, playing: false, everSpoke: false };
+/* Somebody with both hands in a machine cannot scroll. The page reads the
+   steps out, one at a time, highlighting the one it is on so a glance finds
+   the place again.
+
+   Two voices can do it, and the page prefers the better one. Recorded: every
+   line was read ahead of time by a real TTS model and shipped as an MP3
+   named after the line (tools/render_voice.py). Spoken: the phone's own
+   speechSynthesis, which is free and always current and sounds like a phone
+   -- and is missing outright on some Android builds, where the interface
+   exists with no engine behind it.
+
+   The recordings win when they are there, and they cover the case the
+   browser voice cannot: a device with no speech engine can still play audio.
+   When a clip is missing, or the page is opened as a single file with no
+   folder beside it, playback falls back to the phone mid-procedure rather
+   than stopping. */
+const say = { steps: [], clips: [], at: -1, playing: false,
+              everSpoke: false, recorded: false };
+const player = new Audio();
 const canSpeak = () =>
   'speechSynthesis' in window && typeof SpeechSynthesisUtterance === 'function';
+/* Clips for the procedure on the screen. Partial coverage counts: a step
+   without a recording is spoken by the phone, which beats skipping it. */
+const haveClips = () => !!(D.voice && D.voice.dir && say.clips.some(Boolean));
+const canRead = () => canSpeak() || haveClips();
+const clipUrl = id => D.voice.dir + id + D.voice.ext;
 
 /* « » marks a button name for the eye. Spoken, the marks are noise, and a
    folder path reads better with its separators named than spelled. */
@@ -712,6 +780,8 @@ function sayStop() {
   say.playing = false;
   say.at = -1;
   if (canSpeak()) speechSynthesis.cancel();
+  player.pause();
+  player.onended = player.onerror = null;
   document.querySelectorAll('ol.steps li.saying')
     .forEach(li => li.classList.remove('saying'));
   const b = $('#saytoggle');
@@ -734,7 +804,7 @@ function icon(kind) {
 }
 
 function sayFrom(index) {
-  if (!canSpeak() || index >= say.steps.length) { sayStop(); return; }
+  if (!canRead() || index >= say.steps.length) { sayStop(); return; }
   say.at = index;
   say.playing = true;
   const items = document.querySelectorAll('ol.steps li');
@@ -743,6 +813,59 @@ function sayFrom(index) {
   if (here) {
     here.classList.add('saying');
     here.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  if (say.recorded && say.clips[index]) playClips(index);
+  else speakStep(index);
+}
+
+/* The number and the step are two files -- see voice.py for why -- played
+   back to back. The small gap between them lands where a pause belongs
+   anyway, after "Step 4." */
+function playClips(index) {
+  const queue = [(D.voiceNums || [])[index], say.clips[index]]
+    .filter(Boolean).map(clipUrl);
+  let at = 0;
+  const next = () => {
+    if (!say.playing) return;
+    if (at >= queue.length) {
+      prefetch(index + 1);
+      sayFrom(index + 1);
+      return;
+    }
+    player.src = queue[at++];
+    player.onended = next;
+    /* A clip that will not load must not end the reading. Hand the rest of
+       the procedure to the phone and carry on from the same step. */
+    player.onerror = () => { say.recorded = false; speakStep(index); };
+    player.play().catch(() => { say.recorded = false; speakStep(index); });
+  };
+  next();
+}
+
+/* Ask the browser for the next step's audio while the current one plays, so
+   the gap between steps is not a download. */
+function prefetch(index) {
+  const id = say.clips[index];
+  if (!id) return;
+  const a = new Audio();
+  a.preload = 'auto';
+  a.src = clipUrl(id);
+}
+
+/* Replace the controls with a sentence saying why nothing is being read.
+   Better than a button that appears to do nothing. */
+function sayNote(text) {
+  sayStop();
+  const bar = $('.saybar');
+  if (bar) bar.replaceChildren(el('p', { class: 'saynote' }, text));
+}
+
+function speakStep(index) {
+  if (!canSpeak()) {
+    sayNote('The recordings could not be loaded and this device has no '
+      + 'speech voice of its own, so the steps cannot be read out. '
+      + 'Everything else on the page still works.');
+    return;
   }
   const line = new SpeechSynthesisUtterance(
     `Step ${index + 1}. ${forSpeech(say.steps[index])}`);
@@ -758,12 +881,11 @@ function sayFrom(index) {
      after it has actually failed, since guessing up front would hide the
      feature from devices that can do it. */
   line.onerror = () => {
-    sayStop();
     if (!say.everSpoke) {
-      const bar = $('.saybar');
-      if (bar) bar.replaceChildren(el('p', { class: 'saynote' },
-        'This device has no speech voice installed, so the steps cannot be '
-        + 'read out. Everything else on the page still works.'));
+      sayNote('This device has no speech voice installed, so the steps '
+        + 'cannot be read out. Everything else on the page still works.');
+    } else {
+      sayStop();
     }
   };
   speechSynthesis.speak(line);
@@ -771,16 +893,21 @@ function sayFrom(index) {
 
 function sayToggle() {
   if (!say.playing) {
-    if (say.at >= 0 && speechSynthesis.paused) {
-      speechSynthesis.resume();
+    const paused = say.at >= 0
+      && (say.recorded ? player.paused && player.src
+                       : canSpeak() && speechSynthesis.paused);
+    if (paused) {
       say.playing = true;
+      if (say.recorded) player.play().catch(() => sayFrom(say.at));
+      else speechSynthesis.resume();
     } else {
       sayFrom(say.at >= 0 ? say.at : 0);
     }
     $('#saytoggle').replaceChildren(icon('pause'), 'Pause');
   } else {
-    speechSynthesis.pause();
     say.playing = false;
+    if (say.recorded) player.pause();
+    else if (canSpeak()) speechSynthesis.pause();
     $('#saytoggle').replaceChildren(icon('play'), 'Continue');
   }
 }
@@ -1126,8 +1253,10 @@ function showResult(t) {
   body.append(el('h4', {}, 'Step by step'));
 
   say.steps = p.steps;
+  say.clips = p.say || [];
   say.everSpoke = false;
-  if (canSpeak()) {
+  say.recorded = haveClips();
+  if (canRead()) {
     body.append(el('div', { class: 'saybar noprint' },
       el('button', { class: 'saybtn', id: 'saytoggle', type: 'button',
                      onclick: sayToggle }, icon('play'), 'Read the steps aloud'),

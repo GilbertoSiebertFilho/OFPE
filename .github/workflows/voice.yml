@@ -1,0 +1,132 @@
+# Record the spoken steps.
+#
+# Run by hand, not on every push: the recordings only change when the wording
+# of a step changes, and re-reading forty-five minutes of speech on every
+# commit would be absurd. tools/render_voice.py is incremental -- it renders
+# the lines that have no clip yet and leaves the rest alone -- so a run after
+# a wording change is a handful of clips and a couple of minutes.
+#
+# It runs here rather than on a laptop because the model weights come from
+# Hugging Face, and this is a machine that can reach it.
+#
+# The intended order of operations:
+#
+#   1. Run with commit = false and a small limit. Nothing is committed; the
+#      clips come back as a downloadable artifact. Listen to them.
+#   2. Not the right voice? Run it again with a different one. Still nothing
+#      committed, nothing to undo.
+#   3. Happy with it? Run with limit = 0 and commit = true. That reads
+#      everything and pushes voice/ to main, which publishes the site.
+#
+# Listening before committing is the whole design. Nobody in this pipeline
+# can hear the output, so the person who can has to be the one who decides.
+name: Record the spoken steps
+
+on:
+  workflow_dispatch:
+    inputs:
+      backend:
+        description: "Which model"
+        type: choice
+        default: kitten
+        options: [kitten, pocket]
+      voice:
+        description: "Voice name (blank = the backend's default)"
+        type: string
+        default: ""
+      model:
+        description: "Model id / language (blank = default)"
+        type: string
+        default: ""
+      limit:
+        description: "How many clips to render (0 = all of them)"
+        type: string
+        default: "12"
+      commit:
+        description: "Push the clips to main"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# One recording session at a time: two runs would fight over voice/ and could
+# leave half the steps in one voice and half in another.
+concurrency:
+  group: voice
+  cancel-in-progress: false
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    # Reading every line takes far longer than a normal job. The default
+    # six-hour ceiling is plenty; this guards against a wedged model load.
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install the model
+        run: |
+          pip install -r requirements.txt
+          if [ "${{ inputs.backend }}" = "kitten" ]; then
+            pip install https://github.com/KittenML/KittenTTS/releases/download/0.8.1/kittentts-0.8.1-py3-none-any.whl
+          else
+            pip install pocket-tts
+          fi
+
+      - name: Check ffmpeg
+        # Present on ubuntu-latest; if that ever changes, fail here with a
+        # clear reason rather than half way through a two-hour render.
+        run: ffmpeg -version | head -1
+
+      - name: Read the steps
+        run: |
+          python tools/render_voice.py \
+            --backend "${{ inputs.backend }}" \
+            --voice "${{ inputs.voice }}" \
+            --model "${{ inputs.model }}" \
+            --limit "${{ inputs.limit }}" \
+            --prune
+
+      - name: What came out
+        run: |
+          echo "### Recorded" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          python - <<'PY' >> $GITHUB_STEP_SUMMARY
+          import json, pathlib
+          m = json.loads(pathlib.Path("voice/manifest.json").read_text())
+          clips = m["clips"]
+          print(f"backend : {m['backend']}")
+          print(f"model   : {m['model']}")
+          print(f"voice   : {m['voice']}")
+          print(f"clips   : {len(clips)}")
+          print(f"audio   : {sum(c['s'] for c in clips.values()) / 60:.1f} minutes")
+          print(f"size    : {sum(c['b'] for c in clips.values()) / 1e6:.2f} MB")
+          PY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Take the clips home to listen to
+        if: ${{ !inputs.commit }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: voice-${{ inputs.backend }}-${{ inputs.voice || 'default' }}
+          path: voice/
+          retention-days: 14
+
+      - name: Commit them
+        if: ${{ inputs.commit }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A voice
+          if git diff --cached --quiet; then
+            echo "nothing changed"
+            exit 0
+          fi
+          git commit -m "Record the spoken steps (${{ inputs.backend }}, voice ${{ inputs.voice || 'default' }})"
+          git push origin HEAD:main

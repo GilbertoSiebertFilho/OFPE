@@ -4,3 +4,8 @@ data/
 .pytest_cache/
 .venv/
 venv/
+
+# Placeholder tone fixtures from tools/render_voice.py --backend tone.
+# The real recordings are .mp3; these exist only to drive the player in a
+# test and must never ship.
+/voice/*.wav

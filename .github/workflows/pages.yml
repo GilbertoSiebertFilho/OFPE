@@ -51,13 +51,25 @@ jobs:
         run: python tools/build_guide.py
 
       - name: Assemble the site
-        # The guide is the whole site: one self-contained page, no assets to
-        # copy, nothing to link. Naming it index.html makes the bare repository
-        # address the address a producer types.
+        # The page itself is self-contained -- every icon and photograph is
+        # baked into it. The one thing served beside it is voice/: the spoken
+        # steps, recorded ahead of time (tools/render_voice.py), fetched a
+        # clip at a time only when somebody presses play. Keeping them out of
+        # the page is the point; embedding ten megabytes of audio would make
+        # every visitor pay for a feature most will not use.
+        #
+        # If voice/ is empty the copy is a no-op and the page reads the steps
+        # with the phone's own speech engine, exactly as it did before.
         run: |
           mkdir -p site
           cp OFPE-Guide.html site/index.html
           cp OFPE-Guide.html site/OFPE-Guide.html
+          if [ -d voice ]; then
+            cp -r voice site/voice
+            echo "voice: $(ls site/voice | wc -l) files, $(du -sh site/voice | cut -f1)"
+          else
+            echo "voice: none recorded yet"
+          fi
           # Sent to a phone, the page should be saveable as a file too.
           echo "OFPE Monitor Guide — built $(date -u '+%Y-%m-%d %H:%M UTC')" \
             > site/build.txt

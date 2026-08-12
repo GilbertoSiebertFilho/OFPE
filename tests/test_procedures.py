@@ -695,3 +695,66 @@ def test_every_scope_exclusion_names_things_that_exist():
         assert equipment in {e.value for e in pr.EquipmentType}, equipment
         for key in keys:
             assert key in pr.OBJECTIVES, f"{equipment}: {key}"
+
+
+# ----------------------------------------------------------------- speech
+
+
+def test_a_spoken_step_drops_the_marks_and_names_the_slashes():
+    """« » are for the eye; a slash read aloud as "backslash" helps nobody."""
+    said = pr.voice.spoken("Open «Data Transfer» and go to GS3_2630\\Profile\\RCD")
+    assert "«" not in said and "»" not in said
+    assert "\\" not in said
+    assert said == "Open Data Transfer and go to GS3_2630, Profile, RCD"
+
+
+def test_a_clip_is_named_after_what_is_inside_it():
+    """Content-addressed, so an edited step cannot reuse the old recording."""
+    a = pr.voice.clip_id("Press Menu.")
+    assert a == pr.voice.clip_id("Press Menu.")
+    assert a != pr.voice.clip_id("Press Menu, then Setup.")
+    assert len(a) == 16 and a.isalnum()
+
+
+def test_every_step_of_every_procedure_has_a_line_to_record():
+    """A step with no clip falls back to the phone voice -- silently. So the
+    corpus has to cover all of them, and this is what notices when it does not."""
+    corpus = pr.voice.lines()
+    missing = [
+        step
+        for procedure in pr.PROCEDURES
+        for step in procedure.steps
+        if pr.voice.clip_id(pr.voice.spoken(step)) not in corpus
+    ]
+    assert not missing, missing[:3]
+
+
+def test_the_numbers_called_out_reach_the_longest_procedure():
+    corpus = pr.voice.lines()
+    longest = pr.voice.longest_procedure()
+    assert longest == max(len(p.steps) for p in pr.PROCEDURES)
+    for n in (1, longest):
+        assert pr.voice.clip_id(pr.voice.step_prefix(n)) in corpus
+
+
+def test_the_page_and_the_recordings_say_the_same_thing():
+    """The page still speaks the steps itself when a clip is missing. If its
+    idea of a spoken step drifted from voice.spoken(), the two voices would
+    read the same step differently -- which sounds like a mistake, and is one."""
+    source = (pathlib.Path(__file__).resolve().parents[1]
+              / "tools" / "build_guide.py").read_text()
+    forspeech = source.split("const forSpeech")[1].split(";")[0]
+    assert ".replace(/«|»/g, '')" in forspeech
+    assert r".replace(/\\/g, ', ')" in forspeech
+
+
+def test_placeholder_tones_cannot_reach_a_built_page():
+    """The tone backend exists so the player can be exercised without model
+    weights. It must not be one forgotten flag away from being published:
+    clips that load perfectly and are not speech never trigger the fallback."""
+    tones = {"backend": pr.voice.PLACEHOLDER_BACKEND, "clips": {"a": {"s": 1, "b": 2}}}
+    real = {"backend": "kitten", "clips": {"a": {"s": 1, "b": 2}}}
+    assert not pr.voice.shippable(tones)
+    assert pr.voice.shippable(tones, allow_placeholder=True)
+    assert pr.voice.shippable(real)
+    assert not pr.voice.shippable({"backend": "kitten", "clips": {}})
