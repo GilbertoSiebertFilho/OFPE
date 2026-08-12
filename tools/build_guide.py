@@ -218,6 +218,14 @@ CSS = r"""
   --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
 }
 
+/* The page opens light whatever the phone is set to.
+   A display guide is read outdoors, in a bright cab, often with the screen at
+   arm's length -- and a phone left in dark mode by default was handing people
+   a dark page in exactly the conditions a dark page is worst for. Following
+   the system preference is the right default for most pages and the wrong one
+   for this. Dark is still there for anyone who wants it, one press away, so
+   this is a starting point rather than a decision taken away. */
+
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
@@ -246,6 +254,15 @@ body.go h1 { font-size: 1.16rem; letter-spacing: -.012em; }
 body.go .tagline, body.go .rule { display: none; }
 body.go .search { margin-top: 13px; }
 body.go .search input { padding: 9px 13px; font-size: .92rem; }
+
+.themebtn {
+  position: absolute; top: 26px; right: 0; font: inherit; font-size: .8rem;
+  cursor: pointer; padding: 7px 12px; min-height: 38px; border-radius: 99px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+}
+.themebtn:hover { border-color: var(--accent-line); color: var(--ink); }
+body.go .themebtn { top: 14px; }
+header { position: relative; }
 
 .search { margin-top: 20px; position: relative; }
 .search input {
@@ -421,6 +438,27 @@ ol.steps li:last-child { padding-bottom: 0; }
 .key.hasicon img { width: 1.55em; height: 1.55em; display: block;
   border-radius: 3px; background: #f4f5f1; }
 .nb { white-space: nowrap; }
+
+/* ------------------------------------------------------ reading it aloud */
+/* Hands inside the machine, phone on the seat. The browser's own speech
+   engine reads the steps out, which needs no install, no account and no
+   signal -- the same constraints the rest of the page is built for. */
+.saybar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.saybtn {
+  font: inherit; font-weight: 620; cursor: pointer; padding: 11px 17px;
+  border-radius: 9px; min-height: 46px; display: inline-flex;
+  align-items: center; gap: 9px;
+  border: 1.5px solid var(--accent); background: var(--accent);
+  color: var(--accent-ink);
+}
+.saybtn.quiet { background: var(--surface); color: var(--ink);
+  border-color: var(--line); }
+.saybtn.quiet:hover { border-color: var(--accent-line); }
+.saybtn svg { width: 18px; height: 18px; flex: none; fill: currentColor; }
+/* The step being read lights up, so a glance finds your place again. */
+ol.steps li.saying { background: var(--accent-soft); border-radius: 9px;
+  box-shadow: 0 0 0 8px var(--accent-soft); }
+.saynote { font-size: .82rem; color: var(--ink-3); margin: -8px 0 16px; }
 
 /* -------------------------------------------- what is not on screen yet */
 /* The answer is the file and the steps. Everything else -- what to have ready,
@@ -636,6 +674,102 @@ const keys = (text, monitorKey) => {
 
 const CONF_TONE = { verified: 'ok', file_verified: 'check', confirm_on_machine: 'check' };
 
+/* ----------------------------------------------------- reading it aloud */
+/* Somebody with both hands in a machine cannot scroll. The browser speaks the
+   steps, one at a time, highlighting the one it is on so a glance finds the
+   place again.
+   speechSynthesis is not everywhere -- some Android browsers ship no voice at
+   all -- so the control only appears when the engine is really there, rather
+   than offering a button that does nothing. */
+const say = { steps: [], at: -1, playing: false, everSpoke: false };
+const canSpeak = () =>
+  'speechSynthesis' in window && typeof SpeechSynthesisUtterance === 'function';
+
+/* « » marks a button name for the eye. Spoken, the marks are noise, and a
+   folder path reads better with its separators named than spelled. */
+const forSpeech = text => text
+  .replace(/«|»/g, '')
+  .replace(/\\/g, ', ')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+function sayStop() {
+  say.playing = false;
+  say.at = -1;
+  if (canSpeak()) speechSynthesis.cancel();
+  document.querySelectorAll('ol.steps li.saying')
+    .forEach(li => li.classList.remove('saying'));
+  const b = $('#saytoggle');
+  if (b) b.replaceChildren(icon('play'), 'Read the steps aloud');
+}
+
+function icon(kind) {
+  const paths = {
+    play: 'M8 5v14l11-7z',
+    pause: 'M6 5h4v14H6zm8 0h4v14h-4z',
+    stop: 'M6 6h12v12H6z',
+  };
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', paths[kind]);
+  svg.append(path);
+  return svg;
+}
+
+function sayFrom(index) {
+  if (!canSpeak() || index >= say.steps.length) { sayStop(); return; }
+  say.at = index;
+  say.playing = true;
+  const items = document.querySelectorAll('ol.steps li');
+  items.forEach(li => li.classList.remove('saying'));
+  const here = items[index];
+  if (here) {
+    here.classList.add('saying');
+    here.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  const line = new SpeechSynthesisUtterance(
+    `Step ${index + 1}. ${forSpeech(say.steps[index])}`);
+  line.lang = 'en';
+  /* Slower than conversation: these are numbers and folder names being
+     followed by hand, not prose being skimmed. */
+  line.rate = 0.92;
+  line.onstart = () => { say.everSpoke = true; };
+  line.onend = () => { if (say.playing) sayFrom(index + 1); };
+  /* Having the API is not having a voice: some devices ship the interface and
+     no engine behind it, and speak() then fails silently. Rather than leave a
+     button that appears to do nothing, say what happened -- once, and only
+     after it has actually failed, since guessing up front would hide the
+     feature from devices that can do it. */
+  line.onerror = () => {
+    sayStop();
+    if (!say.everSpoke) {
+      const bar = $('.saybar');
+      if (bar) bar.replaceChildren(el('p', { class: 'saynote' },
+        'This device has no speech voice installed, so the steps cannot be '
+        + 'read out. Everything else on the page still works.'));
+    }
+  };
+  speechSynthesis.speak(line);
+}
+
+function sayToggle() {
+  if (!say.playing) {
+    if (say.at >= 0 && speechSynthesis.paused) {
+      speechSynthesis.resume();
+      say.playing = true;
+    } else {
+      sayFrom(say.at >= 0 ? say.at : 0);
+    }
+    $('#saytoggle').replaceChildren(icon('pause'), 'Pause');
+  } else {
+    speechSynthesis.pause();
+    say.playing = false;
+    $('#saytoggle').replaceChildren(icon('play'), 'Continue');
+  }
+}
+
 const S = { equip: null, mon: null, ver: null, job: null, route: null };
 const monByKey = Object.fromEntries(D.monitors.map(m => [m.key, m]));
 
@@ -686,6 +820,7 @@ function reset(from) {
 const answered = k => S[k] !== null;
 
 function render() {
+  sayStop();
   document.body.classList.toggle('go', answered('equip'));
   drawTrail();
   drawEquip();
@@ -913,7 +1048,19 @@ function showResult(t) {
      nobody looks at while their hands are busy. */
   const walk = D.walkPhotos[[S.mon, S.job, p.t].join('|')];
   body.append(el('h4', {}, 'Step by step'));
-  if (walk) body.append(el('p', { class: 'evidence' }, walk.evidence));
+
+  say.steps = p.steps;
+  say.everSpoke = false;
+  if (canSpeak()) {
+    body.append(el('div', { class: 'saybar noprint' },
+      el('button', { class: 'saybtn', id: 'saytoggle', type: 'button',
+                     onclick: sayToggle }, icon('play'), 'Read the steps aloud'),
+      el('button', { class: 'saybtn quiet', type: 'button', onclick: sayStop },
+        icon('stop'), 'Stop')));
+    body.append(el('p', { class: 'saynote noprint' },
+      'Reads one step at a time and lights up the one it is on. '
+      + 'Works with the phone in your pocket.'));
+  }
   body.append(el('ol', { class: 'steps' }, p.steps.map((s, i) => {
     const item = el('li', {}, keys(s, S.mon));
     const shot = walk && walk.steps[i];
@@ -931,6 +1078,7 @@ function showResult(t) {
     }
     return item;
   })));
+  if (walk) block('Where these photos were taken', [walk.evidence], 'ok');
   if (p.conf !== 'verified')
     block('How sure is this?', [D.confidence[p.conf].desc], 'care');
   block('Check it worked', p.ok, 'ok');
@@ -1020,6 +1168,24 @@ $('#find').addEventListener('input', e => {
      el('span', {}, m.brand + ' ' + m.model))));
 });
 
+/* Light unless somebody asks otherwise. localStorage is wrapped because an
+   embedded page is not always allowed it, and losing the preference is a much
+   smaller problem than the page failing to start. */
+const THEME_KEY = 'ofpe-theme';
+const readTheme = () => {
+  try { return localStorage.getItem(THEME_KEY); } catch { return null; }
+};
+function setTheme(name) {
+  document.documentElement.dataset.theme = name;
+  $('#theme').textContent = name === 'dark' ? 'Light mode' : 'Dark mode';
+  $('#theme').setAttribute('aria-label',
+    name === 'dark' ? 'Switch to the light page' : 'Switch to the dark page');
+  try { localStorage.setItem(THEME_KEY, name); } catch { /* not allowed here */ }
+}
+setTheme(readTheme() === 'dark' ? 'dark' : 'light');
+$('#theme').addEventListener('click', () => setTheme(
+  document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+
 $('#shotbox').addEventListener('click', e => {
   if (e.target.id === 'shotbox') e.target.close();
 });
@@ -1036,9 +1202,8 @@ def build() -> None:
 
 <header>
   <h1>Getting files in and out of the monitor</h1>
-  <p class="tagline">Pick your machine, your display and your software version.
-    You get the file format, the exact folder on the stick, and the buttons to
-    press &mdash; not the general idea of them.</p>
+  <p class="tagline">The exact folder, and the exact buttons &mdash; for your
+    machine.</p>
   <div class="rule"></div>
   <div class="search">
     <label class="sr-only" for="find" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search for your display</label>
@@ -1047,6 +1212,8 @@ def build() -> None:
     <div class="hits" id="hits"></div>
   </div>
 </header>
+
+<button class="themebtn noprint" id="theme" type="button"></button>
 
 <div class="trail" id="trail"></div>
 
@@ -1062,9 +1229,7 @@ def build() -> None:
 
 <section class="q" id="q3" hidden>
   <div class="qhead"><span class="qnum">03</span><h2 class="qtitle">Which software version?</h2></div>
-  <p class="qnote">This matters more than it looks. Menus move between releases,
-    and one John Deere update stopped accepting a file format it used to take.
-    If you are not sure, pick the last option.</p>
+  <p class="qnote">Menus move between releases. Not sure? Pick the last option.</p>
   <div id="vhelp"></div>
   <div class="chips" id="vers"></div>
 </section>
