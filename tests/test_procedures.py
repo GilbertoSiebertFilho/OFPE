@@ -758,3 +758,36 @@ def test_placeholder_tones_cannot_reach_a_built_page():
     assert pr.voice.shippable(tones, allow_placeholder=True)
     assert pr.voice.shippable(real)
     assert not pr.voice.shippable({"backend": "kitten", "clips": {}})
+
+
+# --------------------------------------------------------------- checklist
+
+
+def test_every_check_has_a_key_that_is_its_own():
+    """A tick is remembered under its key. Two items sharing one means ticking
+    one ticks the other, on a list whose whole job is to be trusted."""
+    keys = [c.key for stage in pr.checklist_for("harvest") for c in stage.checks]
+    assert keys, "the harvest list is empty"
+    assert len(keys) == len(set(keys)), sorted(keys)
+    for key in keys:
+        assert key.replace("_", "").isalnum(), key
+
+
+def test_the_checklist_carries_no_numbers_of_its_own():
+    """The trial sheet has the header width, the field and the coordinates.
+    Anything numeric here would be invented, and would be believed."""
+    import re
+
+    for stage in pr.checklist_for("harvest"):
+        for check in stage.checks:
+            text = check.text + " " + check.why
+            bad = [n for n in re.findall(r"\d+(?:\.\d+)?", text)]
+            assert not bad, f"{check.key} states a number: {bad}"
+
+
+def test_the_ones_that_cannot_be_undone_say_why():
+    hard = [c for stage in pr.checklist_for("harvest")
+            for c in stage.checks if c.hard]
+    assert hard, "nothing is marked as unrecoverable, which cannot be right"
+    for check in hard:
+        assert check.why, check.key

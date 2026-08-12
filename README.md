@@ -246,6 +246,26 @@ complaint, and much rarer.
 The form is deliberately short. A bad report beats no report, and a long form
 gets abandoned in a cab.
 
+### The harvest day checklist
+
+The first screen opens with a short list of the things that spoil a trial if
+they are missed — the same shape as the checklist an agronomist emails out,
+but ticked on the phone that is already in the cab. Ticks are kept in
+`localStorage` by key rather than by position, so improving an item's wording
+does not silently untick a half-worked list, and a **Clear the ticks** button
+resets it for the next day.
+
+It is deliberately generic. `ofpe/procedures/checklist.py` holds the shape of
+the day and the handful of mistakes with no way back — a nudged line, an
+uncalibrated monitor, a header width that is wrong on every point in the
+field. The numbers live on the grower's own trial sheet, and a test enforces
+that: any digit in a checklist item fails the suite, because a number here
+would be invented and would be believed. Two items are marked as
+unrecoverable and have to say why.
+
+Other operations are data, not code: `CHECKLISTS` is keyed by operation, so a
+planting or spraying list is another tuple.
+
 ### Reading the steps out loud
 
 Hands inside a machine cannot scroll. Every procedure card has **Read the steps

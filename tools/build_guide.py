@@ -198,6 +198,12 @@ DATA = {
     "iconCredits": credits,
     "voice": voice_meta,
     "voiceNums": voice_numbers,
+    "checklist": [
+        {"key": s.key, "title": s.title, "note": s.note,
+         "checks": [{"k": c.key, "t": c.text, "why": c.why, "hard": c.hard}
+                    for c in s.checks]}
+        for s in pr.checklist_for("harvest")
+    ],
 }
 
 # --------------------------------------------------------------------------- #
@@ -212,7 +218,25 @@ CSS = r"""
    Kept close to paper: this is read in a bright cab, off a phone held at
    arm's length, and a heavy ground makes the steps harder to pick out than a
    near-white one. */
+html {
+  /* Everything else on this page is sized in rem, and rem answers to this
+     element -- not to body. 17.4px on a phone, 18px from a tablet up. */
+  font-size: clamp(17px, 15.9px + .42vw, 18px);
+}
+
 :root {
+  /* One type scale instead of twenty-one hand-picked sizes. Nearly every
+     word on this page sat BELOW the base size -- .78rem to .93rem -- which
+     on a phone is 12 to 15 pixels, held at arm's length, in a cab, in the
+     sun. The base grows a little with the viewport; the scale itself opens
+     up on a small screen, so the smallest text gains most where it is
+     needed most. */
+  --t-eyebrow: .72rem;
+  --t-xs:      .79rem;
+  --t-sm:      .86rem;
+  --t-md:      .93rem;
+  --t-lg:      .97rem;
+
   --ground:      #f6f7f3;
   --surface:     #ffffff;
   --surface-2:   #f0f2ec;
@@ -280,12 +304,26 @@ CSS = r"""
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--ground); color: var(--ink);
-  font-family: var(--sans); font-size: 16px; line-height: 1.55;
+  font-family: var(--sans); line-height: 1.55;
 }
 :focus-visible { outline: 3px solid var(--accent-line); outline-offset: 2px; border-radius: 4px; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
-.wrap { max-width: 760px; margin: 0 auto; padding: 0 18px 96px; }
+.wrap { max-width: 800px; margin: 0 auto; padding: 0 18px 96px; }
+
+/* A phone is read at arm's length with a glove on. The small end of
+   the scale closes on the base rather than everything inflating: the
+   captions and notes gain about a fifth, the headings barely move. */
+@media (max-width: 620px) {
+  :root {
+    --t-eyebrow: .78rem;
+    --t-xs:      .85rem;
+    --t-sm:      .92rem;
+    --t-md:      .98rem;
+    --t-lg:      1.02rem;
+  }
+  .wrap { padding: 0 15px 96px; }
+}
 
 /* ---------------------------------------------------------------- header */
 header { padding: 30px 0 20px; }
@@ -303,10 +341,10 @@ body.go header { padding: 18px 0 12px; }
 body.go h1 { font-size: 1.16rem; letter-spacing: -.012em; }
 body.go .tagline, body.go .rule { display: none; }
 body.go .search { margin-top: 13px; }
-body.go .search input { padding: 9px 13px; font-size: .92rem; }
+body.go .search input { padding: 9px 13px; font-size: var(--t-md); }
 
 .themebtn {
-  position: absolute; top: 26px; right: 0; font: inherit; font-size: .8rem;
+  position: absolute; top: 26px; right: 0; font: inherit; font-size: var(--t-xs);
   cursor: pointer; padding: 7px 12px; min-height: 38px; border-radius: 99px;
   border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
 }
@@ -347,7 +385,7 @@ header { position: relative; }
 }
 .trail:empty { display: none; }
 .backbtn {
-  font: inherit; font-weight: 620; font-size: .88rem; cursor: pointer;
+  font: inherit; font-weight: 620; font-size: var(--t-md); cursor: pointer;
   padding: 9px 16px 9px 12px; min-height: 44px; flex: none;
   display: inline-flex; align-items: center; gap: 7px;
   border: 1.5px solid var(--line); border-radius: 99px;
@@ -361,7 +399,7 @@ header { position: relative; }
    which costs a glance to decode; dropping "Combine harvester" entirely does
    not. Which crumbs survive is decided in fitCrumbs, after measuring. */
 .crumbs {
-  font-size: .84rem; color: var(--ink-3);
+  font-size: var(--t-sm); color: var(--ink-3);
   flex: 1 1 auto; min-width: 0; overflow: hidden;
   display: flex; align-items: baseline; gap: 7px; white-space: nowrap;
 }
@@ -376,12 +414,12 @@ header { position: relative; }
 .q[hidden] { display: none; }
 .qhead { display: flex; align-items: baseline; gap: 11px; margin-bottom: 13px; }
 .qnum {
-  font-family: var(--mono); font-size: .78rem; font-weight: 700;
+  font-family: var(--mono); font-size: var(--t-xs); font-weight: 700;
   color: var(--accent); letter-spacing: .06em; flex: none;
   padding-top: .18em;
 }
 .qtitle { margin: 0; font-size: 1.18rem; font-weight: 640; letter-spacing: -.012em; }
-.qnote { margin: -6px 0 13px; color: var(--ink-3); font-size: .89rem; max-width: 58ch; }
+.qnote { margin: -6px 0 13px; color: var(--ink-3); font-size: var(--t-md); max-width: 58ch; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 9px; }
 .chip {
@@ -391,14 +429,16 @@ header { position: relative; }
   display: flex; flex-direction: column; justify-content: center; gap: 2px;
 }
 .chip:hover { border-color: var(--accent-line); }
-.chip .sub { font-size: .8rem; color: var(--ink-3); }
-.chip .n { font-family: var(--mono); font-size: .76rem; color: var(--ink-3); }
+.chip .sub { font-size: var(--t-xs); color: var(--ink-3); }
+.chip .n { font-family: var(--mono); font-size: var(--t-xs); color: var(--ink-3); }
 
 /* The drawings all show the same green guidance screen, because that is what
    every one of these displays actually shows. So the model name leads and the
    drawing sits underneath at thumbnail size, where the bezel shape is the
    thing you match against the box in the cab. */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(152px, 1fr)); gap: 10px; }
+/* The minimum column grew with the type: at 152px a bigger "Gen 4
+   CommandCenter (4240 / 4600 / 4640)" ran into the card edge. */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; }
 .mcard {
   font: inherit; cursor: pointer; padding: 11px 11px 9px; border-radius: 11px;
   border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
@@ -407,13 +447,14 @@ header { position: relative; }
 .mcard:hover { border-color: var(--accent-line); }
 .mcard img { width: 78px; aspect-ratio: 380/300; align-self: flex-end;
   margin-top: auto; padding-top: 10px; opacity: .92; }
-.mcard .b { font-size: .71rem; font-weight: 700; letter-spacing: .06em;
+.mcard .b { font-size: var(--t-eyebrow); font-weight: 700; letter-spacing: .06em;
   text-transform: uppercase; color: var(--ink-3); }
-.mcard .m { font-size: .93rem; font-weight: 620; line-height: 1.27; letter-spacing: -.008em; }
+.mcard .m { font-size: var(--t-md); font-weight: 620; line-height: 1.27;
+  letter-spacing: -.008em; overflow-wrap: break-word; }
 
 .jobs { display: flex; flex-direction: column; gap: 20px; }
 .jobgroup h3 {
-  margin: 0 0 9px; font-size: .74rem; text-transform: uppercase;
+  margin: 0 0 9px; font-size: var(--t-eyebrow); text-transform: uppercase;
   letter-spacing: .1em; color: var(--ink-3); font-weight: 700;
   display: flex; align-items: center; gap: 10px;
 }
@@ -425,7 +466,7 @@ header { position: relative; }
 }
 .job:hover { border-color: var(--accent-line); }
 .job b { display: block; font-size: 1rem; font-weight: 620; }
-.job span { display: block; font-size: .85rem; color: var(--ink-3); margin-top: 2px; }
+.job span { display: block; font-size: var(--t-sm); color: var(--ink-3); margin-top: 2px; }
 
 /* ---------------------------------------------------------------- result */
 .result { margin-top: 30px; }
@@ -442,10 +483,10 @@ header { position: relative; }
 .chead img { width: 132px; aspect-ratio: 380/300; flex: none; }
 .chead .t { flex: 1; min-width: 210px; }
 .chead h2 { margin: 0; font-size: 1.3rem; font-weight: 660; letter-spacing: -.015em; text-wrap: balance; }
-.chead p { margin: 3px 0 0; color: var(--ink-2); font-size: .9rem; }
+.chead p { margin: 3px 0 0; color: var(--ink-2); font-size: var(--t-md); }
 .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .tag {
-  font-size: .73rem; font-weight: 640; padding: 3px 9px; border-radius: 99px;
+  font-size: var(--t-eyebrow); font-weight: 640; padding: 3px 9px; border-radius: 99px;
   border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
 }
 .tag.ok { border-color: var(--ok); color: var(--ok); background: var(--ok-soft); }
@@ -453,7 +494,7 @@ header { position: relative; }
 
 .body { padding: 20px; }
 h4 {
-  margin: 26px 0 11px; font-size: .74rem; text-transform: uppercase;
+  margin: 26px 0 11px; font-size: var(--t-eyebrow); text-transform: uppercase;
   letter-spacing: .1em; color: var(--ink-3); font-weight: 700;
 }
 h4:first-child { margin-top: 0; }
@@ -466,10 +507,10 @@ h4:first-child { margin-top: 0; }
   background: var(--surface); padding: 11px 14px;
   border: 1px solid var(--line); border-radius: 10px;
 }
-.facts dt { font-size: .69rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); font-weight: 700; }
-.facts dd { margin: 4px 0 0; font-weight: 600; font-size: .95rem; overflow-wrap: anywhere; }
+.facts dt { font-size: var(--t-eyebrow); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); font-weight: 700; }
+.facts dd { margin: 4px 0 0; font-weight: 600; font-size: var(--t-lg); overflow-wrap: anywhere; }
 .facts code {
-  font-family: var(--mono); font-size: .87rem; font-weight: 600;
+  font-family: var(--mono); font-size: var(--t-sm); font-weight: 600;
   background: var(--accent-soft); color: var(--ink); padding: 3px 7px;
   border-radius: 5px; display: inline-block; border: 1px solid var(--accent-line);
 }
@@ -483,7 +524,7 @@ ol.steps li::before {
   content: counter(s); position: absolute; left: 0; top: -1px;
   width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;
   background: var(--accent); color: var(--accent-ink);
-  font-family: var(--mono); font-size: .87rem; font-weight: 700;
+  font-family: var(--mono); font-size: var(--t-sm); font-weight: 700;
 }
 ol.steps li:last-child { padding-bottom: 0; }
 
@@ -527,7 +568,7 @@ ol.steps li:last-child { padding-bottom: 0; }
 /* The step being read lights up, so a glance finds your place again. */
 ol.steps li.saying { background: var(--accent-soft); border-radius: 9px;
   box-shadow: 0 0 0 8px var(--accent-soft); }
-.saynote { font-size: .82rem; color: var(--ink-3); margin: -8px 0 16px; }
+.saynote { font-size: var(--t-sm); color: var(--ink-3); margin: -8px 0 16px; }
 
 /* -------------------------------------------- what is not on screen yet */
 /* The answer is the file and the steps. Everything else -- what to have ready,
@@ -541,7 +582,7 @@ ol.steps li.saying { background: var(--accent-soft); border-radius: 9px;
 }
 .more summary {
   cursor: pointer; list-style: none; padding: 12px 15px;
-  display: flex; align-items: center; gap: 10px; font-size: .93rem;
+  display: flex; align-items: center; gap: 10px; font-size: var(--t-md);
 }
 .more summary::-webkit-details-marker { display: none; }
 .more summary::before {
@@ -551,12 +592,12 @@ ol.steps li.saying { background: var(--accent-soft); border-radius: 9px;
 .more details[open] summary::before { content: "\2013"; }
 .more details[open] summary { border-bottom: 1px solid var(--line-soft); }
 .more summary:hover { color: var(--accent); }
-.more .n { margin-left: auto; color: var(--ink-3); font-size: .82rem;
+.more .n { margin-left: auto; color: var(--ink-3); font-size: var(--t-sm);
   font-family: var(--mono); }
 .more .inner { padding: 13px 15px 15px; }
 .more ul { margin: 0; padding-left: 19px; }
 .more li { margin-bottom: 8px; } .more li:last-child { margin-bottom: 0; }
-.more .src { font-size: .84rem; color: var(--ink-2); }
+.more .src { font-size: var(--t-sm); color: var(--ink-2); }
 .more .src p { margin: 0 0 7px; } .more .src p:last-child { margin: 0; }
 /* A dot carries the tone the coloured panel used to. Quieter, same meaning. */
 .more .dot { width: 8px; height: 8px; border-radius: 50%; flex: none;
@@ -600,7 +641,7 @@ ol.vsteps > li::before {
   content: counter(v); position: absolute; left: 0; top: -1px;
   width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;
   background: var(--accent); color: var(--accent-ink);
-  font-family: var(--mono); font-size: .87rem; font-weight: 700;
+  font-family: var(--mono); font-size: var(--t-sm); font-weight: 700;
 }
 /* The button crop sits in the flow of the sentence at the size of a word:
    the eye matches it against the glass without leaving the instruction. */
@@ -610,12 +651,12 @@ ol.vsteps > li::before {
   display: flex; gap: 9px; align-items: center; margin-top: 10px;
   padding: 8px 11px 8px 8px; border: 1px solid var(--line); border-radius: 9px;
   background: var(--surface-2); color: var(--ink-2); font: inherit;
-  font-size: .84rem; text-align: left; cursor: pointer; width: 100%;
+  font-size: var(--t-sm); text-align: left; cursor: pointer; width: 100%;
 }
 .vshot:hover { border-color: var(--accent-line); color: var(--ink); }
 .vshot img { width: 104px; flex: none; border-radius: 5px; display: block; }
 .vshot b { display: block; font-weight: 620; color: var(--ink); }
-.vsub { display: block; font-size: .78rem; color: var(--ink-3); margin-top: 1px; }
+.vsub { display: block; font-size: var(--t-xs); color: var(--ink-3); margin-top: 1px; }
 .vanswer { margin-top: 6px; }
 .vanswer img { width: 100%; max-width: 420px; border: 1.5px solid var(--accent-line);
   border-radius: 9px; display: block; }
@@ -640,10 +681,10 @@ ol.vsteps > li::before {
 #shotbox.zoom img { max-width: none; max-height: none; width: 260%;
   cursor: zoom-out; }
 #shotbox.zoom p { display: none; }
-#shotbox .hint { color: #b2bba9; font-size: .8rem; margin: 0; }
+#shotbox .hint { color: #b2bba9; font-size: var(--t-xs); margin: 0; }
 #shotbox.zoom .hint { display: none; }
 #shotbox p { margin: 0; max-width: 62ch; text-align: center; color: #e9ede4;
-  font-size: .92rem; line-height: 1.5; }
+  font-size: var(--t-md); line-height: 1.5; }
 #shotbox .close {
   position: absolute; top: 14px; right: 14px; font: inherit; font-weight: 620;
   cursor: pointer; padding: 9px 15px; border-radius: 8px; min-height: 44px;
@@ -671,9 +712,10 @@ ol.vsteps > li::before {
 }
 .prep summary {
   cursor: pointer; list-style: none; padding: 13px 15px;
-  display: flex; align-items: center; gap: 10px; font-size: .93rem;
+  display: flex; align-items: center; gap: 10px; font-size: var(--t-md);
   font-weight: 560; min-height: 46px; box-sizing: border-box;
 }
+.prep summary .st { flex: 1 1 auto; min-width: 0; }
 .prep summary::-webkit-details-marker { display: none; }
 .prep summary::before {
   content: "+"; font-family: var(--mono); font-weight: 700; color: var(--accent);
@@ -683,10 +725,47 @@ ol.vsteps > li::before {
 .prep details[open] summary { border-bottom: 1px solid var(--line-soft); }
 .prep summary:hover { color: var(--accent); }
 .prep .inner { padding: 14px 15px 16px; }
-.prep p { margin: 0 0 11px; font-size: .92rem; }
+.prep p { margin: 0 0 11px; font-size: var(--t-md); }
 .prep p:last-child { margin: 0; }
-.prep .skip { color: var(--ink-3); font-size: .87rem; }
-.prep ol { margin: 0 0 12px; padding-left: 21px; font-size: .92rem; }
+.prep .skip { color: var(--ink-3); font-size: var(--t-sm); }
+.prep .tally {
+  margin-left: auto; color: var(--ink-3); font-size: var(--t-xs);
+  font-family: var(--mono); font-weight: 400; flex: none;
+}
+.prep h5 { margin: 20px 0 3px; font-size: var(--t-lg); letter-spacing: -.01em; }
+.prep h5:first-child { margin-top: 0; }
+
+/* Rows big enough to hit with a glove, and a tick that stays legible on a
+   sunlit screen: the ticked line greys and strikes through, so what is left
+   undone is what reads. */
+.checks { display: flex; flex-direction: column; margin: 10px 0 4px; }
+.ck {
+  display: flex; gap: 11px; align-items: flex-start;
+  padding: 9px 0; border-top: 1px solid var(--line-soft);
+}
+.ck:first-child { border-top: 0; }
+.ck input {
+  width: 21px; height: 21px; margin: 1px 0 0; flex: none; cursor: pointer;
+  accent-color: var(--accent);
+}
+.ck label { cursor: pointer; display: block; min-height: 23px; }
+.ck .ct { display: block; font-size: var(--t-md); }
+.ck .cw { display: block; font-size: var(--t-sm); color: var(--ink-3); margin-top: 3px; }
+.ck.done .ct { color: var(--ink-3); text-decoration: line-through;
+  text-decoration-thickness: 1px; }
+.ck.done .cw { opacity: .55; }
+/* Two of these cannot be undone once they have happened, and they get the
+   same red the page uses for a step that breaks something. */
+.ck.hard { border-left: 3px solid var(--stop); padding-left: 11px; }
+.ck.hard .ct { font-weight: 640; }
+.clearck {
+  font: inherit; font-size: var(--t-sm); cursor: pointer; margin-top: 14px;
+  padding: 9px 15px; min-height: 40px;
+  border: 1px solid var(--line); border-radius: 99px;
+  background: var(--surface-2); color: var(--ink-2);
+}
+.clearck:hover { border-color: var(--accent-line); color: var(--accent); }
+.prep ol { margin: 0 0 12px; padding-left: 21px; font-size: var(--t-md); }
 .prep ol li { margin-bottom: 8px; }
 .prep ol li:last-child { margin-bottom: 0; }
 
@@ -698,9 +777,9 @@ ol.vsteps > li::before {
 }
 .btn:hover { border-color: var(--accent-line); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.srcline { padding: 13px 20px; border-top: 1px solid var(--line); background: var(--surface-2); font-size: .76rem; color: var(--ink-3); }
+.srcline { padding: 13px 20px; border-top: 1px solid var(--line); background: var(--surface-2); font-size: var(--t-xs); color: var(--ink-3); }
 
-footer { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--line-soft); color: var(--ink-3); font-size: .82rem; }
+footer { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--line-soft); color: var(--ink-3); font-size: var(--t-sm); }
 footer p { margin: 0 0 10px; max-width: 64ch; }
 footer .panel { background: none; border-color: var(--line-soft); }
 footer .vbody { padding: 4px 16px 14px; }
@@ -999,6 +1078,78 @@ function render() {
   /* After drawRoutes, not before: that is what decides whether an answer is
      on screen, and the stick panel hides itself once one is. */
   drawPrep();
+}
+
+/* The list of things that spoil a trial if they are missed. Ticks are kept
+   in localStorage: a checklist is worked through across a morning, with the
+   phone locked and unlocked and the page reopened, and one that forgets
+   where you were is a list you stop using by the second field.
+
+   Kept by key rather than by position, so improving an item's wording does
+   not silently untick it -- and a Clear button, because the same list is
+   worked through again the next day and stale ticks are worse than none. */
+const CHECK_KEY = 'ofpe.check.';
+/* localStorage throws rather than returns null in a sandboxed frame and in
+   some private-browsing modes. A checklist that forgets is a small loss; a
+   page that will not load is not, so every touch is wrapped. */
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+  drop(k) { try { localStorage.removeItem(k); } catch (e) {} },
+};
+const ticked = k => store.get(CHECK_KEY + k) === '1';
+
+function drawCheck() {
+  const host = $('#checkbody');
+  if (!D.checklist || !D.checklist.length) { $('#check').hidden = true; return; }
+  host.replaceChildren();
+
+  D.checklist.forEach(stage => {
+    const rows = el('div', { class: 'checks' });
+    stage.checks.forEach(c => {
+      const box = el('input', { type: 'checkbox', id: 'c-' + c.k });
+      box.checked = ticked(c.k);
+      box.addEventListener('change', () => {
+        if (box.checked) store.set(CHECK_KEY + c.k, '1');
+        else store.drop(CHECK_KEY + c.k);
+        row.classList.toggle('done', box.checked);
+        tally();
+      });
+      const row = el('div', { class: 'ck' + (c.hard ? ' hard' : '')
+                                  + (box.checked ? ' done' : '') },
+        box,
+        el('label', { for: 'c-' + c.k },
+          el('span', { class: 'ct' }, c.t),
+          c.why ? el('span', { class: 'cw' }, c.why) : null));
+      rows.append(row);
+    });
+    host.append(
+      el('h5', {}, stage.title),
+      el('p', { class: 'skip' }, stage.note),
+      rows);
+  });
+
+  host.append(el('p', { class: 'skip' },
+    'Your trial sheet has the numbers — which field, the header width, the '
+    + 'coordinates of the line. This list is only the shape of the day.'));
+  host.append(el('button', { class: 'clearck', type: 'button',
+                             onclick: clearChecks }, 'Clear the ticks'));
+  tally();
+}
+
+function clearChecks() {
+  D.checklist.forEach(s => s.checks.forEach(
+    c => store.drop(CHECK_KEY + c.k)));
+  drawCheck();
+}
+
+/* How far through, in the summary line, so a glance at the closed panel is
+   worth something. */
+function tally() {
+  const all = D.checklist.flatMap(s => s.checks);
+  const done = all.filter(c => ticked(c.k)).length;
+  const out = $('#tally');
+  if (out) out.textContent = `${done}/${all.length}`;
 }
 
 /* Preparing the stick is the one job that happens somewhere else: on a
@@ -1427,6 +1578,13 @@ function printSteps(e) {
 }
 
 /* -------------------------------------------------------------- search */
+/* The long placeholder is cut off mid-word on a phone, and the examples in
+   it are the part that teaches somebody what to type. So the narrow screen
+   gets a short one rather than a truncated long one. */
+if (innerWidth < 620) {
+  $('#find').placeholder = 'Type your display \u2014 2630, Pro 700\u2026';
+}
+
 $('#find').addEventListener('input', e => {
   const q = e.target.value.trim().toLowerCase();
   const hits = $('#hits'); hits.replaceChildren();
@@ -1462,6 +1620,10 @@ $('#shotbox').addEventListener('click', e => {
   if (e.target.id === 'shotbox') e.target.close();
 });
 
+/* The checklist does not depend on any answer, so it is built once rather
+   than on every render -- rebuilding it would throw away a half-ticked list
+   the moment somebody picked a display. */
+drawCheck();
 render();
 """
 
@@ -1489,9 +1651,16 @@ def build() -> None:
 
 <div class="trail" id="trail"></div>
 
+<section class="prep noprint" id="check">
+  <details>
+    <summary><span class="st">Harvest day checklist</span><span class="tally" id="tally"></span></summary>
+    <div class="inner" id="checkbody"></div>
+  </details>
+</section>
+
 <section class="prep noprint" id="prep">
   <details>
-    <summary>Using a USB stick? Set it up on the computer first</summary>
+    <summary><span class="st">Using a USB stick? Set it up on the computer first</span></summary>
     <div class="inner" id="prepbody"></div>
   </details>
 </section>

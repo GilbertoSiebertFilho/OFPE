@@ -44,3 +44,9 @@ from .walkthroughs import (  # noqa: F401
 )
 from . import brands  # noqa: F401  (populates the registry on import)
 from . import voice  # noqa: F401  (reads that registry, so it comes after)
+from .checklist import (  # noqa: F401
+    CHECKLISTS,
+    Check,
+    Stage,
+    checklist_for,
+)

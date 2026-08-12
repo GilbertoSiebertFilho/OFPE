@@ -244,7 +244,7 @@ def test_a_correction_can_be_filed_and_shows_up_in_the_queue(client):
     report = queue["reports"][0]
     # Enriched server-side so the operations list needs no second lookup.
     assert report["monitor_label"].startswith("John Deere")
-    assert report["objective_label"] == "Load guidance lines (AB / curves)"
+    assert report["objective_label"] == "Load AB lines"
     assert report["version_label"] == "Gen 4 OS 11.x"
     assert report["kind_label"] == "The menu was called something else"
     assert report["step_number"] == 5

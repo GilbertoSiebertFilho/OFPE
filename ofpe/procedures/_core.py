@@ -307,7 +307,7 @@ OBJECTIVES: dict[str, Objective] = {
         ),
         Objective(
             key="import_guidance",
-            label="Load guidance lines (AB / curves)",
+            label="Load AB lines",
             direction=Direction.TO_MONITOR,
             description="Reference lines the autosteer follows.",
             typical_formats="ISOXML, shapefile, brand setup file",
