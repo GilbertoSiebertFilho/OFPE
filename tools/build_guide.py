@@ -1026,6 +1026,7 @@ def build() -> None:
 """
     OUT.write_text(html, encoding="utf-8")
     print(f"wrote {OUT}  ({OUT.stat().st_size / 1024 / 1024:.2f} MB)")
+    print("  (README quotes this count in a few places — keep them in step)")
     print(f"  {len(procedures)} procedures, {len(monitors)} displays, {len(icons)} icons")
 
 
