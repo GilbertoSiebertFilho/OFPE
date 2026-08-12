@@ -475,3 +475,50 @@ def test_a_step_that_names_an_app_can_find_its_icon():
         assert named & set(icons), (
             f"{monitor_key} declares icons but no step names any of them"
         )
+
+
+# --------------------------------------------------------------------------- #
+#  Finding the software version                                                #
+# --------------------------------------------------------------------------- #
+
+def test_version_help_images_exist():
+    root = pathlib.Path(__file__).resolve().parent.parent / "assets" / "photos"
+    missing = []
+    for key, help_ in pr.VERSION_HELP.items():
+        for number, step in enumerate(help_.steps, 1):
+            for kind, name in (("button", step.button), ("screen", step.screen)):
+                if name and not (root / help_.folder / name).is_file():
+                    missing.append(f"{key} step {number} {kind}: {name}")
+    assert not missing, "missing photos:\n  " + "\n  ".join(missing)
+
+
+def test_version_help_photos_carry_their_own_explanation():
+    """A photo with no caption is decoration, not evidence.
+
+    The point of showing a whole screen is that somebody can check it against
+    their own display. That only works if we say what to look at -- five photos
+    of the same 2630 are indistinguishable at thumbnail size otherwise.
+    """
+    for key, help_ in pr.VERSION_HELP.items():
+        assert help_.evidence, f"{key} shows photos without saying where from"
+        for number, step in enumerate(help_.steps, 1):
+            if step.screen:
+                assert step.look_for, f"{key} step {number}: screen with no caption"
+                assert step.screen_name, f"{key} step {number}: screen with no name"
+
+
+def test_version_help_points_at_a_display_that_asks_for_a_version():
+    """Help for a display with nothing to choose would be help for nothing."""
+    for key in pr.VERSION_HELP:
+        assert key in catalog_module.MONITORS, key
+        assert pr.versions_for(key), f"{key} has no versions to pick between"
+
+
+def test_version_help_names_the_field_it_is_hunting_for():
+    for key, help_ in pr.VERSION_HELP.items():
+        assert help_.field_label, key
+        assert help_.example, f"{key} gives no example of what the number looks like"
+        # The last step is the payoff, so it must name that field.
+        assert help_.field_label in help_.steps[-1].text, (
+            f"{key}: the final step does not name {help_.field_label!r}"
+        )

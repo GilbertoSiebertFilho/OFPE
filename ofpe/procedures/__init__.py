@@ -32,4 +32,10 @@ from .screens import (  # noqa: F401
     icon_credit,
     icons_for,
 )
+from .version_help import (  # noqa: F401
+    VERSION_HELP,
+    VersionHelp,
+    VersionStep,
+    version_help_for,
+)
 from . import brands  # noqa: F401  (populates the registry on import)

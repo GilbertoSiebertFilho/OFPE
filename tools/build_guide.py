@@ -57,6 +57,39 @@ for key in monitors:
     screen_icons[key["key"]] = table
     credits[key["key"]] = pr.icon_credit(key["key"])
 
+# The photographed walk-through for finding a software version. Embedded like
+# everything else, because the whole point is that it opens in a cab with no
+# signal. The photographs are the heaviest thing on the page and still cheap
+# next to being unable to answer question three.
+version_help = {}
+for entry in monitors:
+    help_ = pr.version_help_for(entry["key"])
+    if not help_:
+        continue
+    photos = ROOT / "assets" / "photos" / help_.folder
+
+    def _img(name: str) -> str:
+        return "data:image/jpeg;base64," + base64.b64encode(
+            (photos / name).read_bytes()).decode()
+
+    version_help[entry["key"]] = {
+        "field": help_.field_label,
+        "example": help_.example,
+        "readsAs": help_.reads_as,
+        "evidence": help_.evidence,
+        "alsoShows": list(help_.also_shows),
+        "steps": [
+            {
+                "text": s.text,
+                "button": _img(s.button) if s.button else "",
+                "screen": _img(s.screen) if s.screen else "",
+                "lookFor": s.look_for,
+                "screenName": s.screen_name,
+            }
+            for s in help_.steps
+        ],
+    }
+
 procedures = []
 for p in pr.PROCEDURES:
     d = p.to_dict()
@@ -84,6 +117,7 @@ DATA = {
                    for c in pr.Confidence},
     "procedures": procedures,
     "screenIcons": screen_icons,
+    "versionHelp": version_help,
     "iconCredits": credits,
     "relatedOrder": list(pr._core._RELATED_ORDER),
 }
@@ -356,6 +390,86 @@ ol.steps li:last-child { padding-bottom: 0; }
 .key.hasicon img { width: 1.55em; height: 1.55em; display: block;
   border-radius: 3px; background: #f4f5f1; }
 .nb { white-space: nowrap; }
+
+/* ---------------------------------------------- finding the version */
+/* Question three is where people stall, so the answer lives inside the
+   question rather than a page away. Closed by default: somebody who knows
+   their version should not have to scroll past a walk-through to answer. */
+.vhelp { margin: 14px 0 4px; border: 1.5px solid var(--line);
+  border-radius: 11px; background: var(--surface); overflow: hidden; }
+.vhelp > summary {
+  cursor: pointer; padding: 13px 16px; font-weight: 620; list-style: none;
+  display: flex; align-items: center; gap: 9px; background: var(--surface-2);
+}
+.vhelp > summary::-webkit-details-marker { display: none; }
+.vhelp > summary::before {
+  content: "▸"; color: var(--accent); font-size: .9em; transition: transform .15s;
+}
+.vhelp[open] > summary::before { transform: rotate(90deg); }
+.vhelp .vbody { padding: 16px; }
+.vhelp .evidence {
+  margin: 0 0 14px; font-size: .85rem; color: var(--ink-2);
+  border-left: 3px solid var(--ok); background: var(--ok-soft);
+  padding: 10px 13px; border-radius: 0 8px 8px 0;
+}
+ol.vsteps { counter-reset: v; list-style: none; margin: 0; padding: 0; }
+ol.vsteps > li {
+  counter-increment: v; position: relative; padding: 0 0 18px 44px;
+  font-size: var(--step); line-height: 1.5;
+}
+ol.vsteps > li::before {
+  content: counter(v); position: absolute; left: 0; top: -1px;
+  width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;
+  background: var(--accent); color: var(--accent-ink);
+  font-family: var(--mono); font-size: .87rem; font-weight: 700;
+}
+/* The button crop sits in the flow of the sentence at the size of a word:
+   the eye matches it against the glass without leaving the instruction. */
+.vbtn { display: block; margin: 9px 0 0; max-width: 210px; width: 100%;
+  border: 1.5px solid var(--line); border-radius: 8px; background: #fff; }
+.vshot {
+  display: flex; gap: 9px; align-items: center; margin-top: 10px;
+  padding: 8px 11px 8px 8px; border: 1px solid var(--line); border-radius: 9px;
+  background: var(--surface-2); color: var(--ink-2); font: inherit;
+  font-size: .84rem; text-align: left; cursor: pointer; width: 100%;
+}
+.vshot:hover { border-color: var(--accent-line); color: var(--ink); }
+.vshot img { width: 104px; flex: none; border-radius: 5px; display: block; }
+.vshot b { display: block; font-weight: 620; color: var(--ink); }
+.vsub { display: block; font-size: .78rem; color: var(--ink-3); margin-top: 1px; }
+.vanswer { margin-top: 6px; }
+.vanswer img { width: 100%; max-width: 420px; border: 1.5px solid var(--accent-line);
+  border-radius: 9px; display: block; }
+
+/* Full-screen photo. A cab is bright and the number is in small print, so the
+   photo gets the whole viewport rather than a polite modal. */
+#shotbox { position: fixed; inset: 0; z-index: 50; border: 0; padding: 0;
+  margin: 0; width: 100%; height: 100%; max-width: none; max-height: none;
+  background: rgba(12,14,10,.94); }
+#shotbox::backdrop { background: rgba(12,14,10,.94); }
+#shotbox .sb {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px; padding: 16px;
+  overflow: auto;
+}
+#shotbox img { max-width: 100%; max-height: calc(100% - 108px);
+  object-fit: contain; border-radius: 8px; cursor: zoom-in; }
+/* A landscape photo in a portrait phone leaves the small print unreadable, and
+   the small print is the whole reason for opening it. So it zooms: the frame
+   scrolls and the picture goes past the edge of the screen. */
+#shotbox.zoom .sb { align-items: flex-start; justify-content: flex-start; }
+#shotbox.zoom img { max-width: none; max-height: none; width: 260%;
+  cursor: zoom-out; }
+#shotbox.zoom p { display: none; }
+#shotbox .hint { color: #b2bba9; font-size: .8rem; margin: 0; }
+#shotbox.zoom .hint { display: none; }
+#shotbox p { margin: 0; max-width: 62ch; text-align: center; color: #e9ede4;
+  font-size: .92rem; line-height: 1.5; }
+#shotbox .close {
+  position: absolute; top: 14px; right: 14px; font: inherit; font-weight: 620;
+  cursor: pointer; padding: 9px 15px; border-radius: 8px; min-height: 44px;
+  background: #e9ede4; color: #171b15; border: 0;
+}
 .srcline p { margin: 0 0 5px; } .srcline p:last-child { margin: 0; }
 
 .note { border-left: 3px solid var(--line); background: var(--surface-2); padding: 12px 15px; border-radius: 0 9px 9px 0; }
@@ -552,9 +666,68 @@ function pickMonitor(key) {
   step();
 }
 
+/* Open a photograph of the real screen. The number people are hunting for is
+   in small print at the bottom of a busy page, so it gets the whole viewport
+   rather than a thumbnail. */
+function openShot(src, caption) {
+  $('#shotimg').src = src;
+  $('#shotcap').textContent = caption || '';
+  $('#shotbox').classList.remove('zoom');
+  $('#shotbox').showModal();
+}
+
+$('#shotimg').addEventListener('click', () => {
+  const box = $('#shotbox');
+  box.classList.toggle('zoom');
+  if (box.classList.contains('zoom')) $('.sb', box).scrollTop = 0;
+});
+
+function drawVersionHelp() {
+  const host = $('#vhelp'); host.replaceChildren();
+  const help = D.versionHelp[S.mon];
+  if (!help) return;
+
+  const body = el('div', { class: 'vbody' });
+  body.append(el('p', { class: 'evidence' }, help.evidence));
+
+  const list = el('ol', { class: 'vsteps' });
+  help.steps.forEach((s, i) => {
+    const last = i === help.steps.length - 1;
+    const item = el('li', {}, keys(s.text, S.mon));
+    if (s.button) {
+      item.append(el('div', { class: last ? 'vanswer' : '' },
+        el('img', { class: last ? '' : 'vbtn', src: s.button, alt: '' })));
+    }
+    if (s.screen) {
+      item.append(el('button', {
+        class: 'vshot', type: 'button',
+        onclick: () => openShot(s.screen, s.lookFor),
+      }, el('img', { src: s.screen, alt: '' }),
+         el('span', {},
+           el('b', {}, s.screenName || 'This screen'),
+           el('span', { class: 'vsub' }, 'Tap to see it on a real machine'))));
+    }
+    list.append(item);
+  });
+  body.append(list);
+
+  if (help.readsAs) body.append(el('p', { class: 'qnote' }, help.readsAs));
+  if (help.alsoShows.length) {
+    body.append(el('h4', {}, 'Worth writing down while you are there'));
+    body.append(el('div', { class: 'note' },
+      el('ul', {}, help.alsoShows.map(x => el('li', {}, x)))));
+  }
+
+  host.append(el('details', { class: 'vhelp' },
+    el('summary', {}, 'Show me where to find it — the ',
+      el('b', { class: 'key' }, help.field), ' line'),
+    body));
+}
+
 function drawVersions() {
   show('#q3', answered('mon') && !answered('ver'));
   if (!answered('mon') || answered('ver')) return;
+  drawVersionHelp();
   const host = $('#vers'); host.replaceChildren();
   const pick = v => { S.ver = v; S.job = S.route = null; step(); };
   monByKey[S.mon].versions.forEach(v => {
@@ -702,6 +875,10 @@ $('#find').addEventListener('input', e => {
      el('span', {}, m.brand + ' ' + m.model))));
 });
 
+$('#shotbox').addEventListener('click', e => {
+  if (e.target.id === 'shotbox') e.target.close();
+});
+
 render();
 """
 
@@ -743,6 +920,7 @@ def build() -> None:
   <p class="qnote">This matters more than it looks. Menus move between releases,
     and one John Deere update stopped accepting a file format it used to take.
     If you are not sure, pick the last option.</p>
+  <div id="vhelp"></div>
   <div class="chips" id="vers"></div>
 </section>
 
@@ -757,6 +935,15 @@ def build() -> None:
 </section>
 
 <div class="result" id="result" hidden></div>
+
+<dialog id="shotbox">
+  <div class="sb">
+    <button class="close" type="button" onclick="shotbox.close()">Close</button>
+    <img id="shotimg" alt="">
+    <p id="shotcap"></p>
+    <p class="hint">Tap the photo to zoom in</p>
+  </div>
+</dialog>
 
 <footer>
   <p><strong>{len(procedures)} procedures across {len(monitors)} displays.</strong>

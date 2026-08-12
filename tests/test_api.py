@@ -428,3 +428,37 @@ def test_deleting_a_machine_keeps_its_lines(client):
     lines = client.get("/api/lines").json()
     assert len(lines) == 1
     assert lines[0]["machine_id"] == ""
+
+
+def test_the_version_walkthrough_reaches_the_browser(client):
+    """The photos are useless if the API keeps them to itself."""
+    response = client.get(
+        "/api/guide/procedure",
+        params={
+            "monitor_key": "john_deere.gs3_2630",
+            "objective": "import_prescription",
+            "transport": "usb",
+        },
+    )
+    assert response.status_code == 200
+    walkthrough = response.json()["version_walkthrough"]
+    assert walkthrough, "the 2630 has a photographed walk-through and did not send it"
+    assert walkthrough["field"] == "Application Software Build"
+
+    # And every image it points at must actually be served.
+    for step in walkthrough["steps"]:
+        for url in (step["button"], step["screen"]):
+            if url:
+                assert client.get(url).status_code == 200, url
+
+
+def test_a_display_with_no_photos_says_so_rather_than_faking_it(client):
+    response = client.get(
+        "/api/guide/procedure",
+        params={
+            "monitor_key": "trimble.precision_iq",
+            "objective": "import_prescription",
+            "transport": "usb",
+        },
+    )
+    assert response.json()["version_walkthrough"] is None
