@@ -114,7 +114,7 @@ python3 tools/generate_icons.py
 ## What to try first
 
 The **Guide** tab needs no data at all — the 342 procedures are built in. Pick
-a combine, pick a Gen 4, pick the 2025-3 software version, ask to load guidance
+a combine, pick a Gen 4, pick the 2025-3 monitor version, ask to load AB
 lines, and read what comes back. Then change the version to OS 11.x and watch
 the answer change, which is the whole point of the version step.
 
@@ -145,8 +145,6 @@ Three things fall out of having the whole matrix:
 - **Every display has a handbook.** `/handbook?monitor_key=…&version=…` renders
   *every* procedure for one display as a single printable document — for
   training an operator, for the folder in the workshop, for a machine handover.
-- **Every card suggests what is next.** The trip to the machine to load a
-  prescription is also the moment to pull last week's work data off it.
 - **Every card can be corrected.** A button sends back what the screen actually
   said. See below — this is the only honest route from "confirm the wording" to
   "verified".
