@@ -282,7 +282,13 @@ def render(backend_key: str, model: str, voice: str, clean: bool,
     }, indent=1, sort_keys=True) + "\n")
 
     print(f"{len(clips)} clips, {total / 1e6:.2f} MB in {out}")
-    return 0 if len(clips) == len(lines) else 1
+    short = len(lines) - len(clips)
+    if short:
+        print(f"{short} line(s) still without a recording")
+    # A limited run is meant to come up short -- that is what --limit is for,
+    # and calling it a failure buries the clips it did make. Only a full run
+    # that still has gaps is a real one.
+    return 1 if short and not limit else 0
 
 
 def main() -> int:

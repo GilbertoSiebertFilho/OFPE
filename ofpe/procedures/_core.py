@@ -431,7 +431,7 @@ class MonitorVersion:
 # from; a monitor absent from this map offers only "any version".
 MONITOR_VERSIONS: dict[str, tuple[MonitorVersion, ...]] = {
     "john_deere.gs3_2630": (
-        MonitorVersion("gs3_3x", "GreenStar 3 software 3.x", "The only line still supported"),
+        MonitorVersion("gs3_3x", "GreenStar 3 version 3.x", "The only line still supported"),
     ),
     "john_deere.gen4": (
         MonitorVersion("gen4_10x", "Gen 4 OS 10.x", "Roughly 2016-2019 machines"),
@@ -451,18 +451,18 @@ MONITOR_VERSIONS: dict[str, tuple[MonitorVersion, ...]] = {
         ),
     ),
     "case_ih.afs_pro_700": (
-        MonitorVersion("pro700_28", "Software 28.x"),
-        MonitorVersion("pro700_29", "Software 29.x"),
-        MonitorVersion("pro700_30", "Software 30.x or newer"),
+        MonitorVersion("pro700_28", "Version 28.x"),
+        MonitorVersion("pro700_29", "Version 29.x"),
+        MonitorVersion("pro700_30", "Version 30.x or newer"),
     ),
     "case_ih.afs_pro_1200": (
-        MonitorVersion("pro1200_all", "AFS Connect software (all releases)"),
+        MonitorVersion("pro1200_all", "AFS Connect (all releases)"),
     ),
     "new_holland.intelliview_iv": (
         MonitorVersion("iv4_all", "All releases"),
     ),
     "new_holland.intelliview_12": (
-        MonitorVersion("iv12_all", "PLM Intelligence software (all releases)"),
+        MonitorVersion("iv12_all", "PLM Intelligence (all releases)"),
     ),
     "trimble.precision_iq": (
         MonitorVersion("piq_all", "Precision-IQ (all releases)"),

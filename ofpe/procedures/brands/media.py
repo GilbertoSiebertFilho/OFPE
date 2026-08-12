@@ -48,19 +48,26 @@ for _monitor in (
         file_format="n/a — this prepares the stick itself",
         media_path="n/a",
         minutes=5,
+        # This one happens on a computer, not on the display, so the marked
+        # names are the Windows ones. They are marked for the same reason the
+        # display's are: a name you have to find on a screen reads faster as a
+        # cap than as a word inside a sentence.
         steps=(
             "Pick a stick of 8 GB to 32 GB. Bigger ones often are not read at "
             "all, however new they are.",
             "Plug it into a computer.",
-            "Open This PC, right-click the stick, and choose Format.",
-            "In the box that opens, set File system to FAT32.",
-            "Tick Quick Format, then press Start. It takes a few seconds.",
-            "Give it a short name — letters and numbers only.",
+            "Open «This PC», right-click the stick, and choose «Format».",
+            "In the box that opens, set «File system» to «FAT32».",
+            "Type a short «Volume label» — letters and numbers only, no "
+            "spaces. That is the name the display will show.",
+            "Leave «Quick Format» ticked and press «Start». It takes a few "
+            "seconds.",
             "Copy your files on, in the folder your display expects.",
-            "Click Eject on the computer before you unplug it.",
+            "Right-click the stick and choose «Eject» before you pull it out.",
         ),
         verify=(
-            "Right-click the stick and choose Properties: it should say FAT32.",
+            "Right-click the stick and choose «Properties»: it should say "
+            "FAT32.",
             "Your files appear on the display when you open its import screen.",
         ),
         cautions=(

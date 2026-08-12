@@ -189,7 +189,7 @@ def test_handbook_renders_every_procedure_for_a_display(client):
 
     html = response.text
     assert "Case IH AFS Pro 700" in html
-    assert "Software 30.x or newer" in html
+    assert "Version 30.x or newer" in html
 
     expected = sum(
         len(pr.available_transports(

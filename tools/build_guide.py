@@ -196,7 +196,6 @@ DATA = {
     "versionHelp": version_help,
     "walkPhotos": walk_photos,
     "iconCredits": credits,
-    "relatedOrder": list(pr._core._RELATED_ORDER),
     "voice": voice_meta,
     "voiceNums": voice_numbers,
 }
@@ -503,7 +502,11 @@ ol.steps li:last-child { padding-bottom: 0; }
    display. So the cap keeps a light plate under it in both themes. */
 .key.hasicon img { width: 1.55em; height: 1.55em; display: block;
   border-radius: 3px; background: #f4f5f1; }
+/* A cap and the punctuation after it travel together (see keys()). The cap's
+   own margin would leave the full stop floating away from it, so inside that
+   pair it goes. */
 .nb { white-space: nowrap; }
+.nb .key { margin-right: 0; }
 
 /* ------------------------------------------------------ reading it aloud */
 /* Hands inside the machine, phone on the seat. The browser's own speech
@@ -655,14 +658,37 @@ ol.vsteps > li::before {
 .note ul { margin: 0; padding-left: 19px; }
 .note li { margin-bottom: 6px; } .note li:last-child { margin-bottom: 0; }
 
-.next { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 8px; }
-.next button {
-  font: inherit; text-align: left; cursor: pointer; padding: 10px 13px;
-  border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); color: var(--ink);
+/* The stick is prepared on a computer, before anyone walks out to the
+   machine, so its panel sits above the first question -- not at the bottom
+   of an answer, which is where you read it having already made the trip.
+   It is one closed line until somebody wants it, and it goes away once an
+   answer is on screen: by then you are at the display, and the answer is
+   what should have the room. */
+.prep { margin: 4px 0 26px; }
+.prep details {
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+  overflow: hidden;
 }
-.next button:hover { border-color: var(--accent-line); }
-.next b { display: block; font-size: .88rem; font-weight: 620; }
-.next span { display: block; font-size: .78rem; color: var(--ink-3); margin-top: 1px; }
+.prep summary {
+  cursor: pointer; list-style: none; padding: 13px 15px;
+  display: flex; align-items: center; gap: 10px; font-size: .93rem;
+  font-weight: 560; min-height: 46px; box-sizing: border-box;
+}
+.prep summary::-webkit-details-marker { display: none; }
+.prep summary::before {
+  content: "+"; font-family: var(--mono); font-weight: 700; color: var(--accent);
+  width: 1em; text-align: center; flex: none;
+}
+.prep details[open] summary::before { content: "\2013"; }
+.prep details[open] summary { border-bottom: 1px solid var(--line-soft); }
+.prep summary:hover { color: var(--accent); }
+.prep .inner { padding: 14px 15px 16px; }
+.prep p { margin: 0 0 11px; font-size: .92rem; }
+.prep p:last-child { margin: 0; }
+.prep .skip { color: var(--ink-3); font-size: .87rem; }
+.prep ol { margin: 0 0 12px; padding-left: 21px; font-size: .92rem; }
+.prep ol li { margin-bottom: 8px; }
+.prep ol li:last-child { margin-bottom: 0; }
 
 .actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 24px; }
 .btn {
@@ -941,7 +967,7 @@ function resolve(k, v, o, t) {
   if (generic) {
     const specific = c.filter(p => !p.v.includes('*'));
     return { p: generic, exact: !specific.length,
-      msg: specific.length ? 'These are the general steps for this display. Separate instructions exist for other software versions — go back and pick yours if it is listed.' : '' };
+      msg: specific.length ? 'These are the general steps for this display. Separate instructions exist for other monitor versions — go back and pick yours if it is listed.' : '' };
   }
   if (c.length) return { p: c[0], exact: false,
     msg: 'No steps are recorded for the version you picked. These were written for another release of the same display, so treat the menu names as a guide.' };
@@ -970,6 +996,54 @@ function render() {
   drawVersions();
   drawJobs();
   drawRoutes();
+  /* After drawRoutes, not before: that is what decides whether an answer is
+     on screen, and the stick panel hides itself once one is. */
+  drawPrep();
+}
+
+/* Preparing the stick is the one job that happens somewhere else: on a
+   computer, before the trip out to the machine. Read at the bottom of an
+   answer it is too late to act on, so it sits above the first question --
+   closed, because plenty of jobs need no stick at all, and the panel has to
+   be as easy to walk past as it is to open.
+
+   Before a display is picked it says what to do and admits it cannot yet say
+   the size limit or the folder. Once one is picked, the steps come from that
+   display's own prepare_media procedure rather than from a second copy of
+   the same knowledge written into the page -- the rules genuinely differ
+   (a 2630 will not read a stick over 32 GB; a Gen 4 has no such limit and
+   will not read NTFS), and a hand-written summary here would be the copy
+   that goes stale. */
+function drawPrep() {
+  const host = $('#prepbody');
+  const panel = $('#prep');
+  /* Once an answer is on screen you are standing at the display, and this is
+     no longer something you can act on. Give the room to the answer. */
+  panel.hidden = !!$('#result') && !$('#result').hidden;
+  if (panel.hidden) return;
+  host.replaceChildren();
+
+  const prep = S.mon && D.procedures.find(
+    p => p.m === S.mon && p.o === 'prepare_media');
+
+  host.append(el('p', {},
+    'A stick the display will not read is the commonest reason nothing '
+    + 'appears in the cab, and it is fixed on a computer, not out there. '
+    + 'Do this before you go.'));
+
+  if (prep) {
+    host.append(el('ol', {}, prep.steps.map(s => el('li', {}, keys(s, S.mon)))));
+    if (prep.care && prep.care.length) {
+      host.append(el('p', { class: 'skip' }, prep.care[0]));
+    }
+  } else {
+    host.append(el('p', { class: 'skip' },
+      'The size limit and the file system differ between displays. Pick '
+      + 'yours below and the exact rule for it appears here.'));
+  }
+  host.append(el('p', { class: 'skip' },
+    'Not using a stick — typing the numbers in by hand, or the display sends '
+    + 'its own data — then none of this applies. Carry straight on.'));
 }
 
 /* Undo the last answer given. Backing out of an answer whose route was chosen
@@ -1312,17 +1386,6 @@ function showResult(t) {
   }
   if (more.children.length) body.append(more);
 
-  const related = D.relatedOrder
-    .filter(k => k !== S.job && jobsFor(S.mon, S.ver, S.equip).includes(k))
-    .slice(0, 4);
-  if (related.length) {
-    body.append(el('h4', { class: 'noprint' }, 'While you are at the machine'));
-    body.append(el('div', { class: 'next noprint' }, related.map(k =>
-      el('button', { onclick: () => { S.job = k; S.route = null; step(); } },
-        el('b', {}, jobLabel(k, S.mon)),
-        el('span', {}, D.directions[D.objectives[k].dir])))));
-  }
-
   body.append(el('div', { class: 'actions noprint' },
     el('button', { class: 'btn primary', onclick: printSteps }, 'Print this'),
     el('button', { class: 'btn', onclick: () => { reset('equip');
@@ -1426,6 +1489,13 @@ def build() -> None:
 
 <div class="trail" id="trail"></div>
 
+<section class="prep noprint" id="prep">
+  <details>
+    <summary>Using a USB stick? Set it up on the computer first</summary>
+    <div class="inner" id="prepbody"></div>
+  </details>
+</section>
+
 <section class="q" id="q1">
   <div class="qhead"><span class="qnum">01</span><h2 class="qtitle">What are you working with?</h2></div>
   <div class="chips" id="equip"></div>
@@ -1437,7 +1507,7 @@ def build() -> None:
 </section>
 
 <section class="q" id="q3" hidden>
-  <div class="qhead"><span class="qnum">03</span><h2 class="qtitle">Which software version?</h2></div>
+  <div class="qhead"><span class="qnum">03</span><h2 class="qtitle">Which monitor version?</h2></div>
   <p class="qnote">Menus move between releases. Not sure? Pick the last option.</p>
   <div id="vhelp"></div>
   <div class="chips" id="vers"></div>
@@ -1465,12 +1535,11 @@ def build() -> None:
 </dialog>
 
 <footer>
-  <p><strong>{len(procedures)} procedures across {len(monitors)} displays.</strong></p>
   <details class="panel">
     <summary>How to read these answers</summary>
     <div class="vbody">
       <p>Folder paths and file formats are checked against manufacturer
-        documentation. Exact menu names move between software releases, which is
+        documentation. Exact menu names move between monitor versions, which is
         why each answer says whether it is verified or worth confirming on the
         machine.</p>
       <p>Two kinds of picture appear here, and they are not the same kind of
