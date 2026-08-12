@@ -629,3 +629,38 @@ def test_every_renamed_job_points_at_a_real_display_and_objective():
         assert objective_key in offered, (
             f"{monitor_key} renames {objective_key} but does not offer it"
         )
+
+
+def test_scope_and_impossibility_stay_separate():
+    """Two reasons a job is missing, kept apart on purpose.
+
+    Both hide a row from the same menu, so it would be easy to collapse them
+    into one list. Don't: `not_for` says the machine cannot do it, and
+    SCOPE_EXCLUSIONS says we chose not to cover it. Only one of those is safe to
+    reverse without checking anything.
+    """
+    # A combine genuinely cannot take a prescription.
+    assert "combine" in pr.OBJECTIVES["import_prescription"].not_for
+    assert "import_prescription" not in pr.SCOPE_EXCLUSIONS["combine"]
+
+    # A combine can perfectly well update its software; we just do not cover it.
+    assert "software_update" in pr.SCOPE_EXCLUSIONS["combine"]
+    assert not pr.OBJECTIVES["software_update"].not_for
+
+
+def test_out_of_scope_jobs_are_hidden_for_that_machine_only():
+    hidden = {"import_point", "export_point", "software_update"}
+    on_combine = {o.key for o in pr.available_objectives(
+        "john_deere.gs3_2630", None, "combine")}
+    on_sprayer = {o.key for o in pr.available_objectives(
+        "john_deere.gs3_2630", None, "sprayer")}
+    assert not (hidden & on_combine), sorted(hidden & on_combine)
+    assert hidden <= on_sprayer, "hidden on a combine, still expected elsewhere"
+
+
+def test_every_scope_exclusion_names_things_that_exist():
+    """A typo here silently hides nothing, which is the worst kind of bug."""
+    for equipment, keys in pr.SCOPE_EXCLUSIONS.items():
+        assert equipment in {e.value for e in pr.EquipmentType}, equipment
+        for key in keys:
+            assert key in pr.OBJECTIVES, f"{equipment}: {key}"

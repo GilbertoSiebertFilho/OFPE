@@ -64,6 +64,8 @@ __all__ = [
     "labels_in",
     "OBJECTIVE_LABELS",
     "objective_label",
+    "SCOPE_EXCLUSIONS",
+    "in_scope",
 ]
 
 ANY_VERSION = "*"
@@ -234,6 +236,32 @@ class Objective:
             "typical_formats": self.typical_formats,
             "not_for": list(self.not_for),
         }
+
+
+# Jobs left out for an equipment type by choice rather than by physics.
+#
+# This is deliberately NOT Objective.not_for, even though both end up hiding a
+# row from the same menu. `not_for` is a fact about the machine: a combine
+# applies nothing, so a prescription is a job that cannot happen on one. The
+# entries below can happen -- combines do carry marked points, and their
+# displays do take software updates. We have simply decided this platform does
+# not cover them.
+#
+# Keeping the two apart costs one dictionary and buys the ability to answer
+# "why is this missing?" honestly a year from now, and to reverse a scope call
+# without first having to work out whether it was ever safe to offer.
+SCOPE_EXCLUSIONS: dict[str, tuple[str, ...]] = {
+    "combine": (
+        "import_point",     # can be done; not part of this project's work
+        "export_point",     # same
+        "software_update",  # dealer work, not the producer's job
+    ),
+}
+
+
+def in_scope(objective_key: str, equipment: str | None) -> bool:
+    """Whether this project covers this job on this machine."""
+    return objective_key not in SCOPE_EXCLUSIONS.get(equipment or "", ())
 
 
 # Where a display offers exactly one route to a job, the generic name hides
@@ -845,7 +873,9 @@ def available_objectives(
     return [
         o
         for o in OBJECTIVES.values()
-        if o.key in keys and o.applies_to(equipment)
+        if o.key in keys
+        and o.applies_to(equipment)      # the machine cannot do it
+        and in_scope(o.key, equipment)   # we chose not to cover it
     ]
 
 
