@@ -30,6 +30,11 @@ _isoxml_pair(
     "claas.cemis_1200",
     ("CLAAS GPS PILOT CEMIS 1200 documentation", "CLAAS CEMIS 1200 ISOXML tutorials"),
     vocabulary="Reference track",
+    quirks=(
+        "The terminal needs the ISOBUS TC licence for this. Without it the "
+        "import screen is simply not there, and no amount of fixing the file "
+        "will help — that is a dealer job.",
+    ),
 )
 _isoxml_pair("claas.s10", ("CLAAS S10 task import documentation",),
              vocabulary="Reference track")
@@ -37,6 +42,13 @@ _isoxml_pair(
     "agco.fendt_one",
     ("Fendt Field Data Converter documentation", "Fendt VarioDoc / Task Doc"),
     vocabulary="Track, under VarioGuide",
+    quirks=(
+        "Fendt often wants the archive left zipped and named TASKDATA.zip "
+        "rather than an unzipped TASKDATA folder. Try the zip if the folder is "
+        "not seen.",
+        "In «VarioDoc», set the exchange medium to the USB stick. If it is set "
+        "to the cloud the terminal never looks at the stick.",
+    ),
 )
 _isoxml_pair("agco.valtra_smarttouch", ("AGCO Field Data Converter documentation",),
              vocabulary="Guidance line, under Valtra Guide")
@@ -44,10 +56,27 @@ _isoxml_pair("agco.mf_datatronic", ("AGCO Field Data Converter documentation",),
              vocabulary="Guidance line, under MF Guide")
 _isoxml_pair("topcon.x_family",
              ("Topcon X family Horizon operator manual", "Topcon Horizon OS datasheet"),
-             vocabulary="Guideline")
+             vocabulary="Guideline",
+             quirks=(
+                 "In the ISOBUS TC settings, set the mode to «Extended» and "
+                 "turn the TASKDATA option on. In the basic mode the terminal "
+                 "runs tasks but will not take field data.",
+             ))
 _isoxml_pair("kverneland.isomatch", ("Kverneland IsoMatch terminal documentation",),
-             vocabulary="Guidance line")
-_isoxml_pair("generic.isobus", ("ISO 11783-10",), vocabulary="Guidance pattern")
+             vocabulary="Guidance line",
+             quirks=(
+                 "This is the «IsoMatch GEOCONTROL» app's job, not the plain "
+                 "terminal menu. Look for «Import work data», then use "
+                 "«Continue a task» to pick the guidance mode and start.",
+                 "A Tellus PRO can read the folder still zipped. Handy, but the "
+                 "unzipped TASKDATA folder works everywhere.",
+             ))
+_isoxml_pair("generic.isobus", ("ISO 11783-10",), vocabulary="Guidance pattern",
+             quirks=(
+                 "If a terminal refuses a file that looks right, run it through "
+                 "the AEF TaskData Validator on a computer first. It is free "
+                 "and it names the fault, which saves guessing in the cab.",
+             ))
 
 _add(
     monitor_key="claas.cemis_1200",
@@ -123,13 +152,18 @@ _add(
         "Load your file. The converter takes every common format, "
         "including guidance lines and curves.",
         "Convert to the format the terminal expects and write it to the stick.",
-        "Plug the stick into the terminal and import from the data screen.",
-        "Select the field, then pick the track under VarioGuide.",
+        "On the terminal, open «VarioDoc» and switch data transfer by USB on. "
+        "Set the exchange medium to the USB stick — not the cloud.",
+        "Check the task controller is active. Nothing imports while it is off.",
+        "Plug the stick into the terminal and run the import from the data "
+        "screen.",
+        "Select the field, then pick the track under «VarioGuide».",
     ),
     verify=("The track is listed under the right field in VarioGuide.",),
     cautions=(
-        "Some Fendt workflows expect the archive named TASKDATA.zip. If the "
-        "terminal will not see the folder, try importing the zip as-is.",
+        "Fendt is the one family that often wants the archive left zipped and "
+        "named TASKDATA.zip, rather than an unzipped TASKDATA folder. If the "
+        "terminal cannot see the folder, put the zip on instead.",
     ),
     confidence=Confidence.VERIFIED,
     sources=("Fendt Field Data Converter documentation",),
@@ -146,21 +180,31 @@ _add(
     minutes=10,
     steps=(
         _FAT32,
-        "For ISOXML: unzip at the root so a TASKDATA folder appears.",
+        "For ISOXML: unzip at the root so a folder named Taskdata appears with "
+        "the task file inside it.",
         "For a shapefile: create a folder named SHP at the root and put the "
         "four parts inside it. That is where TRACK-Leader looks.",
-        "Plug the stick into the terminal and run the import.",
+        "Switch «ISOBUS-TC» on in the terminal, and set it to the extended "
+        "mode if you want field data rather than just a plain task.",
+        "Plug the stick into the terminal.",
+        "Open «ISOBUS-TC» and run its import.",
         "Select the line on the run screen.",
     ),
     verify=("The line appears in the guidance list.",),
     cautions=(
+        "This terminal MOVES the contents of the Taskdata folder off the stick "
+        "and onto its own SD card. After a successful import the stick is empty "
+        "— that is normal, not a lost file, but keep a copy on the computer.",
         "TRACK-Leader's own store is an ngstore database, and ngstore folders "
         "only move between terminals of the same type. Do not hand-copy one; "
         "import through ISOXML or shapefile instead.",
         "From v8 the terminal writes shp and kml into an SHP folder when you "
         "synchronise to USB — a good way to see the naming it expects.",
     ),
-    common_errors=_ISOXML_ERRORS,
+    common_errors=_ISOXML_ERRORS + (
+        "Panicking when the stick comes back empty. The terminal moved the "
+        "files rather than copying them.",
+    ),
     confidence=Confidence.VERIFIED,
     sources=("Müller-Elektronik TRACK-Leader operating instructions, v8",),
 )

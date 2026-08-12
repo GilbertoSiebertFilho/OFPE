@@ -148,13 +148,24 @@ def test_a_shared_version_run_matches_exactly():
         assert "Apex" not in " ".join(result.procedure.steps)
 
 
-def test_generic_procedure_is_flagged_when_a_specific_one_exists_elsewhere():
-    """Case IH prescriptions differ by release, so a generic answer must warn."""
-    result = pr.resolve(
-        "case_ih.afs_pro_700", "import_prescription", "usb", "pro700_30"
-    )
-    assert result.matched_version is True
-    assert "Toolbox" in " ".join(result.procedure.steps)
+def test_every_pro_700_release_gets_the_two_stage_load():
+    """The Pro 700's power-off load is the same across its software lines.
+
+    This used to assert the opposite -- that 28.x and 30.x took different menu
+    paths -- on the strength of a reconstruction rather than a source. Case IH's
+    own import guide describes one procedure: stick in with the power off, files
+    to internal storage, then assign them to fields on the Import2 tab. Splitting
+    it by release invented a difference and sent half the fleet down a path that
+    does not exist.
+    """
+    for version in ("pro700_28", "pro700_29", "pro700_30"):
+        result = pr.resolve(
+            "case_ih.afs_pro_700", "import_prescription", "usb", version
+        )
+        assert result.matched_version is True, version
+        steps = " ".join(result.procedure.steps)
+        assert "Shapefile" in steps, version
+        assert "Import2" in steps, version
 
 
 def test_unknown_version_falls_back_and_says_so():
@@ -322,6 +333,65 @@ def test_steps_stay_short_enough_to_follow():
         f"steps over {_MAX_STEP_CHARS} characters — move the explanation into "
         "cautions or common_errors:\n  " + "\n  ".join(long_steps)
     )
+
+
+# "Toolbox > Data Management > Import" is how a technician writes a menu path
+# and how a manual indexes one. It is not how you tell somebody what to do: it
+# collapses three separate presses into a line that names none of them as a
+# button, and it hides whether the middle one is a tab, a card or a screen. Each
+# press gets its own step, and the label it carries gets marked as a label.
+def test_steps_do_not_collapse_a_menu_path_into_one_line():
+    offenders = sorted(
+        {
+            f"{procedure.monitor_key}/{procedure.objective}: {step[:80]}"
+            for procedure in pr.PROCEDURES
+            for step in procedure.steps
+            if step.count(" > ") >= 1
+        }
+    )
+    assert not offenders, (
+        "menu paths written as A > B > C. Give each press its own step and mark "
+        "the on-screen wording with « »:\n  " + "\n  ".join(offenders)
+    )
+
+
+# A marked label is a claim that those characters appear on the glass. Steps
+# that name no button at all are the ones to be suspicious of on a display we
+# claim to have verified -- that is usually a sign the steps were reasoned out
+# rather than read off a manual.
+def test_a_verified_usb_procedure_names_at_least_one_button():
+    from ofpe.procedures._core import labels_in
+
+    offenders = sorted(
+        {
+            f"{procedure.monitor_key}/{procedure.objective}"
+            for procedure in pr.PROCEDURES
+            if procedure.confidence is pr.Confidence.VERIFIED
+            and procedure.transport is pr.Transport.USB
+            and procedure.objective != "prepare_media"
+            and not any(labels_in(step) for step in procedure.steps)
+        }
+    )
+    assert not offenders, (
+        "marked VERIFIED but no step names a button. _demote_unread_menu_paths "
+        "should have caught this — check it still runs in _add:\n  "
+        + "\n  ".join(offenders)
+    )
+
+
+def test_the_demotion_actually_fires():
+    """The invariant above holds by construction, so prove the machinery works.
+
+    Otherwise a broken demotion would make the test above pass for the wrong
+    reason: nothing left to catch because nothing is being checked.
+    """
+    demoted = [
+        p for p in pr.PROCEDURES if p.confidence is pr.Confidence.FILE_VERIFIED
+    ]
+    assert demoted, "no procedure sits at the middle confidence level"
+    assert all(
+        p.transport is pr.Transport.USB for p in demoted
+    ), "only USB procedures are demoted by this rule"
 
 
 def test_the_shared_instructions_carry_their_own_explanation():

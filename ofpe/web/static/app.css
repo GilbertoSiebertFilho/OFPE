@@ -207,6 +207,11 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .badge.desktop_bridge, .badge.needs_sample, .badge.low { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
 .badge.api_only { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
 
+/* «Label» in a step is the exact wording on the display, drawn as a key cap so
+   the eye can jump straight to the word it has to find on the glass. */
+.key { font-weight: 700; white-space: nowrap; padding: 1px 5px; margin: 0 1px;
+  border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); }
+
 /* -------------------------------------------------------------- producer */
 
 .producer .steps { max-width: 940px; margin: 0 auto; padding: 24px 16px 64px; display: flex; flex-direction: column; gap: 28px; }

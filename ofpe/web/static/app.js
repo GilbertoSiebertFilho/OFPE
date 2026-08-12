@@ -41,6 +41,13 @@ function el(tag, attrs = {}, ...children) {
   return node;
 }
 
+// A step names buttons in «guillemets»; each becomes a key cap. Split rather
+// than replace, so nothing in the source text is ever treated as markup.
+function screenKeys(text) {
+  return text.split(/«([^»]*)»/)
+    .map((part, i) => (i % 2 ? el('b', { class: 'key' }, part) : part));
+}
+
 let toastTimer = null;
 function toast(message, bad = false) {
   const node = $('#toast');
@@ -971,8 +978,13 @@ function renderProcedure(data) {
   const p = data.procedure;
   const monitor = data.monitor;
 
+  // Three levels, not two: "the file is right but we reconstructed the menu
+  // path" is its own thing, and flattening it into "verified" is how somebody
+  // ends up in a cab hunting for a button we named ourselves.
+  const confTone = { verified: 'native', file_verified: 'structural' };
   const badges = [
-    el('span', { class: `badge ${p.confidence === 'verified' ? 'native' : 'needs_sample'}` },
+    el('span', { class: `badge ${confTone[p.confidence] || 'needs_sample'}`,
+                 title: p.confidence_description || '' },
       p.confidence_label),
     el('span', { class: 'badge' }, data.version_label),
     el('span', { class: 'badge' }, p.transport_label),
@@ -991,6 +1003,9 @@ function renderProcedure(data) {
 
   if (!data.matched_version) {
     body.append(el('div', { class: 'panelbox warn' }, data.message));
+  }
+  if (p.confidence !== 'verified' && p.confidence_description) {
+    body.append(el('div', { class: 'panelbox' }, p.confidence_description));
   }
 
   const facts = el('dl', { class: 'facts' });
@@ -1022,7 +1037,8 @@ function renderProcedure(data) {
   }
 
   body.append(el('h4', {}, 'Step by step'));
-  body.append(el('ol', { class: 'procsteps' }, p.steps.map(s => el('li', {}, s))));
+  body.append(el('ol', { class: 'procsteps' },
+    p.steps.map(s => el('li', {}, screenKeys(s)))));
 
   if (p.verify.length) {
     body.append(el('h4', {}, 'Check it worked'));

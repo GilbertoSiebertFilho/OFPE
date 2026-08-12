@@ -31,9 +31,10 @@ _add(
         "Inside AgData create a folder named Prescriptions.",
         "Put the four shapefile parts LOOSE inside Prescriptions — not in a "
         "further subfolder.",
+        "Give every part the same base name. Precision-IQ matches them by name.",
         "Plug the stick into the display.",
-        "Open Data Transfer.",
-        "Select the USB and import the prescription.",
+        "On the home screen, tap «Data Transfer».",
+        "Choose the USB drive as the source, then import the prescription.",
         "Attach it to the field and choose the rate column and unit.",
     ),
     verify=("The rate map draws over the right field.",),
@@ -71,7 +72,8 @@ _add(
         "Otherwise export from Trimble Ag Software onto a USB stick — it "
         "writes the AgData folder for you.",
         "Plug the stick into the display.",
-        "Open Data Transfer, select the USB, and import the field.",
+        "On the home screen, tap «Data Transfer», choose the USB drive, and "
+        "import the field.",
         "Select the line on the run screen.",
     ),
     verify=("The line appears under the correct field in Precision-IQ.",),
@@ -95,7 +97,7 @@ _add(
         _FAT32,
         "Close the running task.",
         "Plug the stick into the display.",
-        "Open Data Transfer.",
+        "On the home screen, tap «Data Transfer».",
         "Choose to export data to the USB.",
         "Select the fields or the whole data set.",
         "Wait for completion and eject.",
@@ -127,7 +129,7 @@ _add(
         "Create AgGPS\\Prescriptions at the root of the stick.",
         "Put the four shapefile parts loose inside Prescriptions.",
         "Plug the stick into the display.",
-        "Data > USB > read from the stick.",
+        "Open the «Data» screen, choose «USB», and read from the stick.",
         "Attach the prescription to the field and set the rate column.",
     ),
     verify=("The rate map draws over the right field.",),
@@ -169,7 +171,8 @@ _add(
         "Sync over the air if the machine has connectivity, and stop here.",
         "Otherwise export to a USB stick — Trimble Ag Software writes the "
         "AgData folder for you.",
-        "In Precision-IQ: Data Transfer, select the USB, import the field.",
+        "On the display, tap «Data Transfer», choose the USB drive, and import the "
+        "field.",
     ),
     verify=(
         "The boundary draws around the field on the run screen.",
@@ -203,7 +206,7 @@ _add(
     steps=(
         "In Trimble Ag Software, confirm the client / farm / field names.",
         "Sync to the display over the air, or export to USB.",
-        "In Precision-IQ: Data Transfer, import from the USB.",
+        "On the display, tap «Data Transfer» and import from the USB drive.",
         "Check the field list on the display matches the office.",
     ),
     verify=("The display's field list matches Trimble Ag Software.",),
@@ -225,7 +228,7 @@ _add(
     steps=(
         _FAT32,
         "Plug the stick into the display.",
-        "Open Data Transfer.",
+        "On the home screen, tap «Data Transfer».",
         "Export the field data to the USB — lines travel with the field record.",
         "Wait for completion and eject.",
         "At the office, import the AgData folder into Trimble Ag Software.",
@@ -277,7 +280,7 @@ _add(
     steps=(
         _FAT32,
         "Close the running task.",
-        "Open Data Transfer and export everything, not a single field.",
+        "Tap «Data Transfer» and export everything, not a single field.",
         "Wait for the write to finish and eject.",
         "Copy the AgData folder somewhere backed up, and import it into "
         "Trimble Ag Software so there is a readable copy too.",
@@ -314,7 +317,8 @@ _add(
         "Works desktop if that is what this machine has always used.",
         "Attach it to the field.",
         "Export to USB — the software writes the AgGPS folder structure.",
-        "In the display: Data > USB > read from the stick.",
+        "On the display, open the «Data» screen, choose «USB», and read from "
+        "the stick.",
         "Select the line before engaging the steering.",
     ),
     verify=("The line appears in the display's line list for that field.",),
@@ -338,7 +342,7 @@ _add(
         _FAT32,
         "End the running job.",
         "Plug the stick into the display.",
-        "Data > USB > write to the stick.",
+        "Open the «Data» screen, choose «USB», and write to the stick.",
         "Wait for the write to finish before removing it.",
         "At the office, read the AgGPS folder with Trimble Ag Software or "
         "Farm Works.",
@@ -362,7 +366,8 @@ _add(
     steps=(
         _FAT32,
         "End the running job.",
-        "Data > USB and export everything on the display, not one field.",
+        "Open the «Data» screen, choose «USB», and export everything on the "
+        "display rather than one field.",
         "Wait for completion, then copy the AgGPS folder somewhere backed up.",
         "Import it into desktop software once, to prove it reads.",
     ),

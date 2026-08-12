@@ -19,35 +19,51 @@ from ._core import (
     _SHP_SET,
 )
 
+# These steps are deliberately generic: ISO 11783-10 fixes the file -- the
+# TASKDATA folder, the TASKDATA.XML name, the capitals -- but nothing fixes what
+# any one manufacturer calls the screen you import it from. So every procedure
+# built on them sits at FILE_VERIFIED: right about the file, approximate about
+# the menu. A brand that publishes its own wording gets its own entry, at the
+# top confidence, in its own module.
 _ISOXML_IMPORT_STEPS = (
     _FAT32,
     "Unzip the download at the ROOT of the stick so a folder named exactly "
-    "TASKDATA sits at the top level, containing TASKDATA.XML.",
+    "TASKDATA sits at the top level, holding TASKDATA.XML.",
+    "Check both of those names are in CAPITALS. Several terminals will not "
+    "find them written any other way.",
+    "Before you go out, switch the terminal's task controller on. Look for an "
+    "app or a licence called «Task Controller», «ISOBUS-TC» or «TC».",
     "Plug the stick into the terminal.",
-    "Open the ISOBUS task controller / data import screen.",
-    "Run the ISOXML import.",
-    "Confirm the field appears with its reference lines.",
+    "Open the task controller and run its import.",
+    "Confirm the field appears with its reference lines before you drive off.",
     "Select the line you want on the run screen.",
 )
 
 _ISOXML_ERRORS = (
-    "Leaving the file zipped on the stick.",
-    "A TASKDATA folder nested inside another folder.",
+    "Leaving the file zipped on the stick — most terminals cannot open a zip.",
+    "A TASKDATA folder nested inside another folder, usually a second TASKDATA "
+    "left behind by unzipping.",
+    "taskdata or Taskdata instead of TASKDATA. The capitals are part of the "
+    "standard and some terminals are strict about them.",
     "Renaming TASKDATA.XML — the name is fixed by the standard.",
+    "The task controller was never switched on, so the terminal reports nothing "
+    "to import even though the file is perfectly good.",
 )
 
 
 def _isoxml_pair(monitor_key: str, sources: tuple[str, ...], *, version_key=ANY_VERSION,
-                 vocabulary: str = "") -> None:
+                 vocabulary: str = "", quirks: tuple[str, ...] = ()) -> None:
     """Add the import and export ISOXML procedures for one ISOBUS terminal.
 
     The ISOBUS family genuinely does behave the same way, so writing these out
     by hand twenty times would be twenty chances to introduce a difference that
-    is not real.
+    is not real. `quirks` is for the places where a brand really does differ --
+    a zipped archive here, a moved folder there -- so the shared shape stays
+    honest instead of quietly averaging the brands together.
     """
     note = (
         (f"This terminal calls an AB line a {vocabulary}.",) if vocabulary else ()
-    )
+    ) + quirks
     _add(
         monitor_key=monitor_key,
         objective="import_guidance",
@@ -65,7 +81,7 @@ def _isoxml_pair(monitor_key: str, sources: tuple[str, ...], *, version_key=ANY_
             "not listed by name, this procedure still applies.",
         ),
         common_errors=_ISOXML_ERRORS,
-        confidence=Confidence.VERIFIED,
+        confidence=Confidence.FILE_VERIFIED,
         sources=sources,
     )
     _add(
@@ -96,7 +112,7 @@ def _isoxml_pair(monitor_key: str, sources: tuple[str, ...], *, version_key=ANY_
             "the whole folder.",
         ),
         common_errors=("Copying only TASKDATA.XML and losing every logged value.",),
-        confidence=Confidence.VERIFIED,
+        confidence=Confidence.FILE_VERIFIED,
         sources=sources,
     )
 
@@ -139,7 +155,7 @@ def _isoxml_extras(monitor_key: str, sources: tuple[str, ...],
             "as workable ground.",
         ),
         common_errors=_ISOXML_ERRORS,
-        confidence=Confidence.VERIFIED,
+        confidence=Confidence.FILE_VERIFIED,
         sources=sources,
     )
 
@@ -208,7 +224,7 @@ def _isoxml_extras(monitor_key: str, sources: tuple[str, ...],
             "Exporting only the completed task and missing the field record "
             "that holds the lines.",
         ),
-        confidence=Confidence.VERIFIED,
+        confidence=Confidence.FILE_VERIFIED,
         sources=sources,
     )
 
@@ -238,7 +254,7 @@ def _isoxml_extras(monitor_key: str, sources: tuple[str, ...],
             "replacing it — a boundary recorded with a wide implement can sit "
             "half a machine width inside the fence.",
         ),
-        confidence=Confidence.VERIFIED,
+        confidence=Confidence.FILE_VERIFIED,
         sources=sources,
     )
 
@@ -271,7 +287,7 @@ def _isoxml_extras(monitor_key: str, sources: tuple[str, ...],
             "the logged data.",
         ),
         common_errors=("Backing up the XML and leaving the .bin files behind.",),
-        confidence=Confidence.VERIFIED,
+        confidence=Confidence.FILE_VERIFIED,
         sources=sources,
     )
 

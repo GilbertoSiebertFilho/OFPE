@@ -22,29 +22,54 @@ _add(
     objective="import_prescription",
     transport=Transport.USB,
     version_key=("ic_1_3", "ic_4_9", "ic_10"),
-    file_format=".agsetup exported from SMS, or a complete shapefile",
-    extensions=(".agsetup", ".shp", ".shx", ".dbf", ".prj"),
-    media_path="Drive root",
+    file_format="Complete shapefile: .shp + .shx + .dbf + .prj, same base name",
+    extensions=(".shp", ".shx", ".dbf", ".prj"),
+    media_path="Drive root, or a folder of your own — this display browses both",
     minutes=15,
+    prerequisites=(
+        "Unusually, you load the prescription from inside the running job "
+        "rather than from a data screen. So set the job up first.",
+        "If the map arrived as a .zip, unzip it on the computer first.",
+    ),
     steps=(
         _FAT32,
-        "Put the .agsetup file, or the four shapefile parts, at the drive root.",
+        "Copy all four parts to the stick — the .shp, .shx, .dbf and .prj. "
+        "This display browses a folder or the bare root, so either is fine.",
         "Plug the stick into the display.",
-        "Tap the status indicator in the top right corner.",
-        "Choose Data Transfer from the drop-down.",
-        "Tap Import Setup and find the file on the stick.",
-        "Confirm the import.",
-        "Attach the prescription to the field and choose the rate column.",
+        "Start the operation the prescription is for — press the crop button "
+        "for planting or application.",
+        "Check the configuration is the right one, and that the Grower, Farm "
+        "and Field are correct.",
+        "On the map screen, press the application rate tab to expand that "
+        "panel. It is the strip showing the target rate.",
+        "Press the wrench button inside that panel.",
+        "Press the folder icon underneath the «Rx» label. That is the button "
+        "that reaches the USB stick.",
+        "Find the .shp on the stick and select it.",
+        "Choose the rate column and the units the map is in.",
     ),
-    verify=("The rate map draws over the right field.",),
+    verify=(
+        "The rate map draws over the right field on the map screen.",
+        "The target rate on the run screen changes as you drive across zone "
+        "boundaries.",
+    ),
     cautions=(
-        ".agsetup files are forward compatible but not backward. A file written "
-        "by newer software may not open on an older display.",
+        "The route to this button is not obvious: it is inside the running job, "
+        "behind the rate panel and a wrench, not on a data-management screen.",
+        "A prescription supplied as .agsetup instead of a shapefile is a "
+        "different job — use the setup import.",
     ),
-    confidence=Confidence.VERIFIED,
+    common_errors=(
+        "Hunting for the prescription on a data or file screen. On this display "
+        "it is not there.",
+        "Loading the prescription before choosing the field, so it attaches to "
+        "the wrong one.",
+    ),
+    confidence=Confidence.CONFIRM_ON_MACHINE,
     sources=(
-        "Ag Leader support portal, AgSetup file supported uses",
-        "Ag Leader InCommand display user guide",
+        "Ag Leader InCommand 1200 prescription loading guidance (rate tab > "
+        "wrench > folder icon under Rx)",
+        "Ag Leader InCommand 800/1200 display user guide",
     ),
 )
 
@@ -196,11 +221,22 @@ _add(
         "In SMS, confirm the grower / farm / field structure is the one your "
         "office reports on.",
         "Export an .agsetup and copy it to the drive root.",
-        "Status indicator > Data Transfer > Import Setup.",
+        "Plug the stick into the display. On the home screen the "
+        "«External Storage» button wakes up once a stick is in — that is your "
+        "sign the display can see it.",
+        "Press «External Storage», then «Import Setup», and find the .agsetup "
+        "on the stick.",
+        "If you would rather not go via the home screen: press the status "
+        "indicator in the top right, choose «Data Transfer», then "
+        "«Import Setup». Same result.",
         "Select the file and confirm.",
     ),
     verify=("The display's field list matches SMS.",),
     cautions=(
+        "If «External Storage» stays greyed out, the display is not reading the "
+        "stick at all — that is a stick problem, not a file problem.",
+        "On an InCommand Go the path is different: press «Menu» in the upper "
+        "left, then «Data Transfer», then «Import .AGSETUP file».",
         ".agsetup files are forward compatible but not backward. A file written "
         "by newer software may not open on an older display.",
     ),
@@ -219,7 +255,7 @@ _add(
     steps=(
         _FAT32,
         "Plug the stick into the display.",
-        "Status indicator > Data Transfer.",
+        "Press the status indicator in the top right, then «Data Transfer».",
         "Choose Export Setup, not Export Data.",
         "Select the fields whose boundaries you want.",
         "Wait for completion and eject.",
@@ -246,7 +282,7 @@ _add(
     steps=(
         _FAT32,
         "Finish the job on the display first.",
-        "Status indicator > Data Transfer.",
+        "Press the status indicator in the top right, then «Data Transfer».",
         "Export Setup — this is your fields, boundaries and patterns.",
         "Then Export Data — this is what the machine actually did.",
         "Both are needed. Exporting one is half a backup.",

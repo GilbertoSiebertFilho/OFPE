@@ -30,11 +30,17 @@ _add(
         _SHP_SET,
         "Put the files either LOOSE at the drive root, or inside a folder named "
         "exactly SendTo2020. Nothing deeper than that.",
-        "Plug the stick into the USB port on the upper left of the display.",
-        "From the Home screen press Setup, bottom right.",
-        "Press Data, bottom right.",
-        "Press Import, top right, then Prescriptions.",
-        "Select the file and assign it to the right field.",
+        "Plug the stick into the USB port on the left side of the display.",
+        "From the Home screen press «Setup», bottom right.",
+        "Press «Data», bottom right.",
+        "Press «Import», top right.",
+        "Press «Prescriptions», top centre.",
+        "Choose which system the prescription is for: «Seeding», «Liquid», "
+        "«Granular» or «Depth».",
+        "A list of the files on the stick comes up. Tap each one you want, then "
+        "press «Import».",
+        "Now assign each prescription to the field it belongs to. Importing "
+        "alone does not attach it to anything.",
     ),
     verify=("The prescription draws on the map before you start planting.",),
     cautions=(
@@ -60,8 +66,9 @@ _add(
         _FAT32,
         "Put the four shapefile parts at the drive root or in SendTo2020.",
         "Plug the stick into the display.",
-        "Home > Setup > Data > Import.",
-        "Choose Boundaries.",
+        "From the Home screen press «Setup», then «Data», then «Import».",
+        "Choose «Boundaries».",
+        "Tap the files you want and press «Import».",
         "Assign each boundary to the correct field.",
     ),
     verify=("The boundary draws around the field on the map page.",),
@@ -82,7 +89,7 @@ _add(
         _FAT32,
         "Copy the job data onto the stick.",
         "Plug the stick into the console.",
-        "Go to Configuration > Data > Job Data > Transfer.",
+        "Open «Configuration», then «Data», then «Job Data», then «Transfer».",
         "Copy the job in from USB Storage.",
         "Open the job and confirm the guideline is drawn.",
     ),
@@ -106,7 +113,7 @@ _add(
     steps=(
         _FAT32,
         "Plug the stick into the console.",
-        "Configuration > Data > Job Data > Transfer.",
+        "Open «Configuration», then «Data», then «Job Data», then «Transfer».",
         "Copy the job out to USB Storage.",
         "For a readable copy, also export the SHP, KML or PDF report.",
     ),
@@ -199,7 +206,7 @@ _add(
         "Put the files loose at the drive root, or inside SendTo2020. Nothing "
         "deeper.",
         "Plug the stick into the USB port on the upper left of the display.",
-        "Home > Setup > Data > Import.",
+        "From the Home screen press «Setup», then «Data», then «Import».",
         "Select the guidance file and assign it to the right field.",
     ),
     verify=("The line draws on the map page before you start planting.",),
@@ -219,7 +226,7 @@ _add(
     steps=(
         _FAT32,
         "Plug the stick into the USB port on the upper left.",
-        "Home > Setup > Data > Export.",
+        "From the Home screen press «Setup», then «Data», then «Export».",
         "Select the field data to export.",
         "Wait for the transfer to complete before removing the stick.",
         "At the office, read it with your FMIS or upload to Panorama.",
@@ -242,7 +249,7 @@ _add(
     minutes=20,
     steps=(
         _FAT32,
-        "Home > Setup > Data > Export.",
+        "From the Home screen press «Setup», then «Data», then «Export».",
         "Select everything rather than one field.",
         "Wait for completion and copy the result somewhere backed up.",
     ),
@@ -271,7 +278,8 @@ _add(
         _SHP_SET,
         "Copy the files onto the stick.",
         "Plug the stick into the console.",
-        "Configuration > Data > Job Data > Transfer, and copy the job in.",
+        "Open «Configuration», then «Data», then «Job Data», then «Transfer», "
+        "and copy the job in.",
         "Open the job and attach the prescription, then set the rate column "
         "and unit.",
     ),
@@ -296,7 +304,7 @@ _add(
         _FAT32,
         _SHP_SET,
         "Plug the stick into the console.",
-        "Configuration > Data > Job Data > Transfer.",
+        "Open «Configuration», then «Data», then «Job Data», then «Transfer».",
         "Copy the job in from USB Storage and open it.",
         "Confirm the boundary and any no-spray zones are drawn.",
     ),
@@ -320,7 +328,7 @@ _add(
     steps=(
         _FAT32,
         "Plug the stick into the console.",
-        "Configuration > Data > Job Data > Transfer.",
+        "Open «Configuration», then «Data», then «Job Data», then «Transfer».",
         "Export the job, and also export the SHP / KML report.",
         "Open the KML in Google Earth to check it before filing it.",
     ),

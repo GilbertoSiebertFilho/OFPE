@@ -26,46 +26,74 @@ _add(
     file_format="Complete shapefile: .shp + .shx + .dbf + .prj, same base name",
     extensions=(".shp", ".shx", ".dbf", ".prj"),
     media_path="Rx\\  — at the ROOT of the stick, not inside another folder",
-    minutes=10,
+    minutes=15,
     prerequisites=(
-        "The rate map has to be built for this, with the rates stored as "
-        "numbers and the field drawn as an area. If somebody else prepared "
-        "it, they will know whether it is right; if it draws with blank or "
-        "zero rates on the display, it is not.",
+        "The rate map has to be built for this: the field drawn as areas, and "
+        "at least one rate column stored as numbers. The column name is what "
+        "the display offers you as the rate, and it can be no longer than 10 "
+        "characters.",
+        "If the map arrived as a .zip, unzip it on the computer first. The "
+        "display cannot open a zip.",
     ),
     steps=(
         _FAT32,
-        "At the ROOT of the stick create a folder named exactly Rx.",
-        "Copy the four shapefile parts into Rx.",
-        "With the machine powered up, plug the stick into the display's USB port.",
-        "Tap the Menu button, bottom left of the screen.",
-        "Open File Manager.",
-        "Choose Import Data, select the USB as the source, and tick the prescription.",
-        "Confirm and wait for the progress bar to finish.",
-        "Go to Work Setup > Field > Prescription, choose the file, then choose "
-        "the RATE COLUMN and the UNIT.",
+        "At the ROOT of the stick create a folder named exactly Rx — capital "
+        "R, small x, nothing else.",
+        "Copy all four parts into Rx — the .shp, .shx, .dbf and .prj. Several "
+        "fields can share one Rx folder.",
+        "With the machine running, plug the stick into the display's USB port.",
+        "Wait a few seconds. The display puts «USB Drive Options» on screen by "
+        "itself — you do not go looking for it.",
+        "Press «Import Data», then «USB Drive».",
+        "Press «Next», then pick the folder holding the prescription.",
+        "Press «Import», then «OK». Taking 5 to 15 seconds to open is normal, "
+        "not a fault.",
+        "Now tell the machine to use it: press the menu button, then "
+        "«Work Setup».",
+        "On «Work Summary» set «Crop Type» and «Variety», then press "
+        "«Target Rate/Rx» and choose your prescription.",
+        "Press the «Rate Column» box and pick your rate from the "
+        "«Select Rate Column» list.",
+        "Press the «Rate Column Units» box and pick the unit — kg/ha, "
+        "seeds/ha, whatever the map is in.",
     ),
     verify=(
-        "The prescription map draws on the run screen in the right place.",
+        "The prescription map draws on the run screen over the right field.",
         "The rate legend shows sensible numbers, not zeros or blanks -- blanks "
         "mean the rate column was read as text.",
+        "In «Fields and Boundaries», the client, farm and field are the ones "
+        "you expect. Wrong here and the work files itself in the wrong place.",
     ),
-    cautions=(_NO_ACCENTS, _EJECT),
+    cautions=(
+        _NO_ACCENTS,
+        _EJECT,
+        "One prescription can carry several rate columns, and different tanks "
+        "or bins can each use a different column. Import it once.",
+        "John Deere publishes a free JD Rx Converter on StellarSupport that "
+        "fixes most files a display refuses. Try that before blaming the "
+        "display.",
+    ),
     common_errors=(
-        "The .prj part is missing, so the display does not know where on Earth "
-        "the map belongs and draws it in the wrong place.",
-        "The map was saved using a different coordinate system, which puts the "
-        "field in the wrong place — sometimes in another country.",
-        "The rates in the file are stored as words rather than numbers. The map "
-        "draws, but every rate reads as zero or blank.",
-        "The Rx folder nested inside another folder.",
+        "The folder is named anything other than Rx — rx, RX, Prescriptions. "
+        "The display simply does not see it.",
+        "The Rx folder sits inside another folder instead of at the root.",
+        "The map was saved in a different coordinate system rather than WGS84, "
+        "which puts the field in the wrong place — sometimes in another "
+        "country.",
+        "The rates are stored as words rather than numbers. The map draws, but "
+        "every rate reads as zero or blank.",
+        "The rate column name is longer than 10 characters, so it arrives cut "
+        "off or not at all.",
         "The file draws lines or dots rather than areas, so the display has "
         "nothing to apply a rate to.",
     ),
     confidence=Confidence.VERIFIED,
     sources=(
-        "John Deere StellarSupport, Gen 4 File Manager",
-        "Gen 4 CommandCenter release notes",
+        "John Deere Gen 4 on-screen help — File Manager: Import Data",
+        "John Deere Gen 4 on-screen help — Work Setup: Select Prescription, "
+        "Prescription Rate Setup",
+        "John Deere developer documentation, prescription file requirements",
+        "Gen 4 CommandCenter release notes 18-2 (File Manager load time)",
     ),
 )
 
@@ -79,31 +107,44 @@ _add(
     prerequisites=("Finish or pause the job first, so the last of it is saved.",),
     steps=(
         _FAT32,
-        "Use one stick for this machine only.",
-        "End or pause the current job.",
+        "Use one stick for this machine only — see the warning below.",
+        "End or pause the current job so the last of it is written.",
         "Plug the stick into the display's USB port.",
-        "Menu > File Manager.",
-        "Choose Export Data.",
-        "Choose Work Data — the display writes into a JD-Data folder.",
-        "If you also need the client/farm/field structure, choose Setup Data — "
-        "that writes into JD4600.",
+        "The display puts up «USB Drive Options». Press «Export Data». If you "
+        "have dismissed that screen, press the menu button and open "
+        "«File Manager» instead.",
+        "Choose what to send. «Work Data» is the record of what the machine "
+        "did; the display writes it into a folder called JD-Data.",
+        "If the office also needs your client, farm and field list, export "
+        "«Setup Data» as well. That one writes into JD4600.",
+        "You can name the folder it writes into. A name with the machine and "
+        "the date saves an argument later.",
         "Wait for the progress bar to finish completely.",
         _EJECT,
     ),
     verify=(
         "On a computer, confirm the JD-Data folder exists and is not empty.",
-        "Import it into Operations Center and check the field and date look right.",
+        "Upload it to Operations Center and check the field and the date look "
+        "right before you wipe the stick.",
     ),
     cautions=(
         "Exporting with the job still open can produce an incomplete file. "
-        "Always wait for the on-screen confirmation.",
+        "Wait for the on-screen confirmation.",
+        "John Deere's own instruction is one stick per display. Two machines "
+        "sharing a stick can overwrite each other's folders.",
     ),
     common_errors=(
         "Using the same stick on more than one machine. The second machine can "
         "write over the first one's data without warning.",
+        "Pulling the stick during the progress bar. The folder exists, looks "
+        "plausible, and is short of the last part of the day.",
     ),
     confidence=Confidence.VERIFIED,
-    sources=("John Deere StellarSupport, Generation 4 Displays File Manager",),
+    sources=(
+        "John Deere Gen 4 on-screen help — File Manager",
+        "Gen 4 release notes: exported Work data goes to JD-Data, Setup data "
+        "to JD4600; use a separate USB per CommandCenter",
+    ),
 )
 
 _add(
@@ -125,10 +166,11 @@ _add(
         "Copy the generated folder to the ROOT of the stick, keeping its "
         "structure exactly as downloaded.",
         "Plug the stick into the display.",
-        "Menu > File Manager > Import Data.",
+        "Press the menu button, open «File Manager», then press «Import "
+        "Data».",
         "Select the setup package and confirm.",
         "Choose REPLACE or MERGE. Choose MERGE unless you are certain.",
-        "Open Work Setup > Guidance and select the imported track.",
+        "Open «Work Setup», go to «Guidance», and select the imported track.",
     ),
     verify=(
         "The track name appears in the guidance list under the right field.",
@@ -167,9 +209,10 @@ _add(
         "Generate a setup file in the Current System Display format and download it.",
         "Copy the folder to the ROOT of the stick, unchanged.",
         "Plug the stick into the display.",
-        "Menu > File Manager > Import Data.",
+        "Press the menu button, open «File Manager», then press «Import "
+        "Data».",
         "Select the package, choose MERGE, and confirm.",
-        "Open Work Setup > Guidance and select the track.",
+        "Open «Work Setup», go to «Guidance», and select the track.",
     ),
     verify=(
         "The import preview lists your tracks before you confirm. If the "
@@ -208,8 +251,10 @@ _add(
         "Attach it to the correct client, farm and field.",
         "Use Send to Machine and pick the target machine.",
         "In the cab, accept the incoming transfer notification.",
-        "Menu > File Manager to confirm the file arrived.",
-        "Work Setup > Prescription: select the file, the rate column and the unit.",
+        "Press the menu button and open «File Manager» to confirm the file "
+        "arrived.",
+        "Open «Work Setup», press «Target Rate/Rx», then set «Rate Column» "
+        "and «Rate Column Units».",
     ),
     verify=("The map draws on the run screen with a sensible rate legend.",),
     cautions=(
@@ -235,8 +280,8 @@ _add(
     prerequisites=("MTG / JDLink active and the machine paired to the organisation.",),
     steps=(
         "Confirm the machine is connected in Operations Center.",
-        "Confirm Data Sync is enabled on the display: Menu > System > "
-        "Wireless Data Transfer.",
+        "On the display, press the menu button, open «System», then "
+        "«Wireless Data Transfer», and confirm Data Sync is on.",
         "Work data uploads on its own as the job runs — no operator action.",
         "In Operations Center, open Field Analyzer to see the coverage arrive.",
         "If a job is missing, end the job in the cab to force the final upload.",
@@ -263,7 +308,8 @@ _add(
     steps=(
         _FAT32,
         "Plug the stick into the display.",
-        "Menu > File Manager > Export Data.",
+        "Press the menu button, open «File Manager», then press «Export "
+        "Data».",
         "Choose Setup Data (not Work Data) — guidance lines live in setup.",
         "Select the client, farm and fields whose tracks you want.",
         "Wait for the progress bar, then eject from the menu.",
@@ -286,38 +332,54 @@ _add(
     monitor_key="john_deere.gs3_2630",
     objective="import_prescription",
     transport=Transport.USB,
-    file_format=(
-        "A setup profile built by Operations Center. You feed Operations "
-        "Center a shapefile; it writes the profile the 2630 reads."
-    ),
-    media_path="GS3_2630\\<Profile>\\RCD\\",
-    minutes=20,
+    file_format="Complete shapefile: .shp + .shx + .dbf + .prj, same base name",
+    extensions=(".shp", ".shx", ".dbf", ".prj"),
+    media_path="Rx\\  — at the ROOT of the stick, never inside another folder",
+    minutes=15,
     prerequisites=(
-        "The 2630 does not browse a bare stick. Data must sit inside the "
-        "GS3_2630 profile structure written by Deere software.",
+        "The stick must be under 32 GB. The 2630 does not read larger ones, "
+        "however new they are.",
+        "If the map arrived zipped, unzip it on the computer first.",
     ),
     steps=(
         _FAT32,
-        "In Operations Center, build a setup file for a Legacy System Display "
-        "including the prescription.",
-        "Write it to the stick from Operations Center — it creates the "
-        "GS3_2630 folder structure for you.",
-        "Plug the stick into the 2630.",
-        "Menu > GreenStar 3 > Data > Import.",
-        "Select the profile and confirm.",
-        "Under Field Setup, attach the prescription to the field and choose the "
-        "rate column.",
+        "At the ROOT of the stick create a folder named exactly Rx and copy "
+        "all four parts into it — the .shp, .shx, .dbf and .prj.",
+        "In the cab: stop the machine and switch off every kind of recording. "
+        "The import option is greyed out while anything is recording.",
+        "Let the display finish starting up FIRST, then plug the stick in. On "
+        "this display the order matters.",
+        "Wait about 10 seconds. A «Data Transfer» page comes up on its own.",
+        "Choose the third option, «Import Shapefile Data».",
+        "Pick your file and confirm.",
+        "Go to the GreenStar setup and attach the prescription to the field, "
+        "then choose the rate column.",
     ),
-    verify=("The prescription draws on the map page before you start.",),
+    verify=(
+        "The prescription draws on the map page over the right field before "
+        "you start.",
+    ),
     cautions=(
-        "Apex is discontinued; use Operations Center.",
-        "Do not hand-build the GS3_2630 folder tree — the display validates it.",
+        _NO_ACCENTS,
+        "If «Import Shapefile Data» is greyed out, the files are in the wrong "
+        "place — not a display fault. Take the stick back to the computer and "
+        "check the Rx folder is at the root.",
+        "If the display does not see the stick at all, try the other USB port "
+        "before anything else.",
     ),
     common_errors=(
-        "Copying a loose shapefile to the stick root. The 2630 will not see it.",
+        "Plugging the stick in before the display has booted, so the "
+        "«Data Transfer» page never appears.",
+        "Leaving a recording running, which greys out the import.",
+        "A stick larger than 32 GB.",
+        "The Rx folder nested inside another folder.",
     ),
-    confidence=Confidence.CONFIRM_ON_MACHINE,
-    sources=("John Deere StellarSupport, legacy display data management",),
+    confidence=Confidence.VERIFIED,
+    sources=(
+        "John Deere GreenStar GS2/GS3 prescription loading guide "
+        "(Rx folder at root, Data Transfer page, Import Shapefile Data)",
+        "John Deere GS3 2630 user guide",
+    ),
 )
 
 _add(
@@ -331,7 +393,7 @@ _add(
         _FAT32,
         "Finish the job first, so the last of it is saved.",
         "Plug the stick into the 2630.",
-        "Menu > GreenStar 3 > Data > Export.",
+        "Press «Menu», open «GreenStar 3», go to «Data», then press «Export».",
         "Select the profile and confirm.",
         "Wait for the confirmation message before removing the stick.",
         "At the office, upload the whole GS3_2630 folder to Operations Center.",
@@ -349,27 +411,52 @@ _add(
     transport=Transport.USB,
     file_format="Complete shapefile: .shp + .shx + .dbf + .prj, same base name",
     extensions=(".shp", ".shx", ".dbf", ".prj"),
-    media_path="Rx\\  — at the ROOT of the stick",
-    minutes=10,
-    prerequisites=("The file has to be a proper rate map, not a picture of one. If you did "
-        "not build it yourself, the person who sent it will know.",),
+    media_path="Rx\\  — at the ROOT of the stick, not inside another folder",
+    minutes=15,
+    prerequisites=(
+        "The field drawn as areas, and at least one rate column stored as "
+        "numbers with a name of 10 characters or less.",
+        "If the map arrived as a .zip, unzip it on the computer first.",
+    ),
     steps=(
         _FAT32,
-        "Create a folder named exactly Rx at the ROOT of the stick.",
-        "Copy the four shapefile parts into it.",
-        "Plug the stick into the display.",
-        "Menu > System > File Manager > Import Data.",
-        "Select the prescription and confirm.",
-        "Work Setup > Prescription: pick the file, the rate column and the unit.",
+        "At the ROOT of the stick create a folder named exactly Rx — capital "
+        "R, small x.",
+        "Copy all four parts into Rx — the .shp, .shx, .dbf and .prj.",
+        "With the machine running, plug the stick into the display's USB port.",
+        "Wait a few seconds for «USB Drive Options» to appear, then press "
+        "«Import Data» and «USB Drive».",
+        "Press «Next», pick the folder holding the prescription, then «Import» "
+        "and «OK».",
+        "Press the menu button and open «Work Setup».",
+        "On «Work Summary» set «Crop Type» and «Variety», then press "
+        "«Target Rate/Rx» and choose your prescription.",
+        "Press «Rate Column», pick the rate, then press «Rate Column Units» "
+        "and pick the unit.",
     ),
-    verify=("The map draws with a sensible rate legend.",),
-    cautions=(_NO_ACCENTS, _EJECT),
+    verify=(
+        "The map draws over the right field with a sensible rate legend.",
+        "The rates are numbers, not blanks. Blanks mean the column came through "
+        "as text.",
+    ),
+    cautions=(
+        _NO_ACCENTS,
+        _EJECT,
+        "The G5 runs the same data handling as Gen 4, so anything written for a "
+        "4640 applies here — including the JD Rx Converter on StellarSupport.",
+    ),
     common_errors=(
-        "The .prj part is missing, so the field lands in the wrong place.",
-        "Rx folder nested inside another folder.",
+        "The folder is named anything other than Rx.",
+        "The Rx folder sits inside another folder rather than at the root.",
+        "The map is in a coordinate system other than WGS84, so the field "
+        "lands somewhere else entirely.",
+        "The rate column name is longer than 10 characters.",
     ),
     confidence=Confidence.VERIFIED,
-    sources=("John Deere G5 and Generation 4 compatibility chart, StellarSupport",),
+    sources=(
+        "John Deere Gen 4 / G5 on-screen help — File Manager: Import Data",
+        "John Deere G5 and Generation 4 compatibility chart, StellarSupport",
+    ),
 )
 
 _add(
@@ -386,7 +473,7 @@ _add(
         "the field.",
         "Use Send to Machine and select the machine.",
         "In the cab, accept the incoming transfer.",
-        "Work Setup > Guidance: select the track.",
+        "Open «Work Setup», go to «Guidance», and select the track.",
     ),
     verify=("The track appears under the correct field in the guidance list.",),
     cautions=(
@@ -425,9 +512,11 @@ _add(
         "Generate a setup file for the display and download it.",
         "Copy the folder to the ROOT of the stick, unchanged.",
         "Plug the stick into the display.",
-        "Menu > File Manager > Import Data.",
+        "Press the menu button, open «File Manager», then press «Import "
+        "Data».",
         "Select the package, choose MERGE, and confirm.",
-        "Open Work Setup > Field and confirm the boundary is attached.",
+        "Open «Work Setup», go to «Field», and confirm the boundary is "
+        "attached.",
     ),
     verify=(
         "The boundary draws around the field on the map page.",
@@ -460,7 +549,8 @@ _add(
         "the ones you want to see in reports.",
         "Generate a setup file for the display and download it.",
         "Copy the folder to the ROOT of the stick, unchanged.",
-        "Menu > File Manager > Import Data.",
+        "Press the menu button, open «File Manager», then press «Import "
+        "Data».",
         "Choose MERGE, not REPLACE, unless the display is being commissioned.",
         "Confirm the client / farm / field list on the display matches.",
     ),
@@ -492,7 +582,8 @@ _add(
     steps=(
         _FAT32,
         "Plug the stick into the display.",
-        "Menu > File Manager > Export Data.",
+        "Press the menu button, open «File Manager», then press «Export "
+        "Data».",
         "Choose Setup Data — boundaries live in setup, not in work data.",
         "Select the client, farm and fields you want.",
         "Wait for the progress bar, then eject from the menu.",
@@ -523,7 +614,8 @@ _add(
         _FAT32,
         "Use a stick with room to spare — a season of work data is not small.",
         "End the running job.",
-        "Menu > File Manager > Export Data.",
+        "Press the menu button, open «File Manager», then press «Export "
+        "Data».",
         "Export Work Data. Wait for it to finish.",
         "Export Setup Data as well — it is a separate action.",
         _EJECT,
@@ -562,7 +654,7 @@ _add(
         "Download the update and run the installer, pointing it at the USB "
         "stick. It writes the folder structure itself — do not rearrange it.",
         "Plug the stick into the display with the machine running.",
-        "Menu > System > Software Manager.",
+        "Press the menu button, open «System», then «Software Manager».",
         "Select the update on the USB and start the installation.",
         "Do NOT switch off, and do not remove the stick, until the display "
         "restarts on its own.",
@@ -599,7 +691,8 @@ _add(
         "In Operations Center, open Land and confirm the field boundary.",
         "Use Send to Machine and pick the machine.",
         "In the cab, accept the incoming transfer.",
-        "Work Setup > Field: confirm the boundary is attached.",
+        "Open «Work Setup», go to «Field», and confirm the boundary is "
+        "attached.",
     ),
     verify=("The boundary draws on the map page in the cab.",),
     cautions=(
@@ -621,8 +714,8 @@ _add(
     minutes=5,
     prerequisites=("MTG / JDLink active, and Data Sync enabled on the display.",),
     steps=(
-        "On the display: Menu > System > Wireless Data Transfer, and confirm "
-        "sync is on.",
+        "On the display, press the menu button, open «System», then "
+        "«Wireless Data Transfer», and confirm sync is on.",
         "Lines recorded in the cab upload on their own.",
         "In Operations Center, open the field and check the guidance line list.",
         "From there the line can be sent on to any other machine in the fleet.",
@@ -673,7 +766,7 @@ _add(
         "Build a setup file for a Legacy System Display and write it to the "
         "stick from Operations Center.",
         "Plug the stick into the 2630.",
-        "Menu > GreenStar 3 > Data > Import.",
+        "Press «Menu», open «GreenStar 3», go to «Data», then press «Import».",
         "Select the profile and confirm.",
     ),
     verify=("The boundary draws on the map page.",),
@@ -692,7 +785,7 @@ _add(
     steps=(
         _FAT32,
         "Plug the stick into the 2630.",
-        "Menu > GreenStar 3 > Data > Export.",
+        "Press «Menu», open «GreenStar 3», go to «Data», then press «Export».",
         "Select the profile and confirm.",
         "Wait for the confirmation before removing the stick.",
         "Upload the whole GS3_2630 folder to Operations Center to read the "
@@ -720,7 +813,8 @@ _add(
         "Download the GS3 update from StellarSupport and run the installer "
         "against the USB stick.",
         "Plug the stick into the 2630 with the machine running.",
-        "Menu > GreenStar 3 > Software Manager (wording varies by release).",
+        "Press «Menu», open «GreenStar 3», then «Software Manager». The "
+        "wording moves a little between releases.",
         "Start the update and leave the machine running until it restarts.",
         "Confirm the new version afterwards.",
     ),

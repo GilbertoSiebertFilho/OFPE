@@ -33,11 +33,32 @@ def _section(title: str, items, css_class: str = "") -> str:
     )
 
 
+def _screen_keys(text: str) -> str:
+    """Draw «Label» as a key cap.
+
+    Escaping happens per fragment rather than on the whole string, so the
+    guillemets can be found before the text is HTML-escaped and no part of the
+    source is ever emitted unescaped.
+    """
+    out, rest = [], text
+    while pr.LABEL_OPEN in rest:
+        before, _, rest = rest.partition(pr.LABEL_OPEN)
+        label, sep, rest = rest.partition(pr.LABEL_CLOSE)
+        out.append(escape(before))
+        if not sep:  # unclosed; treat the remainder as plain text
+            out.append(escape(pr.LABEL_OPEN + label))
+            return "".join(out)
+        out.append(f"<b class='key'>{escape(label)}</b>")
+    out.append(escape(rest))
+    return "".join(out)
+
+
 def _procedure_block(procedure: pr.Procedure, index: int, version_label: str) -> str:
     objective = pr.OBJECTIVES[procedure.objective]
-    confidence_class = (
-        "native" if procedure.confidence is pr.Confidence.VERIFIED else "needs_sample"
-    )
+    confidence_class = {
+        pr.Confidence.VERIFIED: "native",
+        pr.Confidence.FILE_VERIFIED: "structural",
+    }.get(procedure.confidence, "needs_sample")
 
     facts = []
 
@@ -59,7 +80,12 @@ def _procedure_block(procedure: pr.Procedure, index: int, version_label: str) ->
     fact("Platform", procedure.platform)
     fact("Allow about", f"{procedure.minutes} minutes")
 
-    steps = "".join(f"<li>{escape(s)}</li>" for s in procedure.steps)
+    steps = "".join(f"<li>{_screen_keys(s)}</li>" for s in procedure.steps)
+    caveat = (
+        f"<div class='panelbox'>{escape(procedure.confidence.description)}</div>"
+        if procedure.confidence is not pr.Confidence.VERIFIED
+        else ""
+    )
 
     return f"""
 <article class="proc handbook-entry">
@@ -75,6 +101,7 @@ def _procedure_block(procedure: pr.Procedure, index: int, version_label: str) ->
     </div>
   </div>
   <div class="proc-body">
+    {caveat}
     {"<h4>The file</h4><dl class='facts'>" + "".join(facts) + "</dl>" if facts else ""}
     {_section("Before you start", procedure.prerequisites)}
     <h4>Step by step</h4>

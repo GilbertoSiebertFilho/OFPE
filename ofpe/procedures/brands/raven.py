@@ -35,11 +35,16 @@ _add(
         "Raven\\GFF\\<Grower>\\<Farm>\\<Field>\\abLines",
         "Put the line files in the abLines folder.",
         "Plug the stick into the display.",
-        "Open the USB manager / file manager.",
-        "Select Guidance Lines from the file type drop-down.",
-        "Touch Next, bottom right.",
-        "Browse to the abLines folder.",
-        "Tick the lines you want, or use Select All, and import.",
+        "Touch the «Administrator» or «User» panel along the top of the main "
+        "screen to open it out.",
+        "Select the «File Manager» utility.",
+        "Touch the «USB Manager» tab.",
+        "Touch the USB drop-down and pick the stick you just plugged in.",
+        "Tick the box to the left of each line you want, or touch «Select All» "
+        "at the top of the list.",
+        "Touch «Copy». That brings the lines in and leaves them on the stick. "
+        "«Move» also works but deletes them from the stick, so only use it if "
+        "you mean to.",
     ),
     verify=("The imported lines appear in the guidance list for that field.",),
     cautions=(
@@ -101,9 +106,11 @@ _add(
         _FAT32,
         f"Build the tree on the stick: {_GFF}\\boundaries",
         "Put the boundary file in that folder.",
-        "Plug the stick into the display and open the USB manager.",
-        "Select the boundary file type from the drop-down.",
-        "Browse to the folder, tick the boundary, and import.",
+        "Plug the stick into the display.",
+        "Touch the «Administrator» or «User» panel along the top of the main "
+        "screen, then select «File Manager».",
+        "Touch the «USB Manager» tab and pick the stick from the USB drop-down.",
+        "Tick the boundary, then touch «Copy».",
     ),
     verify=("The boundary draws around the field on the run screen.",),
     cautions=(

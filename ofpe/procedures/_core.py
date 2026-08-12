@@ -59,6 +59,9 @@ __all__ = [
     "objective",
     "coverage",
     "iter_procedures",
+    "LABEL_OPEN",
+    "LABEL_CLOSE",
+    "labels_in",
 ]
 
 ANY_VERSION = "*"
@@ -127,14 +130,48 @@ class Transport(str, Enum):
 
 
 class Confidence(str, Enum):
+    """How much of an answer we have actually read somewhere.
+
+    Two levels were not enough, and the gap between them was where the
+    misleading answers lived. A procedure can be solid about the file -- the
+    format, the folder name, the capitalisation, all of which come straight out
+    of a manufacturer's document -- while the sequence of presses is our own
+    reconstruction of how you would get there. Calling that "verified" invites
+    somebody to stand in a cab looking for a button we named ourselves.
+
+    So the middle level says exactly that: the file is right, the wording on
+    your screen may not match ours.
+    """
+
     VERIFIED = "verified"
+    FILE_VERIFIED = "file_verified"
     CONFIRM_ON_MACHINE = "confirm_on_machine"
 
     @property
     def label(self) -> str:
         return {
-            Confidence.VERIFIED: "Verified against the cited source",
-            Confidence.CONFIRM_ON_MACHINE: "Confirm the menu wording on the machine",
+            Confidence.VERIFIED: "File and button names both checked",
+            Confidence.FILE_VERIFIED: "File checked — button names may differ",
+            Confidence.CONFIRM_ON_MACHINE: "Confirm the wording on the machine",
+        }[self]
+
+    @property
+    def description(self) -> str:
+        return {
+            Confidence.VERIFIED: (
+                "The file format, the folder and the buttons named below all "
+                "come from the manufacturer's own documentation."
+            ),
+            Confidence.FILE_VERIFIED: (
+                "The file format and the folder come from the manufacturer's "
+                "own documentation. The route through the menus is our best "
+                "reading of it, so expect the wording on your screen to be "
+                "close rather than exact."
+            ),
+            Confidence.CONFIRM_ON_MACHINE: (
+                "Assembled from more than one source. Treat the menu names as "
+                "a guide and look for the equivalent option on your screen."
+            ),
         }[self]
 
 
@@ -497,6 +534,7 @@ class Procedure:
             "common_errors": list(self.common_errors),
             "confidence": self.confidence.value,
             "confidence_label": self.confidence.label,
+            "confidence_description": self.confidence.description,
             "sources": list(self.sources),
         }
 
@@ -515,8 +553,37 @@ def _add(**kwargs) -> None:
     procedure = Procedure(**kwargs)
     if procedure.objective not in OBJECTIVES:
         raise ValueError(f"unknown objective {procedure.objective!r}")
+    for step in procedure.steps:
+        if not _labels_balanced(step):
+            raise ValueError(
+                f"unclosed on-screen label in {procedure.monitor_key} "
+                f"{procedure.objective}: {step!r}"
+            )
     procedure = _attach_explanations(procedure)
+    procedure = _demote_unread_menu_paths(procedure)
     PROCEDURES.append(procedure)
+
+
+def _demote_unread_menu_paths(procedure: Procedure) -> Procedure:
+    """Stop a procedure claiming more than it has actually read.
+
+    A step that names no button on a display we have never touched is a
+    reconstruction, however plausible. Enforcing that here rather than trusting
+    each entry to be honest about itself means the only way to claim the top
+    level is to have read the wording and marked it -- and nobody can quietly
+    over-claim by forgetting.
+    """
+    if procedure.confidence is not Confidence.VERIFIED:
+        return procedure
+    if procedure.transport is not Transport.USB:
+        return procedure
+    if procedure.objective == "prepare_media":  # no display involved
+        return procedure
+    if any(labels_in(step) for step in procedure.steps):
+        return procedure
+    return Procedure(
+        **{**procedure.__dict__, "confidence": Confidence.FILE_VERIFIED}
+    )
 
 
 def _attach_explanations(procedure: Procedure) -> Procedure:
@@ -639,6 +706,41 @@ _STEP_EXPLANATIONS = (
     (_EJECT, _EJECT_WHY),
     (_NO_ACCENTS, _NO_ACCENTS_WHY),
 )
+
+
+# --------------------------------------------------------------------------- #
+#  On-screen labels                                                            #
+# --------------------------------------------------------------------------- #
+
+# Words written «like this» in a step are the exact wording on the glass.
+#
+# This matters more than it looks. Somebody standing at a display is doing one
+# thing: matching the word in the instruction against the word under their
+# thumb. A step that says "open the data management area" makes them guess; a
+# step that says press «Data Management» does not. So the label is marked, the
+# renderers draw it as a key cap, and it survives in print and in plain text as
+# a quoted word rather than disappearing into the prose.
+#
+# The marking is also a discipline on the writing: you cannot mark a label you
+# have not actually read somewhere. Anything unmarked is our paraphrase and is
+# allowed to be approximate; anything marked is a claim about the screen.
+LABEL_OPEN, LABEL_CLOSE = "«", "»"
+
+
+def labels_in(text: str) -> tuple[str, ...]:
+    """Every on-screen label a piece of text names, in order."""
+    out, rest = [], text
+    while LABEL_OPEN in rest:
+        _, _, rest = rest.partition(LABEL_OPEN)
+        label, sep, rest = rest.partition(LABEL_CLOSE)
+        if not sep:
+            break
+        out.append(label)
+    return tuple(out)
+
+
+def _labels_balanced(text: str) -> bool:
+    return text.count(LABEL_OPEN) == text.count(LABEL_CLOSE)
 
 
 

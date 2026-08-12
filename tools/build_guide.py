@@ -60,7 +60,8 @@ DATA = {
     "transports": {t.value: {"label": t.label, "desc": t.description}
                    for t in pr.Transport},
     "equipment": {e.value: e.label for e in pr.EquipmentType},
-    "confidence": {c.value: c.label for c in pr.Confidence},
+    "confidence": {c.value: {"label": c.label, "desc": c.description}
+                   for c in pr.Confidence},
     "procedures": procedures,
     "relatedOrder": list(pr._core._RELATED_ORDER),
 }
@@ -317,6 +318,15 @@ ol.steps li::before {
 }
 ol.steps li:last-child { padding-bottom: 0; }
 
+/* «Label» in a step is the exact wording on the display. Drawn as a key cap so
+   the eye can jump straight to the word it has to find on the glass. */
+.key {
+  font-weight: 680; white-space: nowrap; padding: .09em .4em;
+  margin: 0 .04em; border-radius: 5px; background: var(--surface-2);
+  border: 1px solid var(--line); box-shadow: 0 1px 0 var(--line);
+}
+.note .key { background: var(--surface); }
+
 .note { border-left: 3px solid var(--line); background: var(--surface-2); padding: 12px 15px; border-radius: 0 9px 9px 0; }
 .note.ok   { border-color: var(--ok);   background: var(--ok-soft); }
 .note.care { border-color: var(--warn); background: var(--warn-soft); }
@@ -358,6 +368,7 @@ footer p { margin: 0 0 7px; max-width: 64ch; }
   ol.steps li::before { background: #000; color: #fff; }
   ol.steps li, .note, .facts { break-inside: avoid; }
   h4 { break-after: avoid; }
+  .key { background: none; border: 1px solid #000; box-shadow: none; }
 }
 """
 
@@ -375,6 +386,13 @@ const el = (t, a = {}, ...kids) => {
     n.append(c.nodeType ? c : document.createTextNode(String(c)));
   return n;
 };
+
+/* A step names buttons in «guillemets»; each becomes a key cap. Split rather
+   than replace, so nothing in the source text is ever treated as markup. */
+const keys = text => text.split(/«([^»]*)»/)
+  .map((part, i) => i % 2 ? el('b', { class: 'key' }, part) : part);
+
+const CONF_TONE = { verified: 'ok', file_verified: 'check', confirm_on_machine: 'check' };
 
 const S = { equip: null, mon: null, ver: null, job: null, route: null };
 const monByKey = Object.fromEntries(D.monitors.map(m => [m.key, m]));
@@ -541,13 +559,19 @@ function showResult(t) {
         el('h2', {}, obj.label),
         el('p', {}, m.label + ' · ' + D.directions[obj.dir]),
         el('div', { class: 'tags' },
-          el('span', { class: 'tag ' + (p.conf === 'verified' ? 'ok' : 'check') },
-             D.confidence[p.conf]),
+          el('span', { class: 'tag ' + CONF_TONE[p.conf],
+                       title: D.confidence[p.conf].desc },
+             D.confidence[p.conf].label),
           el('span', { class: 'tag' }, ver ? ver.label : 'Any version'),
           el('span', { class: 'tag' }, D.transports[p.t].label)))));
 
   const body = el('div', { class: 'body' });
   if (r.msg) body.append(el('div', { class: 'note care' }, r.msg));
+  /* Say plainly how much of this was read off a manual and how much is our
+     reading of it, before anyone stands in a cab hunting for a button. */
+  if (p.conf !== 'verified')
+    body.append(el('div', { class: 'note ' + (p.conf === 'file_verified' ? '' : 'care') },
+      D.confidence[p.conf].desc));
 
   const facts = el('dl', { class: 'facts' });
   const fact = (k, v, code) => { if (!v || /^n\/a/i.test(v)) return;
@@ -565,11 +589,11 @@ function showResult(t) {
     if (!items || !items.length) return;
     body.append(el('h4', {}, title));
     body.append(el('div', { class: 'note ' + cls },
-      el('ul', {}, items.map(i => el('li', {}, i)))));
+      el('ul', {}, items.map(i => el('li', {}, keys(i))))));
   };
   block('Before you start', p.pre, '');
   body.append(el('h4', {}, 'Step by step'));
-  body.append(el('ol', { class: 'steps' }, p.steps.map(s => el('li', {}, s))));
+  body.append(el('ol', { class: 'steps' }, p.steps.map(s => el('li', {}, keys(s)))));
   block('Check it worked', p.ok, 'ok');
   block('Worth knowing', p.care, 'care');
   block('What usually goes wrong', p.bad, 'stop');
