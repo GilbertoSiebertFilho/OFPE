@@ -255,6 +255,11 @@ SCOPE_EXCLUSIONS: dict[str, tuple[str, ...]] = {
         "import_point",     # can be done; not part of this project's work
         "export_point",     # same
         "software_update",  # dealer work, not the producer's job
+        # The 2630's export takes the whole profile, guidance lines included,
+        # so a separate row for them is a distinction the display does not
+        # make -- and two menu entries for one job is how people end up doing
+        # it twice. The export procedure says so instead.
+        "export_guidance",
     ),
 }
 

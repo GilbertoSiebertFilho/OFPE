@@ -457,11 +457,15 @@ _add(
     verify=(
         "«Data Transfer Complete» appeared and you pressed «Accept». Without "
         "that message the export did not finish, whatever the bar looked like.",
+        "The profile on the stick carries your guidance lines and boundaries "
+        "as well as the yield data. There is nothing else to export separately.",
         "On a computer, the stick holds a GS3_2630 folder with your profile "
         "name inside it, and it is not empty.",
         "Operations Center shows the job with the expected area and date.",
     ),
     cautions=(
+        "This one export takes everything — yield, guidance lines, boundaries, "
+        "the lot. You do not need to come back for the lines separately.",
         "Exporting copies your data; it does not empty the display. The screen "
         "says so: «Note: Data remains on the display.»",
         "The display will not run GreenStar while a stick is plugged in. Pull "
