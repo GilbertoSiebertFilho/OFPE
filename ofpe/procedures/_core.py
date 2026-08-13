@@ -64,6 +64,7 @@ __all__ = [
     "labels_in",
     "OBJECTIVE_LABELS",
     "objective_label",
+    "OUT_OF_SCOPE",
     "SCOPE_EXCLUSIONS",
     "in_scope",
 ]
@@ -250,22 +251,39 @@ class Objective:
 # Keeping the two apart costs one dictionary and buys the ability to answer
 # "why is this missing?" honestly a year from now, and to reverse a scope call
 # without first having to work out whether it was ever safe to offer.
-SCOPE_EXCLUSIONS: dict[str, tuple[str, ...]] = {
-    "combine": (
-        "import_point",     # can be done; not part of this project's work
-        "export_point",     # same
-        "software_update",  # dealer work, not the producer's job
-        # The 2630's export takes the whole profile, guidance lines included,
-        # so a separate row for them is a distinction the display does not
-        # make -- and two menu entries for one job is how people end up doing
-        # it twice. The export procedure says so instead.
-        "export_guidance",
-    ),
-}
+#
+# These arrived as a decision about combines, which was the machine in front
+# of us at the time. None of the reasons was ever about combines: a marked
+# point is out of scope wherever it is dropped, a display update is dealer
+# work on any machine, and every display whose export takes the whole profile
+# takes the guidance lines with it. So they are out of scope everywhere, and
+# the same display shows the same jobs whether it is bolted into a combine, a
+# tractor or a sprayer -- which is what an operator who moves between the
+# three expects, and what they get, since the answer itself never depended on
+# the machine.
+OUT_OF_SCOPE: tuple[str, ...] = (
+    "import_point",     # can be done; not part of this project's work
+    "export_point",     # same
+    "software_update",  # dealer work, not the producer's job
+    # An export that takes the whole profile takes the guidance lines with
+    # it, so a separate row for them is a distinction the display does not
+    # make -- and two menu entries for one job is how people end up doing it
+    # twice. The export procedure says so instead.
+    "export_guidance",
+)
+
+# Out of scope on one kind of machine but not others. Empty, and kept: the
+# distinction it draws is real, and the day one job is worth covering on a
+# planter and not on a sprayer, the alternative is discovering that
+# `not_for` -- which means the machine physically cannot -- was quietly
+# borrowed to mean "we did not get to it".
+SCOPE_EXCLUSIONS: dict[str, tuple[str, ...]] = {}
 
 
 def in_scope(objective_key: str, equipment: str | None) -> bool:
     """Whether this project covers this job on this machine."""
+    if objective_key in OUT_OF_SCOPE:
+        return False
     return objective_key not in SCOPE_EXCLUSIONS.get(equipment or "", ())
 
 

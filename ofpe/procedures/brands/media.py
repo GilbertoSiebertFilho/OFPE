@@ -40,6 +40,11 @@ for _monitor in (
     "precision_planting.2020",
     "teejet.matrix_pro_gs",
     "generic.isobus",
+    # A Windows tablet, so it reads any stick -- the FAT32/32 GB rule is
+    # conservative there, not required. Included because a stick prepared
+    # this way works on every display in this guide, and one answer that is
+    # always safe beats an exception to remember.
+    "agopengps.aog",
 ):
     _add(
         monitor_key=_monitor,

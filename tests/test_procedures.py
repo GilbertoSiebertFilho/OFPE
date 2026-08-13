@@ -667,30 +667,50 @@ def test_scope_and_impossibility_stay_separate():
 
     Both hide a row from the same menu, so it would be easy to collapse them
     into one list. Don't: `not_for` says the machine cannot do it, and
-    SCOPE_EXCLUSIONS says we chose not to cover it. Only one of those is safe to
+    OUT_OF_SCOPE says we chose not to cover it. Only one of those is safe to
     reverse without checking anything.
     """
     # A combine genuinely cannot take a prescription.
     assert "combine" in pr.OBJECTIVES["import_prescription"].not_for
-    assert "import_prescription" not in pr.SCOPE_EXCLUSIONS["combine"]
+    assert "import_prescription" not in pr.OUT_OF_SCOPE
 
-    # A combine can perfectly well update its software; we just do not cover it.
-    assert "software_update" in pr.SCOPE_EXCLUSIONS["combine"]
+    # A display can perfectly well update its software; we just do not cover it.
+    assert "software_update" in pr.OUT_OF_SCOPE
     assert not pr.OBJECTIVES["software_update"].not_for
 
 
-def test_out_of_scope_jobs_are_hidden_for_that_machine_only():
-    hidden = {"import_point", "export_point", "software_update"}
-    on_combine = {o.key for o in pr.available_objectives(
-        "john_deere.gs3_2630", None, "combine")}
-    on_sprayer = {o.key for o in pr.available_objectives(
-        "john_deere.gs3_2630", None, "sprayer")}
-    assert not (hidden & on_combine), sorted(hidden & on_combine)
-    assert hidden <= on_sprayer, "hidden on a combine, still expected elsewhere"
+def test_the_same_display_offers_the_same_jobs_on_every_machine():
+    """An operator moves a 2630 between the tractor and the combine, and the
+    display does not change what it can do on the way. The only differences
+    allowed are physical ones -- a prescription has nowhere to go on a
+    combine -- so the job lists may differ exactly by `not_for` and nothing
+    else."""
+    for eq_a, eq_b in (("combine", "tractor"), ("tractor", "sprayer"),
+                       ("sprayer", "planter")):
+        a = {o.key for o in pr.available_objectives(
+            "john_deere.gs3_2630", None, eq_a)}
+        b = {o.key for o in pr.available_objectives(
+            "john_deere.gs3_2630", None, eq_b)}
+        for key in a ^ b:
+            assert pr.OBJECTIVES[key].not_for, (
+                f"{key} differs between {eq_a} and {eq_b} without a physical reason")
+
+
+def test_out_of_scope_jobs_are_hidden_everywhere():
+    """The scope calls were made while looking at a combine, but none of the
+    reasons was about combines -- so a sprayer or a tractor does not get
+    offered the jobs the project chose not to cover."""
+    for eq in ("combine", "tractor", "sprayer", "planter", None):
+        offered = {o.key for o in pr.available_objectives(
+            "john_deere.gs3_2630", None, eq)}
+        overlap = set(pr.OUT_OF_SCOPE) & offered
+        assert not overlap, f"{eq}: {sorted(overlap)}"
 
 
 def test_every_scope_exclusion_names_things_that_exist():
     """A typo here silently hides nothing, which is the worst kind of bug."""
+    for key in pr.OUT_OF_SCOPE:
+        assert key in pr.OBJECTIVES, key
     for equipment, keys in pr.SCOPE_EXCLUSIONS.items():
         assert equipment in {e.value for e in pr.EquipmentType}, equipment
         for key in keys:
@@ -791,3 +811,23 @@ def test_the_ones_that_cannot_be_undone_say_why():
     assert hard, "nothing is marked as unrecoverable, which cannot be right"
     for check in hard:
         assert check.why, check.key
+
+
+def test_every_display_with_a_usb_route_teaches_stick_preparation():
+    """The stick is the step everything else depends on, so no display that
+    uses one may be missing the how-to -- on any machine it is bolted into."""
+    from ofpe import catalog as cat
+
+    missing = []
+    for key, m in cat.MONITORS.items():
+        if not m.is_terminal:
+            continue
+        has_usb = any(p.transport is pr.Transport.USB
+                      for p in pr.PROCEDURES if p.monitor_key == key)
+        if not has_usb:
+            continue
+        for eq in m.equipment:
+            jobs = {o.key for o in pr.available_objectives(key, None, eq)}
+            if "prepare_media" not in jobs:
+                missing.append((key, eq))
+    assert not missing, missing

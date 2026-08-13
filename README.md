@@ -52,7 +52,7 @@ working until either the plan changes or the repository goes public again.
 
 ## The Guide on its own — nothing to install
 
-The Guide is knowledge, not calculation: 342 procedures, no database, no server
+The Guide is knowledge, not calculation: 343 procedures, no database, no server
 work. So it also exists as **one file**, **`OFPE-Guide.html`**. Double-click it
 and it opens in the browser. Copy it to a phone, mail it to an operator, put it
 on the USB stick that is going to the machine anyway — it works with no
@@ -113,7 +113,7 @@ python3 tools/generate_icons.py
 
 ## What to try first
 
-The **Guide** tab needs no data at all — the 342 procedures are built in. Pick
+The **Guide** tab needs no data at all — the 343 procedures are built in. Pick
 a combine, pick a Gen 4, pick the 2025-3 monitor version, ask to load AB
 lines, and read what comes back. Then change the version to OS 11.x and watch
 the answer change, which is the whole point of the version step.
@@ -132,7 +132,7 @@ Six questions, each narrowing the next:
 equipment type → brand/display → software version → what you want to do → how it travels → the procedure
 ```
 
-**342 procedures across 23 displays.** Every answer carries the file format, the
+**343 procedures across 23 displays.** Every answer carries the file format, the
 exact media path, the filesystem, numbered click-by-click steps, how to check it
 worked, what usually goes wrong, and the source the claim came from. The result
 card prints cleanly — that is the artefact you carry to the machine.
@@ -275,7 +275,7 @@ Two voices can do the reading, and the page prefers the better one.
 **Recorded.** `tools/render_voice.py` reads every line the guide can say through
 a real TTS model and writes it to `voice/` as a mono MP3. The page fetches a
 clip when you press play — about a dozen for the procedure on screen, not a
-model download. This is possible only because the text is a closed set: 342
+model download. This is possible only because the text is a closed set: 343
 procedures share 565 distinct lines which, with the step numbers called out
 separately, come to 581 clips, 47 minutes of speech and 11.5 MB. Pulling work
 data off a 2630 is thirteen steps, 86 seconds of speech and **395 KB**; the
@@ -579,7 +579,7 @@ The procedure knowledge base started life as two tabs in an unrelated
 spreadsheet — a CWSI irrigation tool that happened to also carry a monitor
 file-transfer guide. That guide held 24 procedures, all tagged "all versions".
 
-This is that idea taken seriously: 342 procedures, a real software-version
+This is that idea taken seriously: 343 procedures, a real software-version
 dimension, every claim sourced and confidence-flagged, and a correction loop so
 the flags can come down. The two projects share nothing but that origin, and
 this one owns its own icon generator and assets.
