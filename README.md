@@ -274,10 +274,12 @@ Two voices can do the reading, and the page prefers the better one.
 
 **Recorded.** `tools/render_voice.py` reads every line the guide can say through
 a real TTS model and writes it to `voice/` as a mono MP3. The page fetches a
-clip when you press play — about a dozen for the procedure on screen, a few
-hundred kilobytes, not a model download. This is possible only because the text
-is a closed set: 342 procedures share 565 distinct lines, roughly forty-five
-minutes of speech and about ten megabytes of audio. Two models are wired up:
+clip when you press play — about a dozen for the procedure on screen, not a
+model download. This is possible only because the text is a closed set: 342
+procedures share 565 distinct lines which, with the step numbers called out
+separately, come to 581 clips, 47 minutes of speech and 11.5 MB. Pulling work
+data off a 2630 is thirteen steps, 86 seconds of speech and **395 KB**; the
+longest procedure anywhere is 566 KB. Two models are wired up:
 
 | | licence | needs | notes |
 |---|---|---|---|
