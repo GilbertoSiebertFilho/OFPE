@@ -1,4 +1,4 @@
-"""Planter and sprayer specialists, plus AgOpenGPS."""
+"""Planter and sprayer specialists, AgOpenGPS, and the survey additions."""
 
 from __future__ import annotations
 
@@ -428,3 +428,138 @@ _point_routes("agopengps.aog", _AOG_SOURCES,
               vocabulary="Flag", file_kind="shapefile",
               media_path="The field folder under your AgOpenGPS Fields directory",
               filesystem="any — this is a PC, not an embedded display")
+
+
+# =========================================================================== #
+#  From the producer survey -- real machines in the trials carry these.       #
+#  Menu wording is reported, not yet read off a screen, and every entry says  #
+#  so. The correction button is how these earn their way up.                  #
+# =========================================================================== #
+
+# Bourgault iCon: an iPad controlling the drill over the seeder's own WiFi.
+# It does not steer and it has no USB port, so the two jobs it has are the
+# two a drill controller actually does: take a prescription, give back the
+# seeding record.
+
+_add(
+    monitor_key="bourgault.icon",
+    objective="import_prescription",
+    transport=Transport.CLOUD,
+    file_format="Prescription map — complete shapefile set, zipped",
+    extensions=(".shp", ".shx", ".dbf", ".prj", ".zip"),
+    media_path="",
+    filesystem="n/a",
+    minutes=15,
+    steps=(
+        "A shapefile prescription is four files — .shp, .shx, .dbf and .prj "
+        "— so send the zipped set, never the .shp alone.",
+        "Get the zip onto the iPad: email it to the address signed in on the "
+        "iPad, or drop it in a cloud folder the iPad can open.",
+        "Open it from the ICON app so the map is imported, not just viewed.",
+        "Assign the map to the tank whose product it controls.",
+        "Check the rate legend against the agronomist's sheet before seeding "
+        "— a wrong units guess here seeds the whole field wrong.",
+    ),
+    verify=(
+        "The map draws over the right field, and the rates at two or three "
+        "spots match the sheet.",
+    ),
+    cautions=(
+        "The iPad is the display. If it can open the file, iCon can try it; "
+        "there is no USB stick in this system at all.",
+    ),
+    common_errors=(
+        "Importing the map but not assigning it to a tank, so the drill "
+        "seeds the flat default rate.",
+    ),
+    confidence=Confidence.CONFIRM_ON_MACHINE,
+    sources=("Producer survey, 2026; Bourgault iCon product materials",),
+)
+
+_add(
+    monitor_key="bourgault.icon",
+    objective="export_work_data",
+    transport=Transport.CLOUD,
+    file_format="Seeding record shared off the iPad",
+    extensions=(),
+    media_path="",
+    filesystem="n/a",
+    minutes=10,
+    steps=(
+        "Finish or close the job so the record is complete.",
+        "Use the ICON app's share / export for the job record and send it to "
+        "email or a cloud drive.",
+        "Open what arrived on a computer before leaving the yard — a record "
+        "that did not send is found out now or at reporting time.",
+    ),
+    verify=("The record opens on a computer and covers the whole field.",),
+    cautions=(
+        "Do this before the iPad leaves the seeder's WiFi with the season's "
+        "only copy.",
+    ),
+    common_errors=(),
+    confidence=Confidence.CONFIRM_ON_MACHINE,
+    sources=("Producer survey, 2026; Bourgault iCon product materials",),
+)
+
+# Outback Rebel: an entry-level guidance terminal. Until somebody shows us a
+# file route, the dependable way to get a line in is the screen itself, and
+# the way to get data out is the stick.
+
+_add(
+    monitor_key="outback.rebel",
+    objective="import_guidance",
+    transport=Transport.MANUAL,
+    file_format="No file — the line is set on the screen",
+    extensions=(),
+    media_path="n/a",
+    filesystem="n/a",
+    minutes=10,
+    steps=(
+        "On the guidance screen, start a new AB line.",
+        "Drive to the start of the pass and set A. Drive to the far end and "
+        "set B.",
+        "If your menu offers typing the points instead, the four numbers on "
+        "the trial sheet are Lat A, Long A, Lat B, Long B.",
+        "Name the line so next season's operator can tell it from the rest.",
+    ),
+    verify=(
+        "The lightbar centres when you sit on the line, and the next pass "
+        "offsets by exactly the implement width.",
+    ),
+    cautions=(
+        "Set A and B from the actual ends of the pass, not from wherever the "
+        "tractor happens to stand — a short baseline multiplies any GPS "
+        "wobble across the whole field.",
+    ),
+    common_errors=(),
+    confidence=Confidence.CONFIRM_ON_MACHINE,
+    sources=("Producer survey, 2026 — menu wording not yet verified",),
+)
+
+_add(
+    monitor_key="outback.rebel",
+    objective="export_work_data",
+    transport=Transport.USB,
+    file_format="Coverage / job record copied to the stick",
+    extensions=(),
+    media_path="Drive root",
+    minutes=10,
+    steps=(
+        "Empty the stick first, on a computer. Not \"tidy it up\" — "
+        "delete everything off it.",
+        "Finish or close the job on the display.",
+        "Plug the stick in and use the data / export item in the menu to "
+        "copy the job off.",
+        "Eject or power down before pulling the stick.",
+    ),
+    verify=("The files open on a computer and the coverage looks like the field.",),
+    cautions=(
+        "Reported by producers; we have not read this menu off a machine. "
+        "If your screen says it differently, the correction button on this "
+        "answer is exactly for that.",
+    ),
+    common_errors=(),
+    confidence=Confidence.CONFIRM_ON_MACHINE,
+    sources=("Producer survey, 2026 — menu wording not yet verified",),
+)

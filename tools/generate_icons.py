@@ -378,6 +378,11 @@ MONITORS = [
      (16, 10), 0, 0, False, (86, 122, 168)),
     ("generic_isobus.png",   "ISOBUS terminal",    "any TC-BAS terminal  ·  ISOXML",
      (16, 10), 0, 0, False, (108, 117, 125)),
+    # --- added from the producer survey --------------------------------------
+    ("bourgault_icon.png",   "iCon",               "iPad  ·  wireless  ·  air seeder",
+     (4, 3), 0, 0, False, (86, 128, 52)),
+    ("outback_rebel.png",    "Rebel",              "touch  ·  guidance",
+     (4, 3), 0, 0, False, (208, 110, 36)),
 ]
 
 

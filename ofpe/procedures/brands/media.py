@@ -45,6 +45,10 @@ for _monitor in (
     # this way works on every display in this guide, and one answer that is
     # always safe beats an exception to remember.
     "agopengps.aog",
+    # Survey addition: a guidance terminal with a USB export, so the stick
+    # lesson applies. (Bourgault iCon is deliberately absent -- it is an
+    # iPad, and there is no stick in that system at all.)
+    "outback.rebel",
 ):
     _add(
         monitor_key=_monitor,

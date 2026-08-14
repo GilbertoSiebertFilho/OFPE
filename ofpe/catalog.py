@@ -911,7 +911,7 @@ _add(
         key="topcon.x_family",
         brand="Topcon",
         model="X35 / X25 / XD / XD+",
-        aka=("Horizon", "X35"),
+        aka=("Horizon", "X35", "X30", "X30 Apollo", "X40 Apollo", "XD Plus"),
         generations="Horizon OS",
         support=SupportLevel.NATIVE,
         primary_format="isoxml",
@@ -1096,6 +1096,64 @@ _add(
     )
 )
 
+# Both of these came off the producer survey, added because real seeders and
+# tractors in the trials carry them. The support level is honest: we cannot
+# write either one a guidance file today.
+
+_add(
+    MonitorProfile(
+        key="bourgault.icon",
+        brand="Bourgault",
+        model="iCon (ICON 1 / 2 / 3)",
+        aka=("ICON 3.0", "ICON 3.0 System", "iCon 3", "Icon"),
+        generations="ICON app generations on an Apple iPad",
+        support=SupportLevel.API_ONLY,
+        primary_format="reference_bundle",
+        also_offer=("shapefile", "kml", "geojson"),
+        media="None — the display is an iPad talking to the drill over its own WiFi",
+        filesystem="n/a",
+        guidance_vocabulary="(none — iCon does not steer; the tractor display does)",
+        steps=(
+            "iCon controls the drill: rates, sections, calibration. It does "
+            "not take guidance lines at all.",
+            "Put the AB line on the tractor's own display instead — pick that "
+            "display in this guide and follow its steps.",
+        ),
+        caveats=(
+            "There is no USB port in this system. Files reach the iPad the "
+            "way files reach any iPad: email, a cloud drive, or the Files app.",
+        ),
+        sources=("Producer survey, 2026; Bourgault iCon product materials",),
+    )
+)
+
+_add(
+    MonitorProfile(
+        key="outback.rebel",
+        brand="Outback Guidance",
+        model="Rebel",
+        aka=("Outback Rebel", "Hemisphere Rebel"),
+        generations="Outback touchscreen guidance terminals",
+        support=SupportLevel.API_ONLY,
+        primary_format="reference_bundle",
+        also_offer=("shapefile", "kml", "geojson"),
+        guidance_vocabulary="AB line, Contour, Last pass",
+        steps=(
+            "We have not confirmed a file import route for the Rebel, so do "
+            "not chase one on the machine.",
+            "Set the line on the screen instead: the reference sheet in the "
+            "bundle carries the coordinates, and the display's own new-line "
+            "screen takes it from there.",
+        ),
+        caveats=(
+            "Menu wording below is unverified — reported by producers, not "
+            "yet read off a machine. The correction button on each answer is "
+            "how it gets fixed.",
+        ),
+        sources=("Producer survey, 2026",),
+    )
+)
+
 _add(
     MonitorProfile(
         key="generic.isobus",
@@ -1174,6 +1232,8 @@ _ICONS: dict[str, str] = {
     "precision_planting.2020": "pp_2020.png",
     "teejet.matrix_pro_gs": "teejet_matrix.png",
     "agopengps.aog": "agopengps.png",
+    "bourgault.icon": "bourgault_icon.png",
+    "outback.rebel": "outback_rebel.png",
     "generic.isobus": "generic_isobus.png",
     "generic.gis": "generic_isobus.png",
 }
@@ -1189,23 +1249,25 @@ _EQUIPMENT: dict[str, tuple[str, ...]] = {
     "john_deere.g5": ("tractor", "combine", "sprayer", "planter", "seeder", "universal"),
     "case_ih.afs_pro_700": ("tractor", "combine", "sprayer", "planter", "seeder"),
     "case_ih.afs_pro_1200": ("tractor", "combine", "sprayer", "planter", "seeder"),
-    "new_holland.intelliview_iv": ("tractor", "combine", "sprayer", "forage"),
+    "new_holland.intelliview_iv": ("tractor", "combine", "sprayer", "seeder", "forage"),
     "new_holland.intelliview_12": ("tractor", "combine", "sprayer", "forage"),
     "trimble.precision_iq": ("universal", "tractor", "sprayer", "combine", "spreader"),
     "trimble.fmx": ("universal", "tractor", "sprayer"),
     "ag_leader.incommand": ("universal", "planter", "combine", "sprayer", "tractor"),
-    "raven.viper4": ("universal", "sprayer", "spreader", "tractor"),
+    "raven.viper4": ("universal", "sprayer", "spreader", "seeder", "tractor"),
     "claas.cemis_1200": ("tractor", "combine", "forage"),
     "claas.s10": ("tractor", "combine", "forage"),
     "agco.fendt_one": ("tractor",),
     "agco.valtra_smarttouch": ("tractor",),
     "agco.mf_datatronic": ("tractor",),
-    "topcon.x_family": ("universal", "tractor", "sprayer", "spreader"),
+    "topcon.x_family": ("universal", "tractor", "sprayer", "seeder", "spreader"),
     "kverneland.isomatch": ("tractor", "seeder", "spreader", "sprayer"),
     "mueller.track_leader": ("tractor", "seeder", "sprayer", "spreader"),
     "precision_planting.2020": ("planter",),
     "teejet.matrix_pro_gs": ("sprayer", "spreader", "universal"),
     "agopengps.aog": ("universal", "tractor"),
+    "bourgault.icon": ("seeder",),
+    "outback.rebel": ("tractor",),
     "generic.isobus": _ALL_MACHINES,
     "generic.gis": (),
 }
