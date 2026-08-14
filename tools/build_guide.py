@@ -185,6 +185,8 @@ DATA = {
                         for (m, o), label in pr.OBJECTIVE_LABELS.items()},
     "outOfScope": list(pr.OUT_OF_SCOPE),
     "outOfScopeFor": {k: list(v) for k, v in pr.SCOPE_EXCLUSIONS.items()},
+    "equipMenus": {k: {"only": list(m.only), "keep": list(m.keep_full_menu)}
+                   for k, m in pr.EQUIPMENT_MENUS.items()},
     "objectiveOrder": list(pr.OBJECTIVES),
     "directions": {d.value: d.label for d in pr.Direction},
     "transports": {t.value: {"label": t.label, "desc": t.description}
@@ -1035,10 +1037,18 @@ const versionOk = (p, v) => p.v.includes('*') || !v || p.v.includes(v);
    separate list of jobs this project chose not to cover -- everywhere, since
    none of those calls was ever about one kind of machine -- and the two
    stay apart in the source because only one is safe to reverse unchecked. */
+/* Some machines carry a fixed menu -- on a tractor the trials use three
+   jobs, so three jobs is the menu -- with named displays exempt and keeping
+   everything they document. */
+const menuAllows = (equip, o, k) => {
+  const menu = equip && D.equipMenus[equip];
+  return !menu || menu.keep.includes(k) || menu.only.includes(o);
+};
 const jobsFor = (k, v, equip) => D.objectiveOrder.filter(o =>
   !(equip && (D.objectives[o].notFor || []).includes(equip))
   && !D.outOfScope.includes(o)
   && !(equip && (D.outOfScopeFor[equip] || []).includes(o))
+  && menuAllows(equip, o, k)
   && forMonitor(k).some(p => p.o === o && versionOk(p, v)));
 /* Where one display makes a job specific, name it that way. */
 const jobLabel = (o, k) => D.objectiveLabels[k + '|' + o] || D.objectives[o].label;

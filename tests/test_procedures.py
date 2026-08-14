@@ -679,12 +679,12 @@ def test_scope_and_impossibility_stay_separate():
     assert not pr.OBJECTIVES["software_update"].not_for
 
 
-def test_the_same_display_offers_the_same_jobs_on_every_machine():
+def test_the_2630_offers_the_same_jobs_on_every_machine():
     """An operator moves a 2630 between the tractor and the combine, and the
-    display does not change what it can do on the way. The only differences
-    allowed are physical ones -- a prescription has nowhere to go on a
-    combine -- so the job lists may differ exactly by `not_for` and nothing
-    else."""
+    display does not change what it can do on the way. It is exempt from the
+    tractor menu below, so the only differences allowed are physical ones --
+    a prescription has nowhere to go on a combine -- and the job lists may
+    differ exactly by `not_for` and nothing else."""
     for eq_a, eq_b in (("combine", "tractor"), ("tractor", "sprayer"),
                        ("sprayer", "planter")):
         a = {o.key for o in pr.available_objectives(
@@ -694,6 +694,45 @@ def test_the_same_display_offers_the_same_jobs_on_every_machine():
         for key in a ^ b:
             assert pr.OBJECTIVES[key].not_for, (
                 f"{key} differs between {eq_a} and {eq_b} without a physical reason")
+
+
+def test_a_tractor_menu_is_four_jobs_except_on_the_2630():
+    """On a tractor the trials use four jobs, so four jobs is the menu --
+    written as an allowlist so a job added to the guide later stays off the
+    tractor without anyone remembering to exclude it. The 2630 is exempt and
+    keeps its full menu; and the trim must never leave a display with an
+    empty menu, which is how an allowlist typo would show itself."""
+    from ofpe import catalog as cat
+
+    menu = set(pr.EQUIPMENT_MENUS["tractor"].only)
+    assert menu == {"import_guidance", "import_boundary",
+                    "export_work_data", "prepare_media"}
+
+    for key, m in cat.MONITORS.items():
+        if not m.is_terminal or "tractor" not in m.equipment:
+            continue
+        offered = {o.key for o in pr.available_objectives(key, None, "tractor")}
+        documented = {o.key for o in pr.available_objectives(key, None, None)}
+        if key in pr.EQUIPMENT_MENUS["tractor"].keep_full_menu:
+            assert offered > menu, f"{key}: the exemption did nothing"
+        else:
+            # The menu is what is allowed AND documented -- the FmX has no
+            # boundary procedure, so its tractor menu is honestly three.
+            assert offered == menu & documented, f"{key}: {sorted(offered)}"
+            assert offered, f"{key}: trimmed to an empty menu"
+
+
+def test_the_tractor_exemption_names_real_things():
+    """A typo in the allowlist or the exemption silently trims or spares the
+    wrong display, so both must name keys that exist."""
+    for equipment, menu in pr.EQUIPMENT_MENUS.items():
+        assert equipment in {e.value for e in pr.EquipmentType}, equipment
+        for key in menu.only:
+            assert key in pr.OBJECTIVES, key
+        from ofpe import catalog as cat
+
+        for mon in menu.keep_full_menu:
+            assert mon in cat.MONITORS, mon
 
 
 def test_out_of_scope_jobs_are_hidden_everywhere():

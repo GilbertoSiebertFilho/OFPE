@@ -67,6 +67,8 @@ __all__ = [
     "objective_label",
     "OUT_OF_SCOPE",
     "SCOPE_EXCLUSIONS",
+    "EQUIPMENT_MENUS",
+    "MenuScope",
     "in_scope",
 ]
 
@@ -296,11 +298,53 @@ OUT_OF_SCOPE: tuple[str, ...] = (
 SCOPE_EXCLUSIONS: dict[str, tuple[str, ...]] = {}
 
 
-def in_scope(objective_key: str, equipment: str | None) -> bool:
-    """Whether this project covers this job on this machine."""
+@dataclass(frozen=True)
+class MenuScope:
+    """The whole menu for one kind of machine, written as what stays.
+
+    The blocklists above say what is missing and why, one job at a time. On
+    a tractor the project's need runs the other way round: the trials use
+    three jobs, so three jobs is the menu, and every job added to the guide
+    later stays off the tractor menu without anyone remembering to exclude
+    it. An allowlist fails safe; a blocklist grows stale.
+    """
+
+    only: tuple[str, ...]
+    keep_full_menu: tuple[str, ...] = ()
+    """Displays exempt from the trim, keeping every job they document."""
+
+    def allows(self, objective_key: str, monitor_key: str | None) -> bool:
+        if monitor_key in self.keep_full_menu:
+            return True
+        return objective_key in self.only
+
+
+# On a tractor: put the line and the boundary in, pull the work data off,
+# and the stick that all three depend on. The GreenStar 3 2630 keeps its
+# full menu -- it is the display this project photographed and works with
+# most, and trimming it would remove the prescription, which the trial
+# actually uses there.
+EQUIPMENT_MENUS: dict[str, MenuScope] = {
+    "tractor": MenuScope(
+        only=("import_guidance", "import_boundary",
+              "export_work_data", "prepare_media"),
+        keep_full_menu=("john_deere.gs3_2630",),
+    ),
+}
+
+
+def in_scope(
+    objective_key: str,
+    equipment: str | None,
+    monitor_key: str | None = None,
+) -> bool:
+    """Whether this project covers this job on this machine and display."""
     if objective_key in OUT_OF_SCOPE:
         return False
-    return objective_key not in SCOPE_EXCLUSIONS.get(equipment or "", ())
+    if objective_key in SCOPE_EXCLUSIONS.get(equipment or "", ()):
+        return False
+    menu = EQUIPMENT_MENUS.get(equipment or "")
+    return menu is None or menu.allows(objective_key, monitor_key)
 
 
 # Where a display offers exactly one route to a job, the generic name hides
@@ -916,7 +960,7 @@ def available_objectives(
         for o in OBJECTIVES.values()
         if o.key in keys
         and o.applies_to(equipment)      # the machine cannot do it
-        and in_scope(o.key, equipment)   # we chose not to cover it
+        and in_scope(o.key, equipment, monitor_key)  # we chose not to cover it
     ]
 
 
