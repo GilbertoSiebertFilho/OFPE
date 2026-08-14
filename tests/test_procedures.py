@@ -679,47 +679,48 @@ def test_scope_and_impossibility_stay_separate():
     assert not pr.OBJECTIVES["software_update"].not_for
 
 
-def test_the_2630_offers_the_same_jobs_on_every_machine():
-    """An operator moves a 2630 between the tractor and the combine, and the
-    display does not change what it can do on the way. It is exempt from the
-    tractor menu below, so the only differences allowed are physical ones --
-    a prescription has nowhere to go on a combine -- and the job lists may
-    differ exactly by `not_for` and nothing else."""
-    for eq_a, eq_b in (("combine", "tractor"), ("tractor", "sprayer"),
-                       ("sprayer", "planter")):
-        a = {o.key for o in pr.available_objectives(
-            "john_deere.gs3_2630", None, eq_a)}
-        b = {o.key for o in pr.available_objectives(
-            "john_deere.gs3_2630", None, eq_b)}
-        for key in a ^ b:
-            assert pr.OBJECTIVES[key].not_for, (
-                f"{key} differs between {eq_a} and {eq_b} without a physical reason")
+def test_the_2630_menus_differ_only_where_a_rule_says_so():
+    """The 2630's job list moves between machines for exactly two reasons,
+    both named in code: physics (`not_for` -- a combine applies nothing) and
+    the tractor menu (the trials use four jobs there). Any other difference
+    is a bug."""
+    menus = pr.EQUIPMENT_MENUS
+    lists = {eq: {o.key for o in pr.available_objectives(
+        "john_deere.gs3_2630", None, eq)}
+        for eq in ("combine", "tractor", "sprayer", "seeder")}
+    # Sprayer and seeder carry no menu and share the full list.
+    assert lists["sprayer"] == lists["seeder"]
+    assert "import_prescription" in lists["sprayer"]
+    # The combine lacks the prescription by physics alone.
+    assert lists["combine"] == lists["sprayer"] - {"import_prescription"}
+    assert "combine" in pr.OBJECTIVES["import_prescription"].not_for
+    # The tractor lacks it by the menu alone -- the machine could take it.
+    assert lists["tractor"] == set(menus["tractor"].only)
+    assert "tractor" not in pr.OBJECTIVES["import_prescription"].not_for
 
 
-def test_a_tractor_menu_is_four_jobs_except_on_the_2630():
+def test_a_tractor_menu_is_the_same_four_jobs_on_every_display():
     """On a tractor the trials use four jobs, so four jobs is the menu --
     written as an allowlist so a job added to the guide later stays off the
-    tractor without anyone remembering to exclude it. The 2630 is exempt and
-    keeps its full menu; and the trim must never leave a display with an
-    empty menu, which is how an allowlist typo would show itself."""
+    tractor without anyone remembering to exclude it. No display is exempt.
+    What each one shows is the allowed set intersected with what it
+    documents -- the FmX has no boundary procedure, so its tractor menu is
+    honestly three -- and the trim must never leave anyone an empty menu,
+    which is how an allowlist typo would show itself."""
     from ofpe import catalog as cat
 
     menu = set(pr.EQUIPMENT_MENUS["tractor"].only)
     assert menu == {"import_guidance", "import_boundary",
                     "export_work_data", "prepare_media"}
+    assert not pr.EQUIPMENT_MENUS["tractor"].keep_full_menu
 
     for key, m in cat.MONITORS.items():
         if not m.is_terminal or "tractor" not in m.equipment:
             continue
         offered = {o.key for o in pr.available_objectives(key, None, "tractor")}
         documented = {o.key for o in pr.available_objectives(key, None, None)}
-        if key in pr.EQUIPMENT_MENUS["tractor"].keep_full_menu:
-            assert offered > menu, f"{key}: the exemption did nothing"
-        else:
-            # The menu is what is allowed AND documented -- the FmX has no
-            # boundary procedure, so its tractor menu is honestly three.
-            assert offered == menu & documented, f"{key}: {sorted(offered)}"
-            assert offered, f"{key}: trimmed to an empty menu"
+        assert offered == menu & documented, f"{key}: {sorted(offered)}"
+        assert offered, f"{key}: trimmed to an empty menu"
 
 
 def test_the_tractor_exemption_names_real_things():

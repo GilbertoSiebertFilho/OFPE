@@ -320,15 +320,13 @@ class MenuScope:
 
 
 # On a tractor: put the line and the boundary in, pull the work data off,
-# and the stick that all three depend on. The GreenStar 3 2630 keeps its
-# full menu -- it is the display this project photographed and works with
-# most, and trimming it would remove the prescription, which the trial
-# actually uses there.
+# and the stick that all three depend on. No exemptions -- the 2630 briefly
+# kept its prescription here and the call was reversed within the hour,
+# which is the menu working as intended: one tuple changed, nothing else.
 EQUIPMENT_MENUS: dict[str, MenuScope] = {
     "tractor": MenuScope(
         only=("import_guidance", "import_boundary",
               "export_work_data", "prepare_media"),
-        keep_full_menu=("john_deere.gs3_2630",),
     ),
 }
 
