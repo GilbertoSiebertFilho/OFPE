@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field as PField
 from .. import catalog as catalog_module
 from .. import procedures as procedures_module
 from ..db import DEFAULT_DB_PATH, Database
-from ..procedures import OBJECTIVES, Direction, EquipmentType
+from ..procedures import OBJECTIVES, OFFERED_EQUIPMENT, Direction, EquipmentType
 from ..fitting import fit_guidance_from_track
 from ..generate import (
     expand_swaths,
@@ -654,13 +654,16 @@ def guide_start() -> dict[str, Any]:
             equipment_counts[kind] = equipment_counts.get(kind, 0) + 1
 
     return {
+        # The four machines the project runs trials on -- not every type a
+        # display can be bolted into. The full enum still describes displays;
+        # the question offers what the project covers.
         "equipment_types": [
             {
                 "key": kind.value,
                 "label": kind.label,
                 "monitor_count": equipment_counts.get(kind.value, 0),
             }
-            for kind in EquipmentType
+            for kind in OFFERED_EQUIPMENT
             if equipment_counts.get(kind.value)
         ],
         "brands": sorted({m.brand for m in terminals}),

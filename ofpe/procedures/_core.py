@@ -44,6 +44,7 @@ __all__ = [
     "Transport",
     "Confidence",
     "EquipmentType",
+    "OFFERED_EQUIPMENT",
     "Objective",
     "MonitorVersion",
     "Procedure",
@@ -195,13 +196,28 @@ class EquipmentType(str, Enum):
         return {
             EquipmentType.TRACTOR: "Tractor",
             EquipmentType.COMBINE: "Combine harvester",
-            EquipmentType.SPRAYER: "Self-propelled sprayer",
+            EquipmentType.SPRAYER: "Sprayer",
             EquipmentType.PLANTER: "Planter",
             EquipmentType.SEEDER: "Seeder / air drill",
             EquipmentType.SPREADER: "Fertiliser spreader",
             EquipmentType.FORAGE: "Forage harvester",
             EquipmentType.UNIVERSAL: "Universal / retrofit display",
         }[self]
+
+
+# The four machines this project actually runs trials on, in the order the
+# first question offers them. The enum above stays complete -- which machines
+# a display fits is a fact about the display, and the catalog states it --
+# but the wizard asks about these four and nothing else. A display reachable
+# only through a type not offered here (today that is exactly one: the
+# Precision Planting 20|20, planter-only) drops out of the click path and
+# stays reachable through the search box, which looks at names, not machines.
+OFFERED_EQUIPMENT: tuple[EquipmentType, ...] = (
+    EquipmentType.TRACTOR,
+    EquipmentType.COMBINE,
+    EquipmentType.SEEDER,
+    EquipmentType.SPRAYER,
+)
 
 
 @dataclass(frozen=True)

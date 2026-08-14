@@ -189,7 +189,11 @@ DATA = {
     "directions": {d.value: d.label for d in pr.Direction},
     "transports": {t.value: {"label": t.label, "desc": t.description}
                    for t in pr.Transport},
+    # Every type keeps its label -- the search box reaches any display and
+    # back-fills its first machine type, so the trail must be able to name
+    # planter or spreader even though the first question never offers them.
     "equipment": {e.value: e.label for e in pr.EquipmentType},
+    "equipmentOffered": [e.value for e in pr.OFFERED_EQUIPMENT],
     "confidence": {c.value: {"label": c.label, "desc": c.description}
                    for c in pr.Confidence},
     "procedures": procedures,
@@ -1288,11 +1292,15 @@ function drawEquip() {
   const host = $('#equip'); host.replaceChildren();
   const counts = {};
   D.monitors.forEach(m => m.equipment.forEach(e => counts[e] = (counts[e] || 0) + 1));
-  Object.entries(D.equipment).filter(([k]) => counts[k]).forEach(([k, label]) => {
+  /* Only the machines this project runs trials on. A display that fits other
+     machines too is still reached through one of these, or through the
+     search box above, which looks at names rather than machines. */
+  D.equipmentOffered.filter(k => counts[k]).forEach(k => {
     host.append(el('button', {
       class: 'chip',
       onclick: () => { S.equip = k; step(); },
-    }, el('span', {}, label), el('span', { class: 'n' }, counts[k] + ' displays')));
+    }, el('span', {}, D.equipment[k]),
+       el('span', { class: 'n' }, counts[k] + ' displays')));
   });
 }
 
@@ -1312,7 +1320,14 @@ function drawMonitors() {
 
 function pickMonitor(key) {
   S.mon = key; S.ver = S.job = S.route = null;
-  if (!answered('equip')) S.equip = monByKey[key].equipment[0] || null;
+  /* Arriving by search skips question one, so answer it on the display's
+     behalf -- with a machine the question actually offers, when the display
+     fits one. Its raw first entry can be "universal", which is a fact about
+     the display but a strange thing for the trail to call your machine. */
+  if (!answered('equip')) {
+    const fits = monByKey[key].equipment;
+    S.equip = fits.find(e => D.equipmentOffered.includes(e)) || fits[0] || null;
+  }
   step();
 }
 

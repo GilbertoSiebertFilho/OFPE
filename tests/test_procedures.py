@@ -831,3 +831,34 @@ def test_every_display_with_a_usb_route_teaches_stick_preparation():
             if "prepare_media" not in jobs:
                 missing.append((key, eq))
     assert not missing, missing
+
+
+def test_the_first_question_offers_exactly_the_trial_machines():
+    """Tractor, combine, seeder, sprayer -- the four machines the project
+    runs trials on, and nothing else. The enum stays complete because which
+    machines a display fits is a fact about the display; this is about what
+    the wizard asks."""
+    assert [e.value for e in pr.OFFERED_EQUIPMENT] == [
+        "tractor", "combine", "seeder", "sprayer"]
+    assert pr.EquipmentType.SPRAYER.label == "Sprayer"
+
+    from ofpe import catalog as cat
+
+    terminals = [m for m in cat.MONITORS.values() if m.is_terminal]
+    for kind in pr.OFFERED_EQUIPMENT:
+        assert any(kind.value in m.equipment for m in terminals), kind.value
+
+
+def test_shrinking_the_picker_orphans_exactly_the_displays_we_accepted():
+    """Dropping planter/spreader/forage/universal from question one cuts off
+    any display reachable only through them. Today that is one display, the
+    planter-only Precision Planting 20|20, and it stays findable through the
+    search box. If this list ever grows, that is a real loss of coverage and
+    somebody should decide it on purpose rather than discover it."""
+    from ofpe import catalog as cat
+
+    offered = {e.value for e in pr.OFFERED_EQUIPMENT}
+    orphaned = sorted(
+        key for key, m in cat.MONITORS.items()
+        if m.is_terminal and not (offered & set(m.equipment)))
+    assert orphaned == ["precision_planting.2020"], orphaned
