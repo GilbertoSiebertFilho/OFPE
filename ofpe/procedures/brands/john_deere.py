@@ -1197,3 +1197,100 @@ _point_routes("john_deere.gs3_2630",
               vocabulary="Flag", file_kind="shapefile",
               media_path="GS3_2630\\<Profile>\\RCD\\",
               manual_note=_2630_POINT_NOTE)
+
+
+# --------------------------------------------------------------------------- #
+#  Gen 4: an AB line typed in as coordinates                                   #
+# --------------------------------------------------------------------------- #
+#
+# The Gen 4 had no typed route at all until now -- only the USB import. John
+# Deere's own onscreen help for the Generation 4 confirms the display takes
+# latitude and longitude for point A and point B and wants them in decimal
+# degrees, which is the same shape as the 2630.
+#
+# What it is NOT is photographed. The 2630's version was built from a video
+# of a real cab, so it names every button and sits at VERIFIED; this one is
+# assembled from the manufacturer's help text, so it says CONFIRM ON MACHINE
+# and marks only the two labels that come from the operator manual's own icon
+# set. When somebody films the screens, the steps get the photographs and the
+# wording gets checked -- exactly the route the 2630 took.
+#
+# The first three lines are word for word the 2630's. The physics does not
+# change with the display, and identical text shares one voice recording.
+
+_add(
+    monitor_key="john_deere.gen4",
+    objective="import_guidance",
+    transport=Transport.MANUAL,
+    version_key=ANY_VERSION,
+    file_format="None — you type four numbers in",
+    media_path="",
+    minutes=15,
+    steps=(
+        "You need FOUR numbers, not two. Write them down before you "
+        "climb in: Lat A, Long A, Lat B, Long B.",
+        "A and B are the two ends of the line. Lat A and Long A fix "
+        "where it starts; Lat B and Long B fix where it points. Miss "
+        "one and the display has no line.",
+        "All four in decimal degrees, minus signs included — like "
+        "-27.845123 and -54.477456.",
+        "Set the client, farm and field first, under «Menu» then «Fields». "
+        "The track is filed under them, and one saved to the wrong field is "
+        "lost until you go looking.",
+        "Open «Menu», then «Guidance».",
+        "Start a new track and choose the straight AB track type. Do not "
+        "drive the line — look for the option to enter the points instead of "
+        "recording them.",
+        "Type the latitude and the longitude for point A.",
+        "Type the latitude and the longitude for point B.",
+        "Check the readout before you commit. The display shows the heading "
+        "it worked out from your two points, and the coordinates it holds "
+        "for each.",
+        "Set the track spacing to your working width. The passes either side "
+        "are spaced by this, and it is the number people forget.",
+        "Name the track something the next operator will recognise, and save.",
+    ),
+    verify=(
+        "The line draws through the ground you meant. If it is in another "
+        "district, check the minus signs before anything else.",
+        "The heading shown matches the direction you expect the line to run.",
+        "Drive to the A end with the steering off and confirm the machine "
+        "sits where you think it should.",
+    ),
+    cautions=(
+        "A heading nowhere near the direction you expect the line to run "
+        "means a number went in wrong — check it there rather than finding "
+        "out at the far end of the field.",
+        "Menu wording here comes from John Deere's onscreen help, not from a "
+        "photographed screen. Treat the two marked labels as exact and the "
+        "rest as the shape to look for — and use the correction button when "
+        "your display says it differently.",
+        "The two ends should be far apart — the length of the field, not a "
+        "few metres. A short baseline magnifies any error in the numbers "
+        "across the rest of the field.",
+        "This is the only route that works with no file, no computer and no "
+        "signal, which makes it worth knowing even if you normally import.",
+        "If somebody has already put the line on a USB stick for you, take "
+        "the USB route instead — it is fewer presses and no typing to get "
+        "wrong.",
+    ),
+    common_errors=(
+        "Having only one pair of coordinates. Two numbers give you a point, "
+        "not a line — you need both ends.",
+        "Latitude and longitude the wrong way round.",
+        "Dropping the minus sign, which throws the line into another "
+        "hemisphere.",
+        "Typing degrees and minutes instead of decimal degrees. 27 50.7 S "
+        "and -27.845 are the same place written two ways, and the display "
+        "only takes the second.",
+        "Leaving the track spacing at whatever it was, so every pass after "
+        "the first is the wrong distance out.",
+    ),
+    confidence=Confidence.CONFIRM_ON_MACHINE,
+    sources=(
+        "John Deere Generation 4 onscreen help — Creating a Straight Track "
+        "and Edit Guidance Track (displaysimulator.deere.com): confirms the "
+        "display takes latitude and longitude for A and B in decimal "
+        "degrees. Menu wording not yet read off a machine.",
+    ),
+)

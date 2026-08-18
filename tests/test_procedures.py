@@ -902,3 +902,25 @@ def test_shrinking_the_picker_orphans_exactly_the_displays_we_accepted():
         key for key, m in cat.MONITORS.items()
         if m.is_terminal and not (offered & set(m.equipment)))
     assert orphaned == ["precision_planting.2020"], orphaned
+
+
+def test_no_step_is_leftover_code_rather_than_a_sentence():
+    """A generator that failed to interpolate writes its own source into the
+    step and every other test still passes -- the text is a string, it is the
+    right length, it has no unbalanced guillemets. It is just not English.
+    Caught once for real (`' + repr(FOUR[0]) + '` shipped as three steps of
+    the Gen 4 typed route), so it is caught by a test now."""
+    import re
+
+    marks = ("repr(", '" + ', ' + "', "%s", "\\n")
+    placeholder = re.compile(r"\{[^}]*\}")   # any unfilled format slot
+    bad = []
+    for procedure in pr.PROCEDURES:
+        for step in procedure.steps:
+            # A step may open with a marked button name, so look past the
+            # guillemet for the first real letter.
+            first = next((c for c in step if c.isalpha()), "")
+            if (any(m in step for m in marks) or placeholder.search(step)
+                    or not first.isupper()):
+                bad.append(f"{procedure.monitor_key}/{procedure.objective}: {step[:60]}")
+    assert not bad, bad
