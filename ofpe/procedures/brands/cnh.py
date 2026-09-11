@@ -219,26 +219,11 @@ _add(
     sources=("CNH developer portal, ISOXML ADAPT plugin guide",),
 )
 
-_add(
-    monitor_key="case_ih.afs_pro_1200",
-    objective="export_work_data",
-    transport=Transport.CLOUD,
-    file_format="Automatic sync to AFS Connect",
-    media_path="",
-    filesystem="n/a — wireless",
-    minutes=5,
-    prerequisites=("An AFS Connect subscription and a connected modem.",),
-    steps=(
-        "Confirm the machine shows as connected in the AFS Connect portal.",
-        "Confirm data sharing is enabled on the display.",
-        "Work data uploads automatically as tasks are completed.",
-        "In the portal, open the farm and confirm the task has arrived.",
-    ),
-    verify=("The task appears in AFS Connect with the expected area.",),
-    cautions=("Keep taking an occasional USB export as a backup.",),
-    confidence=Confidence.CONFIRM_ON_MACHINE,
-    sources=("Case IH AFS Connect documentation",),
-)
+# The Pro 1200's AFS Connect export is registered by _cloud_route below, with
+# every other display's cloud route. A hand-written second copy lived here and
+# never reached anybody: the resolver answers with the first entry it finds, so
+# the richer one -- the one that names the platform and warns that the client,
+# farm and field names have to match the terminal -- sat unreachable behind it.
 
 _add(
     monitor_key="new_holland.intelliview_iv",

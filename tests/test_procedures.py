@@ -579,6 +579,50 @@ def test_a_photographed_procedure_is_allowed_to_claim_verified():
         )
 
 
+def test_a_cloud_route_names_the_portal_to_log_into():
+    """"Use the cloud" is not advice until it says which door.
+
+    Several brands run two platforms that do different jobs, and a producer
+    sent to "the portal" opens the telematics one and finds no field. The
+    `platform` field exists for this and is printed on the card; six cloud
+    routes had been added without it, including three John Deere ones whose
+    own steps say Operations Center in the next line.
+    """
+    unnamed = [
+        f"{p.monitor_key} / {p.objective}"
+        for p in pr.PROCEDURES
+        if p.transport is pr.Transport.CLOUD and not p.platform
+    ]
+    assert not unnamed, (
+        "cloud routes that never say where to log in:\n  " + "\n  ".join(unnamed)
+    )
+
+
+def test_no_two_procedures_answer_the_same_question():
+    """One question, one answer.
+
+    The resolver takes the first entry that matches, so a second one for the
+    same display, job, route and release is not a conflict anybody sees -- it
+    is simply never read again. It then drifts: a correction lands on the copy
+    that is live, or on the copy that is not, and there is no way to tell which
+    from the outside. That is how the Pro 1200's cloud export came to have two
+    entries, the better of them unreachable.
+    """
+    seen: dict[tuple[str, str, str, str], pr.Procedure] = {}
+    clashes = []
+    for procedure in pr.PROCEDURES:
+        for version in procedure.version_keys:
+            key = (procedure.monitor_key, procedure.objective,
+                   procedure.transport.value, version)
+            if key in seen:
+                clashes.append(f"{key[0]} / {key[1]} / {key[2]} / {key[3]}")
+            seen[key] = procedure
+    assert not clashes, (
+        "two procedures answer the same question; only the first is ever "
+        "read:\n  " + "\n  ".join(clashes)
+    )
+
+
 def test_a_step_never_points_at_a_photo():
     """Steps are read without their pictures more often than with them.
 

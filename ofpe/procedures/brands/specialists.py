@@ -436,6 +436,11 @@ _point_routes("agopengps.aog", _AOG_SOURCES,
 #  so. The correction button is how these earn their way up.                  #
 # =========================================================================== #
 
+# The "platform" every cloud route has to name. For this one the honest
+# answer is that there is no web portal to log into: the file travels to the
+# iPad by whatever the iPad can open, and the app on it does the import.
+_ICON_APP = "The ICON app on the iPad — no web portal"
+
 # Bourgault iCon: an iPad controlling the drill over the seeder's own WiFi.
 # It does not steer and it has no USB port, so the two jobs it has are the
 # two a drill controller actually does: take a prescription, give back the
@@ -445,6 +450,7 @@ _add(
     monitor_key="bourgault.icon",
     objective="import_prescription",
     transport=Transport.CLOUD,
+    platform=_ICON_APP,
     file_format="Prescription map — complete shapefile set, zipped",
     extensions=(".shp", ".shx", ".dbf", ".prj", ".zip"),
     media_path="",
@@ -480,6 +486,7 @@ _add(
     monitor_key="bourgault.icon",
     objective="export_work_data",
     transport=Transport.CLOUD,
+    platform=_ICON_APP,
     file_format="Seeding record shared off the iPad",
     extensions=(),
     media_path="",

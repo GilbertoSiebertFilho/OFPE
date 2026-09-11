@@ -16,6 +16,10 @@ from .._core import (
     _SHP_SET,
 )
 
+# The portal every Deere cloud route goes through. Named on each of them,
+# because "use the cloud" is not advice until it says which door to open.
+_OPS_CENTER = "John Deere Operations Center"
+
 # =========================================================================== #
 #  JOHN DEERE                                                                 #
 # =========================================================================== #
@@ -291,6 +295,7 @@ _add(
     monitor_key="john_deere.gen4",
     objective="import_prescription",
     transport=Transport.CLOUD,
+    platform=_OPS_CENTER,
     file_format="Prescription published in Operations Center, sent over the air",
     media_path="",
     filesystem="n/a — wireless",
@@ -327,6 +332,7 @@ _add(
     monitor_key="john_deere.gen4",
     objective="export_work_data",
     transport=Transport.CLOUD,
+    platform=_OPS_CENTER,
     file_format="Automatic sync to Operations Center",
     media_path="",
     filesystem="n/a — wireless",
@@ -659,6 +665,7 @@ _add(
     monitor_key="john_deere.g5",
     objective="import_guidance",
     transport=Transport.CLOUD,
+    platform=_OPS_CENTER,
     file_format="Guidance line published in Operations Center",
     media_path="",
     filesystem="n/a — wireless",
@@ -688,7 +695,6 @@ _add(
 # travel in the same package. That is the single most useful thing to know here:
 # people look for a separate boundary import and there is not one.
 
-_OPS_CENTER = "John Deere Operations Center"
 
 _add(
     monitor_key="john_deere.gen4",
