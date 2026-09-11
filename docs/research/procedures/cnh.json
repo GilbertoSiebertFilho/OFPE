@@ -1,0 +1,478 @@
+[
+  {
+    "displayId": "cnh-pro700",
+    "versions": [
+      {
+        "id": "any",
+        "label": "All SW versions (AFS Pro 300/600/700, IntelliView IV)",
+        "note": "Shapefile-import mechanics (doc CIH03291601), the .cn1 folder rules, and USB packaging are unchanged across firmware. Use this versionId for every task except where the TASKDATA-folder-vs-.cn1 Task Controller breakpoint applies (see sw-31-26-minus / sw-31-31-plus)."
+      },
+      {
+        "id": "sw-31-26-minus",
+        "label": "SW 31.26 and older",
+        "note": "When the operator selects TC Grower / TC Farm / TC Field for the ISOBUS Task Controller, the display reads the TASKDATA folder (and the ISOXML file inside it) on the USB/internal storage directly. No separate copy into the .cn1 is required for Task Controller use."
+      },
+      {
+        "id": "sw-31-31-plus",
+        "label": "SW 31.31 and newer",
+        "note": "The Task Controller now reads the .cn1 folder for TC Grower/Farm/Field selection by default. \"ISOBUS data format\" must be turned ON in the Task Controller settings for the TC to go back to reading the separate TASKDATA folder. With it OFF (the default), field data does not need to be supplied as ISOXML for Task Controller use -- but it also will not see ISOXML-only guidance/boundary data until it is copied into the .cn1 via Import2."
+      }
+    ]
+  },
+  {
+    "displayId": "cnh-pro1200",
+    "versions": [
+      {
+        "id": "any",
+        "label": "All SW versions (AFS Pro 1200, IntelliView 12; Phoenix-platform Pro 800/IntelliView 8 share the same Data Management UI)",
+        "note": "Android \"Phoenix\"-platform display. The Data Management / Inbox / Import / Export / Product Library / USB to Cloud screen set and its button labels were consistent across all CNH internal training material reviewed; no version-specific behavior change was found for guidance-line import/export."
+      }
+    ]
+  },
+
+  {
+    "displayId": "cnh-pro700",
+    "versionId": "sw-31-26-minus",
+    "task": "import-guidance",
+    "support": "supported",
+    "summary": "Put a TASKDATA folder with your ISOXML file on a USB stick; the display copies it in at boot and the Task Controller can use it immediately without any extra step.",
+    "fileFormat": {
+      "label": "ISOXML TASKDATA folder (recommend v3.3-flat GuidancePath for this legacy terminal; v4 GGP/GPN may not render)",
+      "usbPath": "\\TASKDATA\\TASKDATA.XML",
+      "usbFormat": "FAT/FAT32",
+      "notes": [
+        "Folder must be literally named TASKDATA (all caps) at the USB root",
+        "Display must be powered OFF when the stick is inserted",
+        "No umlauts or other non-ASCII characters in any Grower/Farm/Field/line name",
+        "A companion .bin file (e.g. GRD00000.bin) only appears if a prescription/application map is also included -- not needed for a guidance-only export"
+      ]
+    },
+    "steps": [
+      { "text": "On a PC, create a folder named \"TASKDATA\" at the root of the USB stick used by this display, and place your TASKDATA.XML file (plus any .bin) inside it.", "note": "Verbatim translated from a German-market CNH/PS&T dealer document; the German UI screenshots show localized labels -- English wording below is inferred from the equivalent English-language Pro 700 shapefile flyer (CIH03291601) where the same Import2 fields are confirmed.", "uncertain": false },
+      { "text": "Power the display off, insert the stick, then power the display back on.", "uncertain": false },
+      { "text": "After the display restarts, a popup reports the files were copied to internal storage. Press the \"Import2\" button directly in that popup, or open it manually.", "path": "Data Management ▸ Import2", "uncertain": false },
+      { "text": "Set the Source field to ISOXML and the Data Type field to the type you want (e.g. \"ALL\").", "path": "Data Management ▸ Import2", "note": "The \"Source\" dropdown label itself is translated from the German UI (\"Quelle\"); exact English wording on a US-market unit is unconfirmed.", "uncertain": true },
+      { "text": "Press \"Import.\"", "uncertain": false },
+      { "text": "Confirm the \"do you really want to import these files\" prompt with \"Import.\" again.", "uncertain": false },
+      { "text": "On the success message, press OK. The display restarts and the data is selectable under Grower / Farm / Field as usual.", "uncertain": false }
+    ],
+    "warnings": [
+      "On this firmware band, selecting TC Grower/TC Farm/TC Field for the ISOBUS Task Controller reads the TASKDATA folder directly -- you do not need to additionally copy the data into the .cn1 just to use the Task Controller.",
+      "Real hardware in this SW band is documented reading only v3.3-style flat GuidancePath AB lines (community-reported); GPN/GGP (ISOXML v4) guidance-group support is unverified -- ship the v3-flat fallback for this version."
+    ],
+    "sources": [
+      "https://static.agrarcommander.at/commander/loginsite/page64/files/HinweisAFS700.pdf",
+      "https://d1hu4133i4rt3z.cloudfront.net/attachments/848/848519-517e7c4c5a505fcf5fa330960375fbe9.pdf"
+    ]
+  },
+  {
+    "displayId": "cnh-pro700",
+    "versionId": "sw-31-31-plus",
+    "task": "import-guidance",
+    "support": "supported",
+    "summary": "Same TASKDATA-folder USB import as older firmware, but you must also turn on \"ISOBUS data format\" in Task Controller settings or the Task Controller will keep using the old .cn1 data instead of your new import.",
+    "fileFormat": {
+      "label": "ISOXML TASKDATA folder (recommend v3.3-flat GuidancePath; v4 GGP/GPN unverified on this terminal generation)",
+      "usbPath": "\\TASKDATA\\TASKDATA.XML",
+      "usbFormat": "FAT/FAT32",
+      "notes": [
+        "Folder must be literally named TASKDATA (all caps) at the USB root",
+        "Display must be powered OFF when the stick is inserted",
+        "No umlauts or other non-ASCII characters in any name"
+      ]
+    },
+    "steps": [
+      { "text": "Create a \"TASKDATA\" folder at the USB root containing TASKDATA.XML (as above).", "uncertain": false },
+      { "text": "Power the display off, insert the stick, power on.", "uncertain": false },
+      { "text": "After restart, press \"Import2\" in the copy-complete popup, or open it manually.", "path": "Data Management ▸ Import2", "uncertain": false },
+      { "text": "Set Source = ISOXML, Data Type = ALL (or the specific type), then press \"Import.\" and confirm.", "path": "Data Management ▸ Import2", "uncertain": true },
+      { "text": "If this display's ISOBUS Task Controller is used to pick Grower/Farm/Field for the implement (not just the main display UI), open Task Controller settings and enable \"ISOBUS data format\" -- otherwise the Task Controller keeps reading the old .cn1 data and ignores the TASKDATA you just imported.", "uncertain": false, "note": "Exact settings-screen path for the \"ISOBUS data format\" toggle was not located in the material reviewed -- omitted rather than guessed." }
+    ],
+    "warnings": [
+      "Critical version breakpoint: from SW 31.31 onward, the Task Controller reads the .cn1 folder (not TASKDATA) for TC Grower/Farm/Field selection UNLESS \"ISOBUS data format\" is enabled in Task Controller settings, in which case it goes back to reading the separate TASKDATA folder. Farmers on this firmware who only import via Import2 but skip this toggle will not see the new guidance data on the Task Controller's grower/farm/field picker.",
+      "If \"ISOBUS data format\" is left disabled (the default), field data does not need to be in ISOXML for Task Controller use at all -- but that also means an ISOXML-only guidance import will not reach the Task Controller until the toggle is enabled or the data is otherwise present in the .cn1."
+    ],
+    "sources": [
+      "https://static.agrarcommander.at/commander/loginsite/page64/files/HinweisAFS700.pdf"
+    ]
+  },
+  {
+    "displayId": "cnh-pro700",
+    "versionId": "any",
+    "task": "import-guidance",
+    "support": "workaround",
+    "summary": "Case IH's own flyer says a shapefile in a \"Shapefile\" USB folder can carry Multiswath guidance lines, but a separate CNH-affiliated document says shapefile import on this display covers only boundaries and prescriptions -- treat this path as unreliable until tested against real hardware.",
+    "fileFormat": {
+      "label": "Multiswath guidance-line shapefile set (undocumented attribute schema)",
+      "usbPath": "\\Shapefile\\*.shp, *.shx, *.dbf",
+      "usbFormat": "FAT/FAT32",
+      "notes": [
+        "Folder must be literally named \"Shapefile\" at the USB root",
+        "The .dbf attribute schema needed to encode a Multiswath guidance line is not published anywhere found in this research -- it likely requires CNH desktop software (AFS Mapping and Records / Ag Leader SMS) to author correctly rather than a hand-built shapefile"
+      ]
+    },
+    "steps": [
+      { "text": "Create the guidance-line shapefile set in desktop software (e.g. AFS Mapping and Records) and export it to a USB stick.", "note": "CIH03291601 names \"Multiswath guidance lines\" as an export option from this desktop software; LINEGUIDER cannot independently verify the .dbf field layout this requires.", "uncertain": true },
+      { "text": "Load the shapefile(s) into a folder titled \"Shapefile\" on the root of the memory stick.", "uncertain": false },
+      { "text": "Insert the stick and power on; files load to internal storage, then follow the same three power-cycle scenarios used for prescription shapefiles (see import-prescription) to merge with an existing .cn1 or start a new one.", "uncertain": false },
+      { "text": "Go to Data Management ▸ Import2, set Data Type to the guidance-line type, and select the target Grower/Farm/Field, then press Import.", "path": "Data Management ▸ Import2", "uncertain": false }
+    ],
+    "warnings": [
+      "DOCUMENTED CONFLICT: Case IH's own \"Shapefile (.shp) Import for the Case IH AFS Pro 700\" flyer (doc CIH03291601) lists \"Multiswath guidance lines\" as something the desktop software can export to the Shapefile folder for this display. A separate CNH-affiliated German-market document (PS&T/CNH \"Datenimport / -export mit CNH Terminal\") describes shapefile import on the AFS 700/IntelliView IV as covering only field boundaries (\"Feldgrenzen\") and application/prescription maps (\"Applikationskarten\") -- it does not mention guidance lines at all. The most likely reconciliation is that \"Multiswath\" rides inside a companion artifact generated by AFS desktop software rather than a raw hand-authored shapefile, but this is unverified.",
+      "Prefer the ISOXML TASKDATA path (see the two firmware-specific import-guidance entries) as the primary/default export target for this display; only fall back to shapefile Multiswath if a real device test confirms it imports actual usable AB lines."
+    ],
+    "sources": [
+      "https://d1hu4133i4rt3z.cloudfront.net/attachments/848/848519-517e7c4c5a505fcf5fa330960375fbe9.pdf",
+      "https://static.agrarcommander.at/commander/loginsite/page64/files/HinweisAFS700.pdf"
+    ]
+  },
+  {
+    "displayId": "cnh-pro700",
+    "versionId": "any",
+    "task": "import-prescription",
+    "support": "supported",
+    "summary": "Prescription maps load through the same \"Shapefile\" USB folder and Import2 screen used for boundaries, with three different power-cycle sequences depending on whether a .cn1 is already on the stick.",
+    "fileFormat": {
+      "label": "Prescription/Rx shapefile set",
+      "usbPath": "\\Shapefile\\*.shp, *.shx, *.dbf",
+      "usbFormat": "FAT/FAT32",
+      "notes": [
+        "Folder must be literally named \"Shapefile\" at the USB root",
+        "Product form must match the rate units exactly (e.g. seeds/acre requires Product Form = \"Seed\", not \"Bulk Seed\" or \"Granular\")",
+        "Limits: max 10 prescriptions per field, 1000 polygons per field, 125,000 rectangles in a field grid"
+      ]
+    },
+    "steps": [
+      { "text": "In desktop software (e.g. AFS Mapping and Records), create the prescription(s) and export them to a USB stick.", "uncertain": false },
+      { "text": "IMPORTANT: place the shapefile(s) in a folder literally named \"Shapefile\" on the root of the USB memory device.", "uncertain": false },
+      { "text": "Scenario 1 (stick already has a farmer's existing .cn1 that you don't want to touch on a PC): power down the display properly, remove the stick with the .cn1, insert a separate stick containing only the \"Shapefile\" folder and power on -- files load to internal storage. When the \"files were copied to internal storage\" popup appears, press OK, key off, and let the display shut down. Remove that stick, re-insert the original stick with the existing .cn1, and power on.", "uncertain": false },
+      { "text": "Scenario 2 (you have a PC and can combine both on one stick): put the \"Shapefile\" folder on the root of the same stick that already holds the .cn1, then insert and power on -- a new .cn1 is NOT created since one already exists.", "uncertain": false },
+      { "text": "Scenario 3 (no existing .cn1 -- blank stick): put the \"Shapefile\" folder on the root of a blank stick, insert and power on -- a new .cn1 IS created on the stick alongside the Shapefile folder.", "uncertain": false },
+      { "text": "In every scenario, finish by going to Data Management ▸ Import2 to re-assign the shapefiles from internal storage into the field inside the .cn1: select the correct Data Type, Grower, Farm, Field, Product Form, and Units for the prescription.", "path": "Data Management ▸ Import2", "uncertain": false },
+      { "text": "Set up the product, work-condition layer, and prescription assignment (Toolbox ▸ Product; Work Condition ▸ Layer; Performance ▸ RxSetup) so the imported map actually drives the controller.", "path": "Toolbox ▸ Product; Work Condition ▸ Layer; Performance ▸ RxSetup", "uncertain": false }
+    ],
+    "warnings": [
+      "This official flyer covers non-ISOBUS application control only (Case IH planters with VR seed/fertilizer drive, Patriot sprayers, Titan floaters, AFS AccuControl, and 3rd-party serial rate control such as Raven/Rawson/Flexicoil/Hardi) -- ISOBUS-controlled implements should use the ISOXML TASKDATA path instead."
+    ],
+    "sources": [
+      "https://d1hu4133i4rt3z.cloudfront.net/attachments/848/848519-517e7c4c5a505fcf5fa330960375fbe9.pdf"
+    ]
+  },
+  {
+    "displayId": "cnh-pro700",
+    "versionId": "any",
+    "task": "import-prescription",
+    "support": "supported",
+    "summary": "Prescription/application maps can also travel inside the ISOXML TASKDATA folder instead of a raw shapefile.",
+    "fileFormat": {
+      "label": "ISOXML TASKDATA folder with prescription grid",
+      "usbPath": "\\TASKDATA\\TASKDATA.XML (+ GRD00000.BIN grid file)",
+      "usbFormat": "FAT/FAT32",
+      "notes": ["The .BIN file only appears when a variable-rate/prescription grid is included; guidance-only or boundary-only exports omit it"]
+    },
+    "steps": [
+      { "text": "Place TASKDATA.XML (and its GRD#####.BIN) in a folder named \"TASKDATA\" at the USB root.", "uncertain": false },
+      { "text": "Power the display off, insert the stick, power on; the files auto-copy to internal storage.", "uncertain": false },
+      { "text": "Open Data Management ▸ Import2, set Source = ISOXML and Data Type to the prescription type (or ALL), then press Import and confirm.", "path": "Data Management ▸ Import2", "uncertain": true },
+      { "text": "When importing an application map, specify the crop and the application unit on the \"Machine\" button before the map will display correctly.", "note": "Translated from German-market source; exact English button label unconfirmed.", "uncertain": true }
+    ],
+    "warnings": [],
+    "sources": [
+      "https://static.agrarcommander.at/commander/loginsite/page64/files/HinweisAFS700.pdf"
+    ]
+  },
+  {
+    "displayId": "cnh-pro700",
+    "versionId": "any",
+    "task": "import-boundaries",
+    "support": "supported",
+    "summary": "Field boundaries load the same way as prescriptions: drop a shapefile in the \"Shapefile\" USB folder and assign it to a field in Import2.",
+    "fileFormat": {
+      "label": "Boundary shapefile set",
+      "usbPath": "\\Shapefile\\*.shp, *.shx, *.dbf",
+      "usbFormat": "FAT/FAT32",
+      "notes": ["Same \"Shapefile\" root folder used for prescriptions and (per the conflicting flyer) Multiswath guidance lines"]
+    },
+    "steps": [
+      { "text": "Create a folder named \"Shapefile\" on the USB stick and place the boundary .shp/.shx/.dbf inside it.", "uncertain": false },
+      { "text": "Do not use umlauts (ä, ö, ü) or other non-ASCII characters in any file or field name.", "uncertain": false },
+      { "text": "On the display, first create the Grower/Farm/Field entry the boundary will attach to, using the same profile screen you'd normally use.", "uncertain": false },
+      { "text": "Power the display off, insert the stick with the Shapefile folder, power on.", "uncertain": false },
+      { "text": "When the \"files copied to internal storage\" popup appears, press \"Import2\" directly in it, or open the screen manually.", "path": "Data Management ▸ Import2", "uncertain": false },
+      { "text": "Set Source = Shapefile and Data Type = the boundary type (e.g. field boundary), pick the specific boundary file, then pick the field to assign it to.", "path": "Data Management ▸ Import2", "uncertain": true },
+      { "text": "Press Import; you can rename the boundary, then a success message confirms the import.", "uncertain": false }
+    ],
+    "warnings": [
+      "If this display uses the ISOBUS Task Controller for boundary-aware section control, the SW 31.26/31.31 TASKDATA-vs-.cn1 breakpoint documented under import-guidance applies here too."
+    ],
+    "sources": [
+      "https://static.agrarcommander.at/commander/loginsite/page64/files/HinweisAFS700.pdf"
+    ]
+  },
+  {
+    "displayId": "cnh-pro700",
+    "versionId": "any",
+    "task": "import-cloud",
+    "support": "workaround",
+    "summary": "This display has no built-in cloud Inbox screen; wireless data transfer only works if the tractor has an optional AFS Connect telematics kit (cellular modem + subscription) fitted, otherwise everything must go through the USB stick.",
+    "steps": [
+      { "text": "Confirm the vehicle has the AFS Connect telematics hardware installed: a DCM 300 cellular modem plus an active AFS Connect subscription/unlock code.", "note": "Reconstructed from CNH/press documentation on the AFS Connect telematics retrofit for AFS Pro 700; no in-display screen path for cloud import was located in the material reviewed for this display generation.", "uncertain": true },
+      { "text": "With that hardware present, boundaries/guidance/prescriptions pushed from MyCaseIH.com or the AFS telematics portal sync to the display automatically in the background -- there is no documented manual \"Inbox ▸ Import\" screen on this generation the way there is on Pro 1200/IntelliView 12.", "uncertain": true },
+      { "text": "Without the telematics kit, use the USB \"Shapefile\" or \"TASKDATA\" folder workflows instead (see import-guidance / import-prescription / import-boundaries).", "uncertain": false }
+    ],
+    "warnings": [
+      "This path is UNCERTAIN -- LINEGUIDER should default to generating USB-based instructions for this display and only mention AFS Connect telematics as an alternative if the farmer confirms they have that hardware and subscription."
+    ],
+    "sources": [
+      "https://media.cnh.com/asia-pacific-english/e/case-ih-announces-afs-connect-wireless-technology-for-data-transfer-and-monitoring---and-new-tech-pa/s/bf58b9b8-6b51-40e0-bd71-5d1588e3c48f"
+    ]
+  },
+  {
+    "displayId": "cnh-pro700",
+    "versionId": "any",
+    "task": "export-workdata-usb",
+    "support": "supported",
+    "summary": "Recorded work data lives in the resident .cn1 folder on the stick already; use the Export screen to additionally write it out as a standalone ISOXML bundle.",
+    "fileFormat": {
+      "label": "ISOXML export bundle",
+      "usbPath": "\\Export\\<timestamp>\\TASKDATA.XML (+ CTP00000.XML, CTR00000.XML, FRM00000.XML, PDT00000.XML, PFD00000.XML, PGP00000.XML, WKR00000.XML)",
+      "usbFormat": "FAT/FAT32",
+      "notes": [
+        "Export always writes ISOXML regardless of what format the data was originally imported as",
+        "Move/rename the exported TASKDATA.XML into a folder literally named TASKDATA to reuse it as a Task Controller source on a SW <=31.26 display"
+      ]
+    },
+    "steps": [
+      { "text": "Power the display off, insert the USB stick used by this display, power back on.", "uncertain": false },
+      { "text": "After restart, open Data Management and select the Export page.", "path": "Data Management ▸ Export", "uncertain": false },
+      { "text": "The destination format is automatically ISOXML.", "uncertain": false },
+      { "text": "Choose the Data Type to export -- either individual data or \"All.\"", "uncertain": false },
+      { "text": "Once a type is chosen, select which specific records to export: All, or by category (Grower / Farm / Field).", "uncertain": false },
+      { "text": "Press \"Export.\" to start, then confirm the \"export the selected information?\" prompt with \"Export.\" again.", "uncertain": false },
+      { "text": "A completion message reports the counts (e.g. \"Expected CN1 data types: 21 / Exported CN1 data types: 21\"); press OK.", "uncertain": false },
+      { "text": "Turn off the tractor ignition and let the display shut down normally so the .cn1 is finalized.", "uncertain": false },
+      { "text": "Find the exported files on the USB stick under \\Export\\<dated subfolder>\\.", "uncertain": false }
+    ],
+    "warnings": [],
+    "sources": [
+      "https://static.agrarcommander.at/commander/loginsite/page64/files/HinweisAFS700.pdf"
+    ]
+  },
+  {
+    "displayId": "cnh-pro700",
+    "versionId": "any",
+    "task": "export-cloud",
+    "support": "workaround",
+    "summary": "There is no native \"send to cloud\" button on this display generation -- the finalized .cn1 folder must be zipped and uploaded manually to a CNH cloud portal, unless the tractor has the optional AFS Connect telematics modem.",
+    "steps": [
+      { "text": "Shut the display down properly so the .cn1 folder is finalized (recorded work data is written continuously and closed out on proper shutdown).", "uncertain": false },
+      { "text": "Zip the .cn1 folder for upload to AFS Connect or FieldAlytics.", "note": "FieldAlytics specifically wants the PARENT folder of the .cn1 selected, not the .cn1 itself.", "uncertain": false },
+      { "text": "Upload the zip through the relevant cloud platform's website/desktop tool.", "uncertain": false },
+      { "text": "Alternative: if the tractor has an AFS Connect telematics kit (DCM 300 cellular modem + subscription/unlock code) installed, data syncs to MyCaseIH.com / the AFS telematics portal automatically without a USB step.", "uncertain": true }
+    ],
+    "warnings": [
+      "Never remove the USB stick while the display is powered on/mid-write -- data may be lost or the .cn1 left in an inconsistent state."
+    ],
+    "sources": [
+      "https://media.cnh.com/asia-pacific-english/e/case-ih-announces-afs-connect-wireless-technology-for-data-transfer-and-monitoring---and-new-tech-pa/s/bf58b9b8-6b51-40e0-bd71-5d1588e3c48f"
+    ]
+  },
+  {
+    "displayId": "cnh-pro700",
+    "versionId": "any",
+    "task": "prepare-usb",
+    "support": "supported",
+    "summary": "Use a FAT/FAT32-formatted stick, keep only one .cn1 on it at a time, never rename or relocate its folders, and put import files in a task-specific root folder named exactly \"Shapefile\" or \"TASKDATA.\"",
+    "fileFormat": {
+      "label": "USB stick root layout",
+      "usbPath": "\\<yymmdd><letter>.cn1\\ (resident, auto-created) plus, as needed, \\Shapefile\\ and \\TASKDATA\\ and \\Export\\",
+      "usbFormat": "FAT/FAT32",
+      "notes": [
+        "The .cn1 folder is auto-named like 130831H7.cn1 (yymmdd date stamp + letter); the display updates this name each power-on to keep files unique",
+        "Never put two .cn1 folders on the same memory stick",
+        "Never change the name, extension, or location of any folder or file inside the .cn1",
+        "Never delete the Index.vy1 file until the data has been archived by desktop software -- it is required to launch the archive process",
+        "No umlauts (ä, ö, ü) or other non-ASCII characters anywhere in Grower/Farm/Field/product/line names"
+      ]
+    },
+    "steps": [
+      { "text": "Use a Case IH-approved USB memory device where possible; other brands \"may work but there is no guarantee\" per dealer support documentation.", "uncertain": false, "note": "Cited USB part numbers are inconsistent across sources: 84398840 in the official shapefile-import flyer (CIH03291601) vs 4796296 in dealer support material -- treat as UNCERTAIN which is current/correct." },
+      { "text": "Format the stick FAT or FAT32.", "uncertain": false },
+      { "text": "For shapefile-based prescriptions, boundaries, or (disputed) Multiswath guidance lines, create a folder literally named \"Shapefile\" at the root.", "uncertain": false },
+      { "text": "For ISOXML-based imports (guidance/boundaries/prescriptions/all), create a folder literally named \"TASKDATA\" at the root containing TASKDATA.XML.", "uncertain": false },
+      { "text": "Do not touch the resident .cn1 folder structure directly -- let the display manage it; only add your import folders alongside it.", "uncertain": false },
+      { "text": "Always power the display off before inserting or removing the stick, and let it shut down fully after a transfer before pulling the stick.", "uncertain": false }
+    ],
+    "warnings": [],
+    "sources": [
+      "https://d1hu4133i4rt3z.cloudfront.net/attachments/848/848519-517e7c4c5a505fcf5fa330960375fbe9.pdf",
+      "https://static.agrarcommander.at/commander/loginsite/page64/files/HinweisAFS700.pdf",
+      "https://www.manualslib.com/manual/2036535/Case-Ih-Afs-Pro-700.html?page=295"
+    ]
+  },
+
+  {
+    "displayId": "cnh-pro1200",
+    "versionId": "any",
+    "task": "import-guidance",
+    "support": "supported",
+    "summary": "Insert a USB stick with a TASKDATA folder (or receive it wirelessly), open the Data card's Import screen, select the guidance items in the tree, and press Import Selected.",
+    "fileFormat": {
+      "label": "ISOXML TASKDATA folder (native format -- v4 GGP/GPN guidance groups expected)",
+      "usbPath": "\\TASKDATA\\TASKDATA.XML",
+      "usbFormat": "FAT",
+      "notes": [
+        "This is CNH's native modern ISOXML platform -- v4 GuidanceGroup/GuidancePattern (GGP/GPN) is the expected representation, unlike the legacy Pro 700",
+        "The display literally reports \"Media import could not be completed because the USB drive format must be FAT\" if the stick is formatted otherwise",
+        "No umlauts or other non-ASCII characters in any name"
+      ]
+    },
+    "steps": [
+      { "text": "Press the top-bar icon to open the Menu screen, then press the \"Data\" button to open the Data setup card.", "path": "Menu ▸ Data", "uncertain": false },
+      { "text": "Press the \"Import\" tile.", "path": "Data ▸ Import", "uncertain": false },
+      { "text": "Press \"Select Import Source,\" then in the picker expand \"USB\" and select the folder containing your TASKDATA files (you can select only one folder at a time).", "path": "Data ▸ Import ▸ Select Import Source", "uncertain": false },
+      { "text": "Press \"Select.\"", "uncertain": false },
+      { "text": "In the resulting tree (organized by Grower/Farm/Field, with Tasks/Prescriptions/Swaths/Boundaries/Landmarks folders under each field), press the guidance/swath items you want -- selecting a folder selects everything inside it.", "uncertain": false },
+      { "text": "Press \"Import Selected (N)\" to start the import.", "uncertain": false },
+      { "text": "If an item name already exists on the display, a Data Conflict dialog appears with up to five choices: Cancel, Skip, Replace, Keep Both, Merge -- there is also a checkbox to apply the same choice to all remaining Grower/Farm/Field naming conflicts.", "uncertain": false },
+      { "text": "Data with no Grower/Farm/Field attached lands in auto-created \"NoGrower / NoFarm / NoField\" folders.", "uncertain": false }
+    ],
+    "warnings": [],
+    "sources": [
+      "https://boekemans.com.au/wp-content/uploads/2023/04/Pro-1200-Instructions-Data-Management-Import-Export.pdf"
+    ]
+  },
+  {
+    "displayId": "cnh-pro1200",
+    "versionId": "any",
+    "task": "import-prescription",
+    "support": "supported",
+    "summary": "Prescription/Rx maps import through the same Data ▸ Import screen as guidance and boundaries, as either ISOXML or a shapefile.",
+    "fileFormat": {
+      "label": "ISOXML TASKDATA folder or prescription shapefile set",
+      "usbPath": "\\TASKDATA\\TASKDATA.XML  (or a shapefile folder selected in the Import Source picker)",
+      "usbFormat": "FAT",
+      "notes": ["Single-part and multi-part polygon shapefiles are both recommended for variable-rate control; grid-type prescriptions are supported but can be resource-heavy"]
+    },
+    "steps": [
+      { "text": "Press the top-bar Menu button, then the Settings tab, then the \"Data\" card.", "path": "Menu ▸ Settings ▸ Data", "uncertain": false },
+      { "text": "Press \"Import.\"", "path": "Data ▸ Import", "uncertain": false },
+      { "text": "Press \"Select Import Source\" and choose the USB folder holding the Rx data (TASKDATA or a shapefile folder), then \"Select.\"", "path": "Data ▸ Import ▸ Select Import Source", "uncertain": false },
+      { "text": "Select the prescription item(s) in the tree and press \"Import Selected.\"", "uncertain": false }
+    ],
+    "warnings": [],
+    "sources": [
+      "https://www.manualslib.com/manual/4025822/Case-Ih-Afs-Pro-1200.html?page=537",
+      "https://boekemans.com.au/wp-content/uploads/2023/04/Pro-1200-Instructions-Data-Management-Import-Export.pdf"
+    ]
+  },
+  {
+    "displayId": "cnh-pro1200",
+    "versionId": "any",
+    "task": "import-boundaries",
+    "support": "supported",
+    "summary": "Field boundaries import through the same Data ▸ Import screen and appear as their own branch in the Grower/Farm/Field tree.",
+    "fileFormat": {
+      "label": "ISOXML TASKDATA folder or boundary shapefile set",
+      "usbPath": "\\TASKDATA\\TASKDATA.XML  (or a shapefile folder)",
+      "usbFormat": "FAT",
+      "notes": []
+    },
+    "steps": [
+      { "text": "Menu ▸ Data ▸ Import ▸ Select Import Source, choose the USB folder, press Select.", "path": "Menu ▸ Data ▸ Import ▸ Select Import Source", "uncertain": false },
+      { "text": "In the tree, expand the target field's \"Boundaries\" folder and select the boundary item, then press \"Import Selected.\"", "uncertain": false }
+    ],
+    "warnings": [],
+    "sources": [
+      "https://boekemans.com.au/wp-content/uploads/2023/04/Pro-1200-Instructions-Data-Management-Import-Export.pdf"
+    ]
+  },
+  {
+    "displayId": "cnh-pro1200",
+    "versionId": "any",
+    "task": "import-cloud",
+    "support": "supported",
+    "summary": "The display's onboard modem (PCM) pulls zipped task-data files from your AFS Connect / PLM Connect portal account into the Inbox screen; from there you either import directly or send them to a USB stick first.",
+    "steps": [
+      { "text": "Open the Data card and press the \"Inbox\" tile -- it lists the task-data zip files present on your AFS Connect / PLM Connect portal account, each with a Received date/time and size.", "path": "Menu ▸ Data ▸ Inbox", "uncertain": false },
+      { "text": "Press \"Import\" next to a file to import that file set from the portal directly into the display.", "uncertain": false },
+      { "text": "Press \"Send to USB\" instead to download the file set from the portal onto an inserted USB stick without importing it yet.", "uncertain": false },
+      { "text": "Press the trash icon to delete a task-data file set from the Inbox.", "uncertain": false },
+      { "text": "The exchange of data between the vehicle and the Connect portal account is always performed by the display and its onboard Processing and Connectivity Module (PCM) modem -- no separate telematics box is required on this platform.", "uncertain": false }
+    ],
+    "warnings": [],
+    "sources": [
+      "https://boekemans.com.au/wp-content/uploads/2023/04/Pro-1200-Instructions-Data-Management-Import-Export.pdf"
+    ]
+  },
+  {
+    "displayId": "cnh-pro1200",
+    "versionId": "any",
+    "task": "export-workdata-usb",
+    "support": "supported",
+    "summary": "Pick a USB destination (this display, an older Pro 700/IntelliView IV, an older Pro 800/IntelliView 8, or desktop software) and the display writes the data out as ISOXML automatically.",
+    "fileFormat": {
+      "label": "ISOXML export",
+      "usbPath": "USB root (destination-specific folder written automatically by the display)",
+      "usbFormat": "FAT",
+      "notes": ["Export Format is fixed to ISOXML regardless of destination chosen -- the Destination dropdown only changes how the display packages/downgrades it for older terminals"]
+    },
+    "steps": [
+      { "text": "Open the Data card and press \"Export.\"", "path": "Menu ▸ Data ▸ Export", "uncertain": false },
+      { "text": "Press the Destination dropdown and choose: \"USB for Pro 1200 / Intelliview 12\", \"USB for Pro 800 / Intelliview 8\", \"USB for Pro 700 / Intelliview 4\", \"USB for Desktop Software\", or \"AFS or PLM Connect.\"", "uncertain": false },
+      { "text": "Export Format is fixed at \"ISOXML.\"", "uncertain": false },
+      { "text": "Select the items/folders to export in the tree (or press \"Select All\"), then press \"Export Selected (X).\"", "uncertain": false },
+      { "text": "A progress panel shows loading percentage and item count; you may leave the page during the export -- a banner reads \"Export in Progress -- You may leave this page during the export.\"", "uncertain": false }
+    ],
+    "warnings": [
+      "Choosing \"USB for Pro 700 / Intelliview 4\" as the destination downgrades the export for that legacy terminal -- use it specifically when the recipient display is a Pro 700, not this one."
+    ],
+    "sources": [
+      "https://boekemans.com.au/wp-content/uploads/2023/04/Pro-1200-Instructions-Data-Management-Import-Export.pdf"
+    ]
+  },
+  {
+    "displayId": "cnh-pro1200",
+    "versionId": "any",
+    "task": "export-cloud",
+    "support": "supported",
+    "summary": "Use the same Export screen but pick \"AFS or PLM Connect\" as the destination -- the onboard modem sends the ISOXML data straight to your Connect portal account, no USB needed.",
+    "steps": [
+      { "text": "Open the Data card and press \"Export.\"", "path": "Menu ▸ Data ▸ Export", "uncertain": false },
+      { "text": "Set Destination = \"AFS or PLM Connect.\"", "uncertain": false },
+      { "text": "Select the items to export and press \"Export Selected (X)\" -- the data is sent wirelessly by the onboard Processing and Connectivity Module (PCM) rather than written to a stick.", "uncertain": false }
+    ],
+    "warnings": [],
+    "sources": [
+      "https://boekemans.com.au/wp-content/uploads/2023/04/Pro-1200-Instructions-Data-Management-Import-Export.pdf"
+    ]
+  },
+  {
+    "displayId": "cnh-pro1200",
+    "versionId": "any",
+    "task": "prepare-usb",
+    "support": "supported",
+    "summary": "Format the stick FAT, put ISOXML data in a root folder literally named TASKDATA, and keep manuals/videos in separate Documents/Videos folders if you're transferring those too.",
+    "fileFormat": {
+      "label": "USB stick root layout",
+      "usbPath": "\\TASKDATA\\TASKDATA.XML   (+ optional \\Documents\\*.pdf and \\Videos\\*.mkv for manuals/training video transfer, unrelated to precision-ag data)",
+      "usbFormat": "FAT",
+      "notes": [
+        "CNH Universal Serial Bus memory stick, part number 47962967, is the one specifically documented for transferring Grower-Farm-Field-Task (GFFT) data, landmarks, and guidance lines between CNH displays on this platform",
+        "No umlauts or other non-ASCII characters in any name",
+        "Documents must be PDF; videos must be Matroska (.mkv) -- these live in their own \\Documents\\ and \\Videos\\ folders, separate from \\TASKDATA\\"
+      ]
+    },
+    "steps": [
+      { "text": "Format the USB stick as FAT (the display explicitly rejects \"a standard other than FAT\" with an on-screen error).", "uncertain": false },
+      { "text": "For precision-ag data, create a folder literally named \"TASKDATA\" at the root containing TASKDATA.XML.", "uncertain": false },
+      { "text": "For manuals, create a \"Documents\" folder at the root and copy .pdf files into it.", "uncertain": false },
+      { "text": "For training videos, create a \"Videos\" folder at the root and copy .mkv files into it.", "uncertain": false },
+      { "text": "Insert the stick; a \"USB Device Detected\" prompt appears for media (Documents/Videos) asking \"Do you want to proceed with Media Import?\" -- press Yes to import, No to skip.", "uncertain": false }
+    ],
+    "warnings": [],
+    "sources": [
+      "https://boekemans.com.au/wp-content/uploads/2023/04/Pro-1200-Instructions-Data-Management-Import-Export.pdf"
+    ]
+  }
+]

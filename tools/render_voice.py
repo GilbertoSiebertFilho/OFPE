@@ -216,7 +216,7 @@ def render(backend_key: str, model: str, voice: str, clean: bool,
     manifest_path = out / MANIFEST
     old = {}
     if manifest_path.exists():
-        old = json.loads(manifest_path.read_text())
+        old = json.loads(manifest_path.read_text(encoding="utf-8"))
 
     # A clip is named after its text, not after the voice that read it, so a
     # change of voice has to clear the floor -- otherwise half the steps come
@@ -279,7 +279,7 @@ def render(backend_key: str, model: str, voice: str, clean: bool,
         "voice": voice,
         "format": ext.lstrip("."),
         "clips": clips,
-    }, indent=1, sort_keys=True) + "\n")
+    }, indent=1, sort_keys=True) + "\n", encoding="utf-8")
 
     print(f"{len(clips)} clips, {total / 1e6:.2f} MB in {out}")
     short = len(lines) - len(clips)
