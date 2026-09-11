@@ -498,6 +498,9 @@ _add(
             "that is the known-good one.",
             "Menu wording moved between software versions -- confirm against "
             "the operator manual for the version actually on the machine.",
+            "Its New Holland twin, the IntelliView IV, was photographed taking "
+            "an import: main menu, Data Management, the Import2 tab. Look "
+            "there if Toolbox > Swath is not where this build keeps it.",
         ),
         common_errors=(
             "Copying only the .shp file.",
@@ -525,15 +528,26 @@ _add(
         steps=(
             _USB_PREP,
             "Unzip so all four shapefile parts sit loose at the drive root.",
-            "Insert the stick, then Toolbox > Swath > import from USB.",
-            "Select Grower / Farm / Field, then the file.",
+            "Insert the stick. On the run screen press Back to reach the main "
+            "menu, then Data Management.",
+            "Go to the Import2 tab: Source = Shapefile, Data Type = "
+            "MultiSwath+.",
+            "Select Grower / Farm / Field, then the file, and import.",
             _USB_EJECT,
         ),
         caveats=(
             "IntelliView IV and the AFS Pro 700 are the same display in "
             "different paint. Anything that imports on one imports on the other.",
+            "What was photographed on this display is the ISOXML route: "
+            "Import2 with Source = ISOXML and Data Type = Guidance Lines, from "
+            "a v3 file. The Guide has that one screen by screen. This bundle "
+            "is the shapefile route on the same screen -- documented, and not "
+            "yet driven end to end.",
         ),
-        sources=("Case IH / New Holland Voyager display documentation",),
+        sources=(
+            "Photographed on a New Holland combine, IntelliView IV, 11 Sep 2026",
+            "Case IH / New Holland Voyager display documentation",
+        ),
     )
 )
 
