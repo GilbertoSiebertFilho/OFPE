@@ -378,7 +378,7 @@ _GS3_2630_LATLON = ProcedureWalk(
         WalkStep(
             text=(
                 "All four in decimal degrees, minus signs included — like "
-                "-27.845123 and -54.477456."
+                "51.888105 and -113.700648."
             ),
         ),
         WalkStep(

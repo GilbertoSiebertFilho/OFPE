@@ -737,9 +737,10 @@ _voyager_lines_and_data(
     Confidence.VERIFIED,
     _IV4_PHOTO_SOURCE,
     extra_cautions=(
-        "Photographed on a combine. The same display runs tractors; there the "
-        "run pages around the guidance page are laid out differently, and "
-        "«Data Management» is the same.",
+        "Photographed on a combine. The same display runs tractors, where the "
+        "run pages around the guidance page are laid out differently — the "
+        "guidance page itself, and «Data Management», are reached the same "
+        "way.",
     ),
 )
 _voyager_lines_and_data(

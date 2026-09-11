@@ -1673,7 +1673,9 @@ function pickMonitor(key) {
    rather than a thumbnail. */
 function openShot(src, caption) {
   $('#shotimg').src = src;
-  $('#shotcap').textContent = caption || '';
+  /* The caption names buttons the same way a step does, so it gets the same
+     key caps rather than showing the « » that mark them. */
+  $('#shotcap').replaceChildren(...(caption ? keys(caption, S.mon) : []));
   $('#shotbox').classList.remove('zoom');
   $('#shotbox').showModal();
 }

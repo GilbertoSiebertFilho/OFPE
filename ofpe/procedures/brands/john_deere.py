@@ -504,7 +504,7 @@ _add(
         "is involved — you type the line in and it is done.",
         "FOUR numbers, not two: Lat A and Long A for one end of the line, "
         "Lat B and Long B for the other. All in decimal degrees with minus "
-        "signs — in Brazil both are negative.",
+        "signs — in Canada the latitude is positive and the longitude negative.",
         "This makes a straight AB line. A curve cannot be typed in — that one "
         "has to be driven.",
     ),
@@ -1059,7 +1059,7 @@ for _jd_monitor in ("john_deere.gen4", "john_deere.g5"):
         cautions=(
             "Deere calls a marked point a Flag. Look for that word, not "
             "'marker' or 'waypoint'.",
-            "Write coordinates as decimal degrees — -27.845123, -54.477456 — "
+            "Write coordinates as decimal degrees — 51.888105, -113.700648 — "
             "with south and west negative.",
             "Flags dropped by the operator in the cab come back the same way, "
             "so this works in both directions once sync is on.",
@@ -1144,7 +1144,7 @@ _add(
         "ground.",
     ),
     cautions=(
-        "Write coordinates as plain decimal degrees — -27.845123, -54.477456 — "
+        "Write coordinates as plain decimal degrees — 51.888105, -113.700648 — "
         "with south and west negative. Degrees-and-minutes is a different "
         "notation and lands the point kilometres away.",
         "A Gen 4 stores data as latitude and longitude, not against the field "
@@ -1233,7 +1233,7 @@ _add(
         "where it starts; Lat B and Long B fix where it points. Miss "
         "one and the display has no line.",
         "All four in decimal degrees, minus signs included — like "
-        "-27.845123 and -54.477456.",
+        "51.888105 and -113.700648.",
         "Set the client, farm and field first, under «Menu» then «Fields». "
         "The track is filed under them, and one saved to the wrong field is "
         "lost until you go looking.",
