@@ -653,7 +653,7 @@ _GS3_2630_IMPORT_LINES = ProcedureWalk(
 #  New Holland IntelliView IV                                                  #
 # --------------------------------------------------------------------------- #
 #
-# Photographed on a New Holland combine at Olds College on 11 September 2026:
+# Photographed on a New Holland combine in central Alberta on 11 September
 # an AB line typed in twice (once with a wrong turn into «Mark B», once clean
 # with a finger on every press), the same kind of line brought in off a stick
 # as ISOXML, and the yield data taken off. 88 photographs; the ones used here
@@ -671,7 +671,7 @@ _GS3_2630_IMPORT_LINES = ProcedureWalk(
 _IV4_FOLDER = "new_holland_intelliview_iv"
 _IV4_WHERE = (
     "a New Holland combine with an IntelliView IV (software © 2010–2021), "
-    "at Olds College on 11 September 2026"
+    "in central Alberta on 11 September 2026"
 )
 
 _IV4_LATLON = ProcedureWalk(

@@ -48,12 +48,14 @@ cp1252 and mangles the «» label markers. CI runs Ubuntu + Python 3.11; local i
 
 tests → `build_guide.py` → commit (including `OFPE-Guide.html`) → push `main`.
 
-**Pages Source is "Deploy from a branch" (main, root), so what is committed *is* the
-live site** — `index.html` (the doorway, which keeps the `#` of a shared link),
-`OFPE-Guide.html`, `assets/photos/`, `voice/`. The **Publish the guide** workflow
-also runs on every push: it re-runs the tests and would deploy if the Source were
-switched to GitHub Actions. Forgetting to rebuild the page means pushing steps the
-site never shows.
+**Two deployments are live at once and take turns**, so always rebuild and commit the
+page: the Pages Source says *Deploy from a branch* (main, root — GitHub serves the
+committed `index.html`, `OFPE-Guide.html`, `assets/photos/`, `voice/`), and the
+**Publish the guide** workflow also deploys a site of its own on every push (same
+page, served at the root instead of behind the doorway). Either way, a procedure
+edited and not rebuilt reaches nobody. Setting Source to *GitHub Actions* would end
+the ambiguity, let the tests gate the live page, and retire the committed page — the
+user has to change that setting.
 Voice: the **Record the spoken steps** workflow (manual dispatch, KittenTTS, voice
 *Jasper*) is incremental — reword a step, run it, only new lines are recorded.
 Ask before committing or pushing; a push is live for producers within minutes.
@@ -93,8 +95,10 @@ Ask before committing or pushing; a push is live for producers within minutes.
 - GreenStar 3 2630 photographed by the user: find version, pull off work data, AB line
   typed by lat/long, AB line by USB (`assets/photos/john_deere_gs3_2630`).
   "Load field boundaries" on the 2630 is still reconstructed, not photographed.
-- New Holland IntelliView IV, photographed 11 Sep 2026 on a combine at Olds College
-  (88 photos in the user's Drive; `tools/extract_iv4_photos.py` cuts the 60 used):
+- New Holland IntelliView IV, photographed 11 Sep 2026 on a combine in central
+  Alberta (88 photos in the user's Drive, synced at `G:\My Drive\`;
+  `tools/extract_iv4_photos.py` uses 33 of them and writes the 60 files in
+  `assets/photos/new_holland_intelliview_iv`):
   AB line typed as lat/long, AB line from a stick as **ISOXML v3** (the file made in
   Ag Leader SMS with «Generic ISO11783 (v3) - Type 1»), and pulling off work data as
   ISOXML. The Case IH AFS Pro 700 carries the same steps at CONFIRM_ON_MACHINE.

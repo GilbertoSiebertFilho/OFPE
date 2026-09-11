@@ -767,9 +767,12 @@ def _mirror(
     """Register a rebadged display's procedures by copying another's.
 
     Several displays in this catalog are the same hardware in different paint:
-    the New Holland IntelliView IV and the Case IH AFS Pro 700, the John Deere
-    G5 and the Gen 4, the AGCO terminals across Fendt, Valtra and Massey
-    Ferguson.
+    the John Deere G5 and the Gen 4, the AGCO terminals across Fendt, Valtra
+    and Massey Ferguson. (The New Holland IntelliView IV and the Case IH AFS
+    Pro 700 are such a pair too, but the photographed jobs they share are
+    registered by a helper in brands/cnh.py, which also drops the unshot
+    twin's confidence a tier -- something this function deliberately cannot
+    do, since a copy that quietly kept VERIFIED would be a lie.)
 
     They are copied rather than aliased so that every answer stays
     self-contained. When one of them eventually diverges -- and they do -- the

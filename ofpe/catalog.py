@@ -460,10 +460,14 @@ _add(
 # --------------------------------------------------------------------------- #
 #  CNH -- Case IH, New Holland, Steyr                                          #
 # --------------------------------------------------------------------------- #
-# The split here is generational and sharp. The Voyager-era displays (Pro 700,
-# IntelliView IV) take guidance lines as shapefiles, which the display calls a
-# Multiswath. The current displays (Pro 1200, IntelliView 12) are ISOXML native
-# -- CNH publishes its own ADAPT plugin for the format.
+# The split here is generational, and less sharp than it looked. The Voyager-era
+# displays (Pro 700, IntelliView IV) take guidance lines as shapefiles, which
+# the display calls a Multiswath -- and, as an IntelliView IV showed when it was
+# photographed, as ISOXML v3 on the same Import2 screen. This platform writes
+# v4, where guidance lines live in GGP/GPN elements v3 does not have, so the
+# bundle it builds for these two is still the shapefile. The current displays
+# (Pro 1200, IntelliView 12) are ISOXML native -- CNH publishes its own ADAPT
+# plugin for the format.
 
 _add(
     MonitorProfile(
@@ -545,7 +549,7 @@ _add(
             "yet driven end to end.",
         ),
         sources=(
-            "Photographed on a New Holland combine, IntelliView IV, 11 Sep 2026",
+            "Photographed on a New Holland combine, IntelliView IV, central Alberta, 11 Sep 2026",
             "Case IH / New Holland Voyager display documentation",
         ),
     )

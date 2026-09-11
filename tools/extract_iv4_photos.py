@@ -5,7 +5,7 @@ Same two jobs as the GreenStar 3 set (tools/extract_gen3_photos.py): button
 crops that sit inline in a step at the size of a word, and whole screens behind
 them for anybody who wants to check the page against their own display.
 
-The photographs were taken on a New Holland combine at Olds College on
+The photographs were taken on a New Holland combine in central Alberta on
 11 September 2026 -- 88 of them, covering an AB line typed in as coordinates,
 the same line brought in off a stick as ISOXML, and the yield data taken off.
 They live in a shared Google Drive folder; pass another folder as the first

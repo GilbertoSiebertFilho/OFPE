@@ -64,6 +64,10 @@ _add(
         "The two-stage load is what everyone gets wrong. Files reach internal "
         "storage on the first power-up; assigning them to fields on the "
         "«Import2» tab is a separate job afterwards.",
+        "The power-off insertion belongs to this route, where the display "
+        "copies a Shapefile folder into its own storage as it starts. «Import2» "
+        "itself reads a stick with the display running — that is how the "
+        "photographed AB line import goes in.",
         "Case IH ships a branded USB stick (part 84398840). Any properly "
         "formatted FAT32 stick works, but if one misbehaves that is the "
         "known-good one.",
@@ -271,7 +275,14 @@ _add(
         "IntelliView IV and the Case IH AFS Pro 700 are the same display in "
         "different paint. Anything written for one applies to the other, "
         "including the Shapefile folder name and the power-off insertion.",
-        "Later IntelliView IV software also accepts ISOXML and CN1 files.",
+        "The power-off insertion belongs to this route, where the display "
+        "copies a Shapefile folder into its own storage as it starts. «Import2» "
+        "itself reads a stick with the display running — that is how the "
+        "photographed AB line import goes in.",
+        "This display reads ISOXML as well: «Import2», «Source» «ISOXML», and "
+        "the «Data Type» list there offers «Prescription Map» beside the "
+        "«Guidance Lines» that were photographed. Nobody has taken a "
+        "prescription in that way yet.",
     ),
     common_errors=(
         "Plugging the stick into a running display, so nothing loads.",
@@ -394,9 +405,10 @@ def _voyager_extras(monitor_key: str, brand: str) -> None:
             _SHP_SET,
             "Leave the four files loose at the drive root.",
             "Plug the stick into the display.",
-            "Open «Data Management». On some software lines this sits under "
-        "«Field» instead — check both.",
-            "Choose the boundary import.",
+            "From the run screen press «Back» to reach the main menu, then "
+            "«Data Management».",
+            "Go to the «Import2» tab and set «Source» to «Shapefile» and "
+            "«Data Type» to «Boundary».",
             "Select the Grower, Farm and Field it belongs to.",
             "Select the file and import.",
         ),
@@ -432,7 +444,8 @@ def _voyager_extras(monitor_key: str, brand: str) -> None:
             _FAT32,
             "Decide the exact Grower, Farm and Field spellings your office uses.",
             "Plug the stick into the display.",
-            "Open «Data Management».",
+            "From the run screen press «Back» to reach the main menu, then "
+            "«Data Management».",
             "Either import the structure from your FMIS export, or create the "
             "entries by hand on the display.",
             "Check the spelling character by character against the office list.",
@@ -457,7 +470,9 @@ def _voyager_extras(monitor_key: str, brand: str) -> None:
         steps=(
             _FAT32,
             "Plug the stick into the display.",
-            "Open «Data Management» and press «Export».",
+            "From the run screen press «Back» to reach the main menu, then "
+            "«Data Management».",
+            "Go to the «Export» tab. «Target» is «ISOXML».",
             "Select the Grower / Farm / Field whose swaths you want.",
             "Confirm and wait for the transfer to finish.",
             _EJECT,
@@ -486,7 +501,9 @@ def _voyager_extras(monitor_key: str, brand: str) -> None:
         steps=(
             _FAT32,
             "Plug the stick into the display.",
-            "Open «Data Management» and press «Export».",
+            "From the run screen press «Back» to reach the main menu, then "
+            "«Data Management».",
+            "Go to the «Export» tab. «Target» is «ISOXML».",
             "Select the Grower / Farm / Field.",
             "Confirm and wait for the transfer.",
             "Read the folder at the office and convert to shapefile if your "
@@ -513,7 +530,9 @@ def _voyager_extras(monitor_key: str, brand: str) -> None:
             _FAT32,
             "Use a stick with room to spare and nothing else on it.",
             "Close the running task.",
-            "Open «Data Management» and press «Export».",
+            "From the run screen press «Back» to reach the main menu, then "
+            "«Data Management».",
+            "Go to the «Export» tab. «Target» is «ISOXML».",
             "Select everything, not one field.",
             "Wait for the transfer to complete fully.",
             _EJECT,
@@ -562,7 +581,7 @@ _IV4_IMPORT_LINES = walkthrough_for("new_holland.intelliview_iv", "import_guidan
 _IV4_EXPORT = walkthrough_for("new_holland.intelliview_iv", "export_work_data", "usb")
 
 _IV4_PHOTO_SOURCE = (
-    "Photographed on a New Holland combine, IntelliView IV, Olds College, "
+    "Photographed on a New Holland combine, IntelliView IV, central Alberta, "
     "11 Sep 2026",
 )
 _SWATH_WORD = (

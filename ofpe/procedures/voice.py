@@ -8,8 +8,9 @@ the button fails on the first line. Or the lines can be recorded ahead of
 time by a real TTS model and played back as ordinary audio.
 
 Recording is possible here only because the text is a closed set. Nothing on
-this page is composed at runtime: 342 procedures share 565 distinct lines,
-about forty-five minutes of speech, roughly ten megabytes as mono MP3. So
+this page is composed at runtime: the procedures share a few hundred
+distinct lines -- 631 of them today, some fifty minutes of speech, a dozen
+megabytes as mono MP3. So
 the lines can be rendered once and shipped as files, and a producer
 downloads the dozen clips for the procedure on the screen rather than a
 hundred megabytes of model. It also works on the phones that have no speech

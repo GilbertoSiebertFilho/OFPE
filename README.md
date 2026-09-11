@@ -18,32 +18,39 @@ Three tabs:
 
 **https://gilbertosiebertfilho.github.io/OFPE/**
 
-One address, always current. Every push rebuilds it, so a correction made today
-reaches everyone who opens it tomorrow — nothing to download, no version to be
-on the wrong side of, and nothing for a producer to install. It opens on a
-phone in a cab.
+One address, always current. A correction pushed today reaches everyone who
+opens it tomorrow — nothing to download, no version to be on the wrong side of,
+and nothing for a producer to install. It opens on a phone in a cab.
 
-The build runs the test suite first and **stops if anything fails**, leaving the
-last good page up. A stale answer is survivable; a broken one, read by somebody
-about to press buttons on a machine, is not.
+**Rebuild the page before you push.** Two things publish this site at the
+moment and they take turns, so treat the committed page as the one that counts:
+
+- **Deploy from a branch** (`main`, root) is what the Pages setting says.
+  GitHub serves this directory as it stands: `index.html` the door,
+  `OFPE-Guide.html` the guide, `assets/photos/` and `voice/` beside them.
+- **The Publish the guide workflow** runs on every push — tests, build, then a
+  deploy of its own that also succeeds. Its site puts the guide straight at the
+  root instead of behind the door.
+
+They serve the same page, so the difference a visitor sees is only whether the
+address keeps `OFPE-Guide.html` in it — and a shared link works either way,
+because the door carries the `#` across. What matters is the habit:
+`tools/build_guide.py`, commit the result, then push. A procedure edited and
+not rebuilt reaches neither.
+
+**Worth doing once:** set **Settings → Pages → Source** to *GitHub Actions*.
+Then the test suite gates the live page — a red build leaves yesterday's good
+one up — and `OFPE-Guide.html` can stop being committed at all, which is a
+megabyte and a half of rewritten file per change.
 
 <details>
-<summary>Turning it on the first time</summary>
+<summary>Why there is a door at all</summary>
 
-**Settings → Pages → Build and deployment → Source.** Either value works, and
-they behave differently enough to be worth knowing:
-
-- **GitHub Actions** — the workflow builds the page and deploys it. Tests run
-  first, so a broken build never reaches the site. This is the one to use.
-- **Deploy from a branch → `main` → `/ (root)`** — GitHub serves the repository
-  directory as it stands. `index.html` sends visitors to the guide, and the
-  page updates whenever a rebuilt `OFPE-Guide.html` is committed. No tests
-  gate it, and nothing rebuilds on its own.
-
-If the Source is left on a branch, the workflow's deploy step fails with
-`404 ... Ensure GitHub Pages has been enabled` — the build was fine, but there
-is no Actions deployment target to publish into. Switching the dropdown fixes
-it; nothing needs changing in the repository.
+`index.html` exists for the branch setting, where GitHub serves the directory
+and a visitor to the root would otherwise get a 404. It redirects to the guide
+and keeps the part of the address after the `#`, so a link to one answer lands
+on that answer. Under the Actions setting it is never served, and costs
+nothing.
 
 This works because the repository is public. GitHub Pages on a *private*
 repository needs a paid plan — so if this is ever made private, the link stops
@@ -331,9 +338,8 @@ Two voices can do the reading, and the page prefers the better one.
 a real TTS model and writes it to `voice/` as a mono MP3. The page fetches a
 clip when you press play — about a dozen for the procedure on screen, not a
 model download. This is possible only because the text is a closed set: 351
-procedures share a few hundred distinct lines which, with the step numbers
-called out separately, come to roughly 630 clips, under an hour of speech and
-about 12 MB. Pulling work
+procedures share 631 distinct lines, counting the step numbers called out
+separately, which come to 53.6 minutes of speech and 13 MB. Pulling work
 data off a 2630 is thirteen steps, 86 seconds of speech and **395 KB**; the
 longest procedure anywhere is 566 KB. Two models are wired up:
 
@@ -408,9 +414,9 @@ highest-value thing you can do for this platform.
 | Brand | Terminals | Format we write | Level |
 |---|---|---|---|
 | John Deere | GS3 2630, Gen 4 (4240/4600/4640), G5 | Shapefile + KML + GeoJSON → Operations Center | Two steps |
-| Case IH | AFS Pro 700 | ISOXML v3, or Shapefile "Multiswath" | Direct (check wording) |
+| Case IH | AFS Pro 700 | Shapefile "Multiswath" | Direct |
 | Case IH | AFS Pro 1200 | ISOXML | Direct |
-| New Holland | IntelliView IV | ISOXML v3, or Shapefile "MultiSwath+" | Direct |
+| New Holland | IntelliView IV | Shapefile "MultiSwath+" | Direct |
 | New Holland | IntelliView 12 | ISOXML | Direct |
 | Trimble | GFX-350/750/1060/1260, TMX-2050 | Shapefile → Trimble Ag Software | Two steps |
 | Trimble | FmX, CFX-750, FM-1000 | Shapefile → Trimble Ag Software | Two steps |
@@ -428,6 +434,14 @@ highest-value thing you can do for this platform.
 | AgOpenGPS | AgOpenGPS | Field folder text files + KML | Unverified |
 | Generic | Any ISOBUS terminal (TC-BAS+) | ISOXML | Direct |
 | Generic | QGIS / ArcGIS / FMIS | Shapefile, GeoJSON | Direct |
+
+**One row is narrower than it looks.** The Voyager pair — AFS Pro 700 and
+IntelliView IV — was photographed loading a line from **ISOXML v3**, written by
+Ag Leader SMS. This platform writes ISOXML **v4**, where guidance lines live in
+`GGP`/`GPN` elements that v3 does not have, so what it offers those two
+displays is the shapefile Multiswath instead. Until the v3 flat dialect is
+written, a line for a Pro 700 or an IntelliView IV comes from SMS, not from
+here — the Guide says so, step by step.
 
 **ISOXML is the workhorse.** One exporter covers CLAAS, the whole AGCO family,
 Topcon, Kverneland, Müller, current CNH, and anything else advertising TC-BAS.
@@ -508,9 +522,10 @@ geo             projection and geodesy
 says, where the folder is — with no machinery in the way. Twenty-odd ISOBUS
 terminals genuinely behave identically, so that behaviour is written once in
 `families.py`; writing it out twenty times would be twenty chances to introduce
-a difference that is not real. Rebadged displays (the G5 and the Gen 4, the
-IntelliView IV and the AFS Pro 700) are copied with `_mirror` rather than
-aliased, so that when one eventually diverges the fix is editing one entry.
+a difference that is not real. Rebadged displays are copied rather than aliased -- the G5 from the Gen 4 with
+`_mirror`, the AFS Pro 700 from the photographed IntelliView IV through the
+helper in `brands/cnh.py` that also drops its confidence a tier -- so that when
+one of a pair diverges, the fix is editing one entry.
 
 Readers and writers only ever talk to `models`, so adding a brand means adding one
 writer and one catalog entry — nothing else changes.
