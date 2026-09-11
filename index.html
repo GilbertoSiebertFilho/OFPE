@@ -16,10 +16,16 @@
   either setting, which matters when the link is going to producers rather
   than to somebody who can read a settings page.
 
-  The redirect is a meta refresh rather than script, because it has to survive
-  a browser with JavaScript off, and the link below has to survive the refresh
-  being ignored.
+  Branch mode is the one the site runs in today (September 2026), so this is
+  the door every producer walks through.
+
+  The script goes first because it keeps the part of the link after the #:
+  a link to one answer -- .../OFPE/#e=combine&m=... -- has to land on that
+  answer, and a meta refresh throws the # away. The meta refresh stays for a
+  browser with JavaScript off, and the link below for a refresh that is
+  ignored.
 -->
+<script>location.replace('OFPE-Guide.html' + location.search + location.hash);</script>
 <meta http-equiv="refresh" content="0; url=OFPE-Guide.html">
 <link rel="canonical" href="OFPE-Guide.html">
 <style>

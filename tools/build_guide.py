@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
-"""Build the OFPE Monitor Guide as one self-contained HTML page.
+"""Build the OFPE Monitor Guide as one HTML page.
 
-The guide needs no server: 341 procedures of built-in knowledge, no database,
-no calculation. So it can be a single file that opens from a link on any phone
-in any cab, with nothing installed. This script bakes the procedure data and
-the terminal drawings into that file.
+The guide needs no server: hundreds of procedures of built-in knowledge, no
+database, no calculation. So it can be a single page that opens from a link on
+any phone in any cab, with nothing installed. This script bakes the procedure
+data and the terminal drawings into that page.
+
+    python tools/build_guide.py            OFPE-Guide.html, the page the site
+                                           serves; photographs load from
+                                           assets/photos/ beside it
+    python tools/build_guide.py --offline  OFPE-Guide-offline.html, one file
+                                           with every photograph baked in
 """
 
 import base64
@@ -17,7 +23,35 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from ofpe import catalog as cat, procedures as pr  # noqa: E402
 
-OUT = ROOT / "OFPE-Guide.html"
+# Two builds from one source.
+#
+# The page GitHub Pages serves points at the photographs beside it, under
+# assets/photos/, so a phone opening a link downloads the pictures of the
+# answer on screen and nothing else. Baked in, two photographed displays were
+# already most of eleven megabytes -- too much to ask of a cab's signal before
+# the first question even shows.
+#
+# --offline bakes every photograph into the one file instead. Heavier, but it
+# opens with no signal and no folder beside it, which is what the copy on the
+# stick going out to the machine wants.
+OFFLINE = "--offline" in sys.argv[1:]
+OUT = ROOT / ("OFPE-Guide-offline.html" if OFFLINE else "OFPE-Guide.html")
+
+# Where a shared link points when the page was not opened from the site -- a
+# file:// address on somebody's phone opens nothing.
+SITE_URL = "https://gilbertosiebertfilho.github.io/OFPE/"
+
+
+def photo(folder: str, name: str) -> str:
+    """A photograph, by address or baked in, depending on the build."""
+    path = ROOT / "assets" / "photos" / folder / name
+    if OFFLINE:
+        return "data:image/jpeg;base64," + base64.b64encode(
+            path.read_bytes()).decode()
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    return f"assets/photos/{folder}/{name}"
+
 
 # --------------------------------------------------------------------------- #
 #  Data
@@ -67,11 +101,9 @@ for entry in monitors:
     help_ = pr.version_help_for(entry["key"])
     if not help_:
         continue
-    photos = ROOT / "assets" / "photos" / help_.folder
 
     def _img(name: str) -> str:
-        return "data:image/jpeg;base64," + base64.b64encode(
-            (photos / name).read_bytes()).decode()
+        return photo(help_.folder, name)
 
     version_help[entry["key"]] = {
         "field": help_.field_label,
@@ -96,11 +128,9 @@ for entry in monitors:
 # owns those steps -- there is no second list to fall out of step with.
 walk_photos = {}
 for walk in pr.WALKTHROUGHS:
-    shots = ROOT / "assets" / "photos" / walk.folder
 
     def _shot(name: str) -> str:
-        return "data:image/jpeg;base64," + base64.b64encode(
-            (shots / name).read_bytes()).decode()
+        return photo(walk.folder, name)
 
     walk_photos["|".join((walk.monitor_key, walk.objective, walk.transport))] = {
         "evidence": walk.evidence,
@@ -131,7 +161,7 @@ voice_manifest = voice_dir / "manifest.json"
 voice_clips: dict[str, dict] = {}
 voice_meta: dict[str, str] = {}
 if voice_manifest.exists():
-    _m = json.loads(voice_manifest.read_text())
+    _m = json.loads(voice_manifest.read_text(encoding="utf-8"))
     if pr.voice.shippable(_m, bool(os.environ.get("OFPE_FAKE_VOICE"))):
         voice_clips = _m.get("clips", {})
         voice_meta = {"dir": "voice/", "ext": "." + _m.get("format", "mp3"),
@@ -203,6 +233,7 @@ DATA = {
     "versionHelp": version_help,
     "walkPhotos": walk_photos,
     "iconCredits": credits,
+    "site": SITE_URL,
     "voice": voice_meta,
     "voiceNums": voice_numbers,
     "checklist": [
@@ -859,6 +890,18 @@ ol.vsteps > li::before {
 }
 .btn:hover { border-color: var(--accent-line); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn:disabled { cursor: default; opacity: .75; }
+
+/* The link to these exact steps, in the card's corner as well as at the
+   bottom: whoever is sending it has usually seen enough by the first step. */
+.cshare {
+  margin-left: auto; align-self: flex-start; font: inherit;
+  font-size: var(--t-sm); font-weight: 620; cursor: pointer;
+  padding: 7px 14px; min-height: 40px; border-radius: 99px;
+  border: 1.5px solid var(--accent-line); background: var(--surface); color: var(--ink);
+}
+.cshare:hover { border-color: var(--accent); }
+.linknote { font-size: var(--t-sm); color: var(--ink-3); margin: 10px 0 0; }
 .srcline { padding: 13px 20px; border-top: 1px solid var(--line); background: var(--surface-2); font-size: var(--t-xs); color: var(--ink-3); }
 
 footer { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--line-soft); color: var(--ink-3); font-size: var(--t-sm); }
@@ -897,6 +940,16 @@ const el = (t, a = {}, ...kids) => {
     n.append(c.nodeType ? c : document.createTextNode(String(c)));
   return n;
 };
+
+/* A photograph from the cab. On the site they sit in assets/photos/ beside
+   the page and load only when their step is on screen. Opened as a lone file
+   with nothing beside it they are not there, so the picture goes quietly --
+   and takes its "tap to see it" button with it -- while the step, which never
+   depended on it, stays. The offline build bakes them in and never gets here. */
+const photoImg = (cls, src) => el('img', {
+  class: cls || null, src, alt: '', loading: 'lazy', decoding: 'async',
+  onerror: e => (e.target.closest('.vshot') || e.target).remove(),
+});
 
 /* A step names buttons in «guillemets»; each becomes a key cap. Split rather
    than replace, so nothing in the source text is ever treated as markup.
@@ -1162,6 +1215,119 @@ function reset(from) {
 
 const answered = k => S[k] !== null;
 
+/* -------------------------------------------------------------- the link */
+/* Every answer has an address. The answers given so far ride in the part of
+   the URL after the #, so a link sent in a message opens straight onto the
+   same steps -- nothing to pick, nothing to scroll -- and the phone's own back
+   gesture undoes an answer instead of leaving the page. */
+const LINK = { equip: 'e', mon: 'm', ver: 'v', job: 'j', route: 'r' };
+
+function linkFor(state) {
+  const q = new URLSearchParams();
+  for (const k of ORDER) {
+    if (state[k] === null) break;
+    q.set(LINK[k], k === 'ver' && state[k] === '' ? 'any' : state[k]);
+  }
+  return q.toString();
+}
+
+/* Read an address back one answer at a time, and stop at the first that no
+   longer makes sense -- a display renamed, a job withdrawn since the link was
+   sent. The wizard simply asks again from there. */
+function readLink(hash) {
+  const q = new URLSearchParams(hash.replace(/^#/, ''));
+  const s = { equip: null, mon: null, ver: null, job: null, route: null };
+  const e = q.get('e'), m = q.get('m'), v = q.get('v'), j = q.get('j'),
+        r = q.get('r');
+  if (e && D.equipment[e]) s.equip = e;
+  const mon = m && monByKey[m];
+  if (!mon || (s.equip && !mon.equipment.includes(s.equip))) return s;
+  /* No machine in the link: answer it the way arriving by search does. */
+  s.equip = s.equip || mon.equipment.find(x => D.equipmentOffered.includes(x))
+    || mon.equipment[0] || null;
+  s.mon = m;
+  if (v === 'any') s.ver = '';
+  else if (v && mon.versions.some(x => x.key === v)) s.ver = v;
+  else return s;
+  if (!j || !jobsFor(m, s.ver, s.equip).includes(j)) return s;
+  s.job = j;
+  if (r && routesFor(m, s.ver, j).includes(r)) s.route = r;
+  return s;
+}
+
+let following = false;
+let replacing = false;
+
+/* Keep the address in step with the answers. A new answer is a new history
+   entry, so the phone's back gesture has something to go back to; reading a
+   link, or arriving by that gesture, must not add one. Undoing an answer the
+   page never recorded -- one that came in on a link -- rewrites the current
+   entry instead, so the gesture still leads back to wherever the link was
+   tapped. */
+function syncLink() {
+  if (following) return;
+  const replace = replacing;
+  replacing = false;
+  const want = linkFor(S), have = location.hash.replace(/^#/, '');
+  if (want === have) return;
+  const url = location.pathname + location.search + (want ? '#' + want : '');
+  try {
+    if (replace) history.replaceState(history.state, '', url);
+    else history.pushState({ ofpe: 1, prev: have }, '', url);
+  } catch (e) { /* a sandboxed frame may refuse; the page works without */ }
+}
+
+function followLink() {
+  const next = readLink(location.hash);
+  /* The make filter is not part of the address. Keep it while the machine
+     stays the same, exactly as the Back button does. */
+  if (next.equip !== S.equip) S.brand = null;
+  Object.assign(S, next);
+  following = true;
+  try { render(); } finally { following = false; }
+}
+addEventListener('popstate', followLink);
+
+/* The link to send: this page's own address when it came from the site, the
+   site's when it was opened as a file or inside something else -- a file://
+   link on somebody else's phone opens nothing. */
+function shareUrl() {
+  const hash = linkFor(S);
+  const onSite = /^https?:$/.test(location.protocol)
+    && location.hostname.endsWith('github.io');
+  const base = onSite ? location.href.split('#')[0] : D.site;
+  return base + (hash ? '#' + hash : '');
+}
+
+function flash(btn, text) {
+  const was = btn.textContent;
+  btn.textContent = text;
+  btn.disabled = true;
+  setTimeout(() => { btn.textContent = was; btn.disabled = false; }, 1800);
+}
+
+async function copyLink(btn) {
+  const url = shareUrl();
+  try {
+    await navigator.clipboard.writeText(url);
+    flash(btn, 'Link copied');
+  } catch (e) {
+    /* No clipboard here -- an old browser, or the page opened as a file.
+       Put the link where it can be copied by hand. */
+    try { window.prompt('Copy this link:', url); } catch (err) { /* nothing left */ }
+  }
+}
+
+/* On a phone this is the share sheet -- WhatsApp, a text, an email -- which
+   is how a link actually reaches a producer. Where there is no share sheet,
+   copying is the next best thing. */
+async function shareLink(btn) {
+  if (!navigator.share) return copyLink(btn);
+  const title = jobLabel(S.job, S.mon) + ' — ' + monByKey[S.mon].label;
+  try { await navigator.share({ title, text: title, url: shareUrl() }); }
+  catch (e) { if (!e || e.name !== 'AbortError') copyLink(btn); }
+}
+
 function render() {
   sayStop();
   document.body.classList.toggle('go', answered('equip'));
@@ -1174,6 +1340,8 @@ function render() {
   /* After drawRoutes, not before: that is what decides whether an answer is
      on screen, and the stick panel hides itself once one is. */
   drawPrep();
+  /* Last, because drawRoutes can answer the route question itself. */
+  syncLink();
 }
 
 /* The list of things that spoil a trial if they are missed. Ticks are kept
@@ -1300,11 +1468,16 @@ function back() {
   const answeredKeys = ORDER.filter(answered);
   if (!answeredKeys.length) return;
   const last = answeredKeys[answeredKeys.length - 1];
-  if (last === 'route' && routesFor(S.mon, S.ver, S.job).length <= 1) {
-    reset('job');
-  } else {
-    reset(last);
-  }
+  const from = last === 'route' && routesFor(S.mon, S.ver, S.job).length <= 1
+    ? 'job' : last;
+  /* When the answer being undone was the page's own last step, go back
+     through the browser's history instead, so this button and the phone's
+     back gesture never disagree about where "back" is. */
+  const target = { ...S };
+  ORDER.slice(ORDER.indexOf(from)).forEach(k => target[k] = null);
+  const st = history.state;
+  if (st && st.ofpe && st.prev === linkFor(target)) history.back();
+  else { replacing = true; reset(from); }
   scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1527,13 +1700,13 @@ function drawVersionHelp() {
     const item = el('li', {}, keys(s.text, S.mon));
     if (s.button) {
       item.append(el('div', { class: last ? 'vanswer' : '' },
-        el('img', { class: last ? '' : 'vbtn', src: s.button, alt: '' })));
+        photoImg(last ? '' : 'vbtn', s.button)));
     }
     if (s.screen) {
       item.append(el('button', {
         class: 'vshot', type: 'button',
         onclick: () => openShot(s.screen, s.lookFor),
-      }, el('img', { src: s.screen, alt: '' }),
+      }, photoImg('', s.screen),
          el('span', {},
            el('b', {}, s.screenName || 'This screen'),
            el('span', { class: 'vsub' }, 'Tap to see it on a real machine'))));
@@ -1626,7 +1799,10 @@ function showResult(t) {
                        title: D.confidence[p.conf].desc },
              D.confidence[p.conf].label),
           el('span', { class: 'tag' }, ver ? ver.label : 'Any version'),
-          el('span', { class: 'tag' }, D.transports[p.t].label)))));
+          el('span', { class: 'tag' }, D.transports[p.t].label))),
+      el('button', { class: 'cshare noprint', type: 'button',
+                     onclick: e => shareLink(e.currentTarget) },
+        navigator.share ? 'Share' : 'Copy link')));
 
   const body = el('div', { class: 'body' });
   /* A version fallback changes what the steps are worth, so it stays on
@@ -1677,13 +1853,13 @@ function showResult(t) {
     const item = el('li', {}, keys(s, S.mon));
     const shot = walk && walk.steps[i];
     if (shot && shot.button) {
-      item.append(el('img', { class: 'vbtn', src: shot.button, alt: '' }));
+      item.append(photoImg('vbtn', shot.button));
     }
     if (shot && shot.screen) {
       item.append(el('button', {
         class: 'vshot noprint', type: 'button',
         onclick: () => openShot(shot.screen, shot.lookFor),
-      }, el('img', { src: shot.screen, alt: '' }),
+      }, photoImg('', shot.screen),
          el('span', {},
            el('b', {}, shot.screenName || 'This screen'),
            el('span', { class: 'vsub' }, 'Tap to see it on a real machine'))));
@@ -1732,10 +1908,20 @@ function showResult(t) {
      icon set have them, so the block adapts rather than pretending. */
   body.append(finishPanel(p, m));
 
+  /* Sending the link comes first: a producer is far more often sent an answer
+     than handed a printout. */
+  const canShare = !!navigator.share;
   body.append(el('div', { class: 'actions noprint' },
-    el('button', { class: 'btn primary', onclick: printSteps }, 'Print this'),
-    el('button', { class: 'btn', onclick: () => { reset('equip');
+    canShare ? el('button', { class: 'btn primary', type: 'button',
+      onclick: e => shareLink(e.currentTarget) }, 'Share this answer') : null,
+    el('button', { class: 'btn' + (canShare ? '' : ' primary'), type: 'button',
+      onclick: e => copyLink(e.currentTarget) }, 'Copy the link'),
+    el('button', { class: 'btn', type: 'button', onclick: printSteps }, 'Print this'),
+    el('button', { class: 'btn', type: 'button', onclick: () => { reset('equip');
         scrollTo({ top: 0, behavior: 'smooth' }); } }, 'Start over')));
+  body.append(el('p', { class: 'linknote noprint' },
+    'The link opens straight onto these steps. Send it to whoever is going '
+    + 'to the machine.'));
 
   card.append(body);
   host.append(card);
@@ -1819,12 +2005,33 @@ $('#shotbox').addEventListener('click', e => {
    than on every render -- rebuilding it would throw away a half-ticked list
    the moment somebody picked a display. */
 drawCheck();
-render();
+/* A link that arrived with answers in it opens on them. Then tidy the address
+   to what was actually understood -- replacing it, not adding to the history,
+   so the first press of the phone's back gesture leaves the page as expected. */
+followLink();
+try {
+  const want = linkFor(S);
+  if (want !== location.hash.replace(/^#/, '')) {
+    history.replaceState(null, '',
+      location.pathname + location.search + (want ? '#' + want : ''));
+  }
+} catch (e) { /* a sandboxed frame may refuse */ }
 """
 
 
 def build() -> None:
-    html = f"""<title>OFPE Monitor Guide</title>
+    # A whole document, not a fragment. Without the viewport line a phone lays
+    # the page out 980 px wide and shrinks it to fit -- every size in the
+    # stylesheet divided by two and a half -- and without the doctype the
+    # browser falls back to quirks mode.
+    html = f"""<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OFPE Monitor Guide</title>
+<meta name="description" content="How to get a file into your monitor and your data back out: the exact folder and the exact buttons, for your display.">
+<meta property="og:title" content="OFPE Monitor Guide">
+<meta property="og:description" content="The exact folder and the exact buttons, for your display.">
 <style>{CSS}</style>
 
 <div class="wrap">
@@ -1925,7 +2132,8 @@ def build() -> None:
 {JS}</script>
 """
     OUT.write_text(html, encoding="utf-8")
-    print(f"wrote {OUT}  ({OUT.stat().st_size / 1024 / 1024:.2f} MB)")
+    print(f"wrote {OUT}  ({OUT.stat().st_size / 1024 / 1024:.2f} MB, "
+          f"{'photographs baked in' if OFFLINE else 'photographs from assets/photos/'})")
     print("  (README quotes this count in a few places — keep them in step)")
     print(f"  {len(procedures)} procedures, {len(monitors)} displays, {len(icons)} icons")
 

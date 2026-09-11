@@ -51,12 +51,13 @@ jobs:
         run: python tools/build_guide.py
 
       - name: Assemble the site
-        # The page itself is self-contained -- every icon and photograph is
-        # baked into it. The one thing served beside it is voice/: the spoken
-        # steps, recorded ahead of time (tools/render_voice.py), fetched a
-        # clip at a time only when somebody presses play. Keeping them out of
-        # the page is the point; embedding ten megabytes of audio would make
-        # every visitor pay for a feature most will not use.
+        # The page carries its procedures and drawings. Two things are served
+        # beside it and fetched only when needed: voice/, the spoken steps
+        # recorded ahead of time (tools/render_voice.py), one clip at a time
+        # when somebody presses play; and assets/photos/, the cab
+        # photographs, only for the answer on screen. Keeping them out of the
+        # page is the point -- baked in, they would make every visitor pay
+        # for pictures of displays they do not own.
         #
         # If voice/ is empty the copy is a no-op and the page reads the steps
         # with the phone's own speech engine, exactly as it did before.
@@ -70,6 +71,12 @@ jobs:
           else
             echo "voice: none recorded yet"
           fi
+          # The cab photographs, at the same relative address the page asks
+          # for them by (assets/photos/...). A phone fetches only the ones on
+          # the answer it is showing.
+          mkdir -p site/assets
+          cp -r assets/photos site/assets/photos
+          echo "photos: $(find site/assets/photos -type f | wc -l) files, $(du -sh site/assets/photos | cut -f1)"
           # Sent to a phone, the page should be saveable as a file too.
           echo "OFPE Monitor Guide — built $(date -u '+%Y-%m-%d %H:%M UTC')" \
             > site/build.txt

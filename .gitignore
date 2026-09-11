@@ -9,3 +9,8 @@ venv/
 # The real recordings are .mp3; these exist only to drive the player in a
 # test and must never ship.
 /voice/*.wav
+
+# The single-file build with every photograph baked in (tools/build_guide.py
+# --offline). Made on demand for a stick or an email, never committed: it is
+# most of ten megabytes of base64 that git cannot compress between versions.
+/OFPE-Guide-offline.html

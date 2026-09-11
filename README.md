@@ -50,20 +50,43 @@ repository needs a paid plan — so if this is ever made private, the link stops
 working until either the plan changes or the repository goes public again.
 </details>
 
+## Sending one answer, not the whole guide
+
+Every answer has its own address. Walk to it once, press **Share** — or **Copy
+the link** on a computer — and what goes into the message opens that card
+directly on the other person's phone: their machine, their display, their
+version, those steps. Nothing to pick, nothing to scroll.
+
+```
+https://gilbertosiebertfilho.github.io/OFPE/#e=combine&m=new_holland.intelliview_iv&v=iv4_all&j=import_guidance&r=manual
+```
+
+Each answer it can still reach is kept in the part after the `#`, so the
+phone's own back gesture undoes one answer at a time instead of leaving the
+page. A link whose display or job no longer exists does not break: the wizard
+takes what it still understands and asks the rest.
+
 ## The Guide on its own — nothing to install
 
-The Guide is knowledge, not calculation: 349 procedures, no database, no server
-work. So it also exists as **one file**, **`OFPE-Guide.html`**. Double-click it
-and it opens in the browser. Copy it to a phone, mail it to an operator, put it
-on the USB stick that is going to the machine anyway — it works with no
-internet, no Python and no login, and each answer prints on one page.
-
-Rebuild it after editing any procedure:
+The Guide is knowledge, not calculation: 351 procedures, no database, no server
+work. So it also exists as **one page**, **`OFPE-Guide.html`** — the one the
+site serves, and the one to open from a clone by double-clicking it.
 
 ```
-.venv/bin/python tools/build_guide.py         # macOS / Linux
-.venv\Scripts\python tools\build_guide.py     # Windows
+.venv/bin/python tools/build_guide.py             # the page the site serves
+.venv\Scripts\python tools\build_guide.py         # Windows
+.venv\Scripts\python tools\build_guide.py --offline
 ```
+
+The page carries its procedures and its drawings; the cab **photographs** sit
+beside it in `assets/photos/` and load only for the answer on screen. That is
+1.5 MB to open a link instead of 11 MB, which is the difference between a page
+that opens in a field and one that does not.
+
+**`--offline`** writes `OFPE-Guide-offline.html` instead: the same page with
+every photograph baked in, for the copy that goes on the USB stick or into an
+email and opens with nothing beside it. It is not committed — it is eleven
+megabytes that change on every rebuild — so make one when you need one.
 
 The full platform below adds the parts that genuinely need a server: the machine
 library, field import, and generating and fitting guidance lines.
@@ -113,7 +136,7 @@ python3 tools/generate_icons.py
 
 ## What to try first
 
-The **Guide** tab needs no data at all — the 349 procedures are built in. Pick
+The **Guide** tab needs no data at all — the 351 procedures are built in. Pick
 a combine, pick a Gen 4, pick the 2025-3 monitor version, ask to load AB
 lines, and read what comes back. Then change the version to OS 11.x and watch
 the answer change, which is the whole point of the version step.
@@ -132,16 +155,15 @@ Six questions, each narrowing the next:
 equipment type → brand/display → software version → what you want to do → how it travels → the procedure
 ```
 
-**349 procedures across 25 displays.** Every answer carries the file format, the
+**351 procedures across 25 displays.** Every answer carries the file format, the
 exact media path, the filesystem, numbered click-by-click steps, how to check it
 worked, what usually goes wrong, and the source the claim came from. The result
 card prints cleanly — that is the artefact you carry to the machine.
 
 Three things fall out of having the whole matrix:
 
-- **Every answer is a link.** The four coordinates live in the URL fragment, so
-  a procedure is something you paste into a message. Opening the link lands
-  straight on the card.
+- **Every answer is a link.** The answers live in the URL fragment, so a
+  procedure is something you paste into a message — see above.
 - **Every display has a handbook.** `/handbook?monitor_key=…&version=…` renders
   *every* procedure for one display as a single printable document — for
   training an operator, for the folder in the workshop, for a machine handover.
@@ -244,6 +266,39 @@ complaint, and much rarer.
 The form is deliberately short. A bad report beats no report, and a long form
 gets abandoned in a cab.
 
+### Photographed in a cab
+
+The strongest evidence in this guide is not a manual. It is somebody sitting in
+the machine, doing the job, and photographing every screen on the way through.
+A manual says what a display is documented to do; a photograph says what it
+actually showed, on that software, on that day.
+
+Two displays have been through it:
+
+| Display | Photographed doing |
+|---|---|
+| John Deere GreenStar 3 2630 | finding the version · AB line typed as lat/long · AB line from a stick · pulling off work data |
+| New Holland IntelliView IV | AB line typed as lat/long · AB line from a stick as ISOXML · pulling off work data |
+
+A photographed job is written once, in `ofpe/procedures/walkthroughs.py`, and
+the procedure reads its steps from there — two copies of the same ten
+instructions would drift apart inside a season and the photographs would
+quietly end up beside the wrong step. Each step can carry a crop of the button
+itself, shown inline at the size of a word, and the whole screen behind it with
+a note saying what to notice.
+
+The extraction is a script per display (`tools/extract_gen3_photos.py`,
+`tools/extract_iv4_photos.py`): it names the photograph each crop comes from
+and the fractions of it to cut, so anybody can check a crop against the
+original. The IntelliView IV set has one alteration, recorded in the script:
+the operator's name on the FARM page is blurred.
+
+**A rebadged twin gets the steps, not the claim.** The Case IH AFS Pro 700 is
+the IntelliView IV in different paint and takes the same steps word for word —
+at `Confirm the wording on the machine`, with a line telling the reader where
+the photographs are. A test enforces both halves: the steps must match, and the
+twin must not claim to have been photographed.
+
 ### The harvest day checklist
 
 The first screen opens with a short list of the things that spoil a trial if
@@ -275,9 +330,10 @@ Two voices can do the reading, and the page prefers the better one.
 **Recorded.** `tools/render_voice.py` reads every line the guide can say through
 a real TTS model and writes it to `voice/` as a mono MP3. The page fetches a
 clip when you press play — about a dozen for the procedure on screen, not a
-model download. This is possible only because the text is a closed set: 349
-procedures share 565 distinct lines which, with the step numbers called out
-separately, come to 581 clips, 47 minutes of speech and 11.5 MB. Pulling work
+model download. This is possible only because the text is a closed set: 351
+procedures share a few hundred distinct lines which, with the step numbers
+called out separately, come to roughly 630 clips, under an hour of speech and
+about 12 MB. Pulling work
 data off a 2630 is thirteen steps, 86 seconds of speech and **395 KB**; the
 longest procedure anywhere is 566 KB. Two models are wired up:
 
@@ -352,9 +408,9 @@ highest-value thing you can do for this platform.
 | Brand | Terminals | Format we write | Level |
 |---|---|---|---|
 | John Deere | GS3 2630, Gen 4 (4240/4600/4640), G5 | Shapefile + KML + GeoJSON → Operations Center | Two steps |
-| Case IH | AFS Pro 700 | Shapefile "Multiswath" | Direct |
+| Case IH | AFS Pro 700 | ISOXML v3, or Shapefile "Multiswath" | Direct (check wording) |
 | Case IH | AFS Pro 1200 | ISOXML | Direct |
-| New Holland | IntelliView IV | Shapefile "Multiswath" | Direct |
+| New Holland | IntelliView IV | ISOXML v3, or Shapefile "MultiSwath+" | Direct |
 | New Holland | IntelliView 12 | ISOXML | Direct |
 | Trimble | GFX-350/750/1060/1260, TMX-2050 | Shapefile → Trimble Ag Software | Two steps |
 | Trimble | FmX, CFX-750, FM-1000 | Shapefile → Trimble Ag Software | Two steps |
@@ -579,7 +635,7 @@ The procedure knowledge base started life as two tabs in an unrelated
 spreadsheet — a CWSI irrigation tool that happened to also carry a monitor
 file-transfer guide. That guide held 24 procedures, all tagged "all versions".
 
-This is that idea taken seriously: 349 procedures, a real software-version
+This is that idea taken seriously: 351 procedures, a real software-version
 dimension, every claim sourced and confidence-flagged, and a correction loop so
 the flags can come down. The two projects share nothing but that origin, and
 this one owns its own icon generator and assets.
