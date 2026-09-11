@@ -632,6 +632,13 @@ build time rather than when a producer clicks download.
   is why roughly half the procedures are flagged "confirm on the machine" and every
   card shows that flag. The correction button is the fix, and it needs people to
   use it — the knowledge base cannot improve on this axis without field reports.
+- **We write ISOXML v4; the Voyager pair reads v3.** Guidance lines live in
+  `GGP`/`GPN` elements, which arrived in ISO 11783-10:2015 — v3 has no such
+  element, and a line there is a flat `LSG` under the field. An IntelliView IV
+  was photographed loading a line from a v3 file that Ag Leader SMS wrote, so
+  the display's side is proven and ours is missing: until the flat dialect is
+  written, what this platform offers a Pro 700 or an IntelliView IV is the
+  shapefile Multiswath, and a line for them comes out of SMS.
 - **No cloud APIs yet.** John Deere Operations Center exposes a guidance-line
   endpoint that creates AB lines directly, and Trimble has an equivalent. Both
   need a developer account and customer OAuth consent. That is the next step and

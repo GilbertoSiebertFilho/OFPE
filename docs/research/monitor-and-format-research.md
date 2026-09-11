@@ -1,5 +1,19 @@
 # LINEGUIDER — Monitor & Guidance-Line Format Research (Master Reference)
 
+> **Read this next to the guide, not instead of it.** It was written in August
+> 2026 for LINEGUIDER, the prototype this platform replaced, and it is kept
+> because the format work behind it is sound and sourced. Two things in it have
+> since been overtaken by photographs of real cabs:
+>
+> - "John Deere accepts no file-based guidance import" is about files *we* can
+>   write. A GS3 2630 does import guidance lines from a stick — from a profile
+>   John Deere's own software wrote. Both statements are true at once.
+> - The Voyager displays (AFS Pro 700, IntelliView IV) are described here as
+>   wanting ISOXML v3; an IntelliView IV has now been photographed doing exactly
+>   that, with a v3 file from Ag Leader SMS.
+>
+> Where this document and a photographed procedure disagree, the photograph wins.
+
 **Compiled:** 2026-08-05
 **Method:** Synthesis of 10 parallel research agents covering John Deere, Trimble/PTx, CNH, Ag Leader, Topcon/Raven/Outback/Hexagon, AGCO/Claas/Kverneland/Müller-Elektronik, ISOXML deep-dive, Shapefile guidance exchange, and line-derivation algorithms. Conflicting claims are retained and flagged inline with **⚠ Conflict** markers; unverified claims are flagged **UNCERTAIN**.
 **Note:** The tenth research stream (ecosystem/competitor landscape) arrived truncated; Section 5 is synthesized from cross-mentions in the other nine streams and should be treated as a partial view pending a dedicated follow-up pass.
