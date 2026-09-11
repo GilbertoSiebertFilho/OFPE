@@ -579,6 +579,76 @@ def test_a_photographed_procedure_is_allowed_to_claim_verified():
         )
 
 
+def test_a_step_never_points_at_a_photo():
+    """Steps are read without their pictures more often than with them.
+
+    The Case IH AFS Pro 700 takes the IntelliView IV's steps word for word and
+    shows none of its photographs; the offline page may be opened with no
+    photos beside it; the voice reads the text to somebody looking at the
+    machine, not the phone. "As in the photo" means nothing in any of those.
+    Pointing at a picture is what `look_for` is for.
+    """
+    for walk in pr.WALKTHROUGHS:
+        for number, text in enumerate(walk.step_texts(), 1):
+            assert "photo" not in text.lower(), (
+                f"{walk.monitor_key}/{walk.objective} step {number} points at a "
+                f"photo in its text: {text!r}"
+            )
+
+
+def test_every_typed_line_opens_with_the_same_three_sentences():
+    """Four numbers are four numbers on any display.
+
+    The opening of a typed AB line is physics, not menus, so it is the same
+    sentence everywhere -- and identical text shares one recording of the
+    spoken step instead of paying to read it again per display.
+    """
+    first = pr.walkthrough_for(
+        "john_deere.gs3_2630", "import_guidance", "manual").step_texts()[:3]
+    for monitor in ("john_deere.gen4", "new_holland.intelliview_iv",
+                    "case_ih.afs_pro_700"):
+        steps = pr.resolve(monitor, "import_guidance", "manual", None).procedure.steps
+        assert steps[:3] == first, monitor
+
+
+def test_the_voyager_twins_share_steps_but_not_the_claim():
+    """Same display, two badges; photographed on only one of them.
+
+    The IntelliView IV was photographed doing these jobs, so it claims
+    VERIFIED. The AFS Pro 700 is the same hardware in Case IH paint and takes
+    the same steps -- but nobody has photographed one, so it must say CONFIRM
+    ON MACHINE and send the reader to the IntelliView IV to see the screens.
+    """
+    for objective, transport in (("import_guidance", "manual"),
+                                 ("import_guidance", "usb"),
+                                 ("export_work_data", "usb")):
+        shot = pr.resolve("new_holland.intelliview_iv", objective, transport,
+                          None).procedure
+        twin = pr.resolve("case_ih.afs_pro_700", objective, transport,
+                          None).procedure
+        assert shot.confidence is pr.Confidence.VERIFIED, objective
+        assert twin.steps == shot.steps, f"{objective}/{transport} drifted"
+        assert twin.confidence is pr.Confidence.CONFIRM_ON_MACHINE, (
+            f"the Pro 700 claims {twin.confidence.value} for {objective}/"
+            f"{transport} on the strength of another display's photographs"
+        )
+        assert any("IntelliView IV" in c for c in twin.cautions), (
+            f"the Pro 700's {objective}/{transport} does not say where the "
+            "photographs are"
+        )
+        assert pr.walkthrough_for("case_ih.afs_pro_700", objective,
+                                  transport) is None
+
+
+def test_the_typed_route_tells_a_canadian_which_number_is_negative():
+    """The trials are in Alberta and Saskatchewan: latitude positive, longitude
+    negative. The IntelliView IV's typed route says so where the minus sign is
+    typed, because a dropped minus puts the line on the other side of the world."""
+    steps = pr.resolve("new_holland.intelliview_iv", "import_guidance",
+                       "manual", None).procedure.steps
+    assert any("Canada" in s and "negative" in s for s in steps)
+
+
 # --------------------------------------------------------------------------- #
 #  What a machine can actually be asked to do                                  #
 # --------------------------------------------------------------------------- #
@@ -802,7 +872,7 @@ def test_the_page_and_the_recordings_say_the_same_thing():
     idea of a spoken step drifted from voice.spoken(), the two voices would
     read the same step differently -- which sounds like a mistake, and is one."""
     source = (pathlib.Path(__file__).resolve().parents[1]
-              / "tools" / "build_guide.py").read_text()
+              / "tools" / "build_guide.py").read_text(encoding="utf-8")
     forspeech = source.split("const forSpeech")[1].split(";")[0]
     assert ".replace(/«|»/g, '')" in forspeech
     assert r".replace(/\\/g, ', ')" in forspeech

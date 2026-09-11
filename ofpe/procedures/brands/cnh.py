@@ -88,61 +88,6 @@ _add(
 )
 
 _add(
-    monitor_key="case_ih.afs_pro_700",
-    objective="import_guidance",
-    transport=Transport.USB,
-    file_format="Shapefile lines — the display calls this a Multiswath",
-    extensions=(".shp", ".shx", ".dbf", ".prj"),
-    media_path="Drive root",
-    minutes=15,
-    steps=(
-        _FAT32,
-        _SHP_SET,
-        "Leave the four files loose at the drive root.",
-        "Plug the stick in.",
-        "Open «Swath».",
-        "Choose the shapefile / Multiswath import.",
-        "Select the Grower, Farm and Field.",
-        "Select the file and import.",
-        "On the run screen, pick the swath before engaging the steering.",
-    ),
-    verify=(
-        "The swath draws where you expect on the run screen.",
-        "Drive one pass with steering off to confirm the machine tracks it.",
-    ),
-    cautions=(
-        "This display calls an AB line a Swath, and a set of imported lines a "
-        "Multiswath. Look for those words, not 'guidance line'.",
-    ),
-    confidence=Confidence.VERIFIED,
-    sources=("Case IH AFS Pro 700 shapefile import guide",),
-)
-
-_add(
-    monitor_key="case_ih.afs_pro_700",
-    objective="export_work_data",
-    transport=Transport.USB,
-    file_format="Display data package written by the AFS software",
-    media_path="Drive root — the display creates its own folder tree",
-    minutes=15,
-    prerequisites=("Close the current task so the last records are written.",),
-    steps=(
-        _FAT32,
-        "Close or pause the running task.",
-        "Plug the stick into the display.",
-        "Open «Data Management» and press «Export».",
-        "Select the Grower / Farm / Field data you want.",
-        "Confirm and wait for the transfer to complete.",
-        _EJECT,
-        "At the office, import the folder into AFS Software or your FMIS.",
-    ),
-    verify=("The folder on the stick is not empty and carries today's date.",),
-    cautions=("Use one stick for this machine only.",),
-    confidence=Confidence.CONFIRM_ON_MACHINE,
-    sources=("Case IH AFS Pro 700 software operating guide",),
-)
-
-_add(
     monitor_key="case_ih.afs_pro_1200",
     objective="import_guidance",
     transport=Transport.USB,
@@ -293,39 +238,6 @@ _add(
 
 _add(
     monitor_key="new_holland.intelliview_iv",
-    objective="import_guidance",
-    transport=Transport.USB,
-    file_format="Shapefile lines — the display calls this a Multiswath",
-    extensions=(".shp", ".shx", ".dbf", ".prj"),
-    media_path="Shapefile\\  — that exact name, at the ROOT of the stick",
-    minutes=20,
-    steps=(
-        _FAT32,
-        "At the ROOT of the stick create a folder named exactly Shapefile and "
-        "copy all four parts of the line file into it.",
-        "Turn the display OFF, plug the stick in, then power ON.",
-        "Let the display copy the files into internal storage, press «OK» at "
-        "the message, key off and let it shut down.",
-        "Power on again and open «Data Management».",
-        "Import the lines and assign them to the right Grower, Farm and Field.",
-        "Pick the swath on the run screen before engaging the steering.",
-    ),
-    verify=(
-        "The swath draws where you expect it on the run screen.",
-        "Drive one pass with the steering off to confirm the machine tracks it.",
-    ),
-    cautions=(
-        "This display calls an AB line a Swath, and a set of imported lines a "
-        "Multiswath. Look for those words.",
-        "IntelliView IV and the Case IH AFS Pro 700 are the same display in "
-        "different paint. Anything that imports on one imports on the other.",
-    ),
-    confidence=Confidence.CONFIRM_ON_MACHINE,
-    sources=("Case IH / New Holland Voyager display documentation",),
-)
-
-_add(
-    monitor_key="new_holland.intelliview_iv",
     objective="import_prescription",
     transport=Transport.USB,
     file_format="Complete shapefile, or ISOXML / CN1 on later software",
@@ -345,8 +257,9 @@ _add(
         "in with the power off on this display.",
         "The display copies the files into internal storage as it starts. When "
         "the message appears, press «OK», then key off and let it shut down.",
-        "Power on again and open «Data Management».",
-        "Go to the import tab and pick the first prescription.",
+        "Power on again, open «Data Management» and go to the «Import2» tab: "
+        "«Source» «Shapefile», «Data Type» «Prescription».",
+        "Pick the first prescription.",
         "Set the Grower, Farm and Field it belongs to.",
         "Set the product form, the unit and the default rate, then import.",
         "Repeat for each remaining prescription.",
@@ -626,27 +539,219 @@ def _voyager_extras(monitor_key: str, brand: str) -> None:
 _voyager_extras("case_ih.afs_pro_700", "Case IH")
 _voyager_extras("new_holland.intelliview_iv", "New Holland")
 
-_add(
-    monitor_key="new_holland.intelliview_iv",
-    objective="export_work_data",
-    transport=Transport.USB,
-    file_format="Display data package written by the IntelliView software",
-    media_path="Drive root — the display creates its own folder tree",
-    minutes=15,
-    prerequisites=("Close the running job first, so the last of it is saved.",),
-    steps=(
-        _FAT32,
-        "Close or pause the running task.",
-        "Plug the stick into the display.",
-        "Open «Data Management» and press «Export».",
-        "Select the Grower / Farm / Field data you want.",
-        "Confirm and wait for the transfer to complete.",
-        _EJECT,
+
+# --------------------------------------------------------------------------- #
+#  Voyager lines and work data, photographed on the IntelliView IV            #
+# --------------------------------------------------------------------------- #
+#
+# The IntelliView IV was photographed doing all three jobs the trials need:
+# an AB line typed in, an AB line brought in off a stick as ISOXML, and the
+# yield data taken off. The steps live in walkthroughs.py beside the photos;
+# these entries read them from there.
+#
+# The Case IH AFS Pro 700 is the same display in Case IH paint, and gets the
+# same steps -- but not the same claim. Nobody has photographed a Pro 700
+# doing this, so it says CONFIRM ON MACHINE and points at the IntelliView IV,
+# where every screen can be seen. When somebody photographs a Pro 700, it gets
+# its own walk-through and the flag comes down.
+
+from ..walkthroughs import walkthrough_for  # noqa: E402
+
+_IV4_LATLON = walkthrough_for("new_holland.intelliview_iv", "import_guidance", "manual")
+_IV4_IMPORT_LINES = walkthrough_for("new_holland.intelliview_iv", "import_guidance", "usb")
+_IV4_EXPORT = walkthrough_for("new_holland.intelliview_iv", "export_work_data", "usb")
+
+_IV4_PHOTO_SOURCE = (
+    "Photographed on a New Holland combine, IntelliView IV, Olds College, "
+    "11 Sep 2026",
+)
+_SWATH_WORD = (
+    "This display calls an AB line a Swath. Look for that word, not "
+    "'guidance line'."
+)
+
+
+def _voyager_lines_and_data(
+    monitor_key: str,
+    confidence: Confidence,
+    sources: tuple[str, ...],
+    extra_cautions: tuple[str, ...] = (),
+) -> None:
+    """The three photographed jobs, for one Voyager-generation display."""
+    _add(
+        monitor_key=monitor_key,
+        objective="import_guidance",
+        transport=Transport.MANUAL,
+        file_format="None — you type four numbers in",
+        media_path="",
+        filesystem="n/a",
+        minutes=15,
+        prerequisites=(
+            "NO USB stick needed. Nothing is plugged into the display and no "
+            "file is involved — you type the line in and it is done.",
+            "FOUR numbers, not two: Lat A and Long A for one end of the line, "
+            "Lat B and Long B for the other. All in decimal degrees — in "
+            "Canada the latitude is positive and the longitude negative.",
+            "This makes a straight AB line. A curve cannot be typed in — that "
+            "one has to be driven.",
+        ),
+        steps=_IV4_LATLON.step_texts(),
+        verify=(
+            "«Swath Select» names the new line, and «Info» repeats the four "
+            "numbers you typed.",
+            "«Map» draws the line through the field you meant. If it is in "
+            "another district, check the minus sign on the longitude first.",
+            "The header width on the display is the trial's working width — "
+            "the passes either side of the line are spaced by it.",
+            "Drive to the A end with the steering off and confirm the machine "
+            "sits where you think it should.",
+        ),
+        cautions=(
+            _SWATH_WORD,
+            "«Enter A» and «Enter B» take typed numbers. «Mark A» and «Mark B» "
+            "take the machine's own position, and need a correction signal to "
+            "do it.",
+            "The first time you engage «Auto Guidance» after starting up, a "
+            "«Safety Information» page asks you to «Accept». If it then says "
+            "«Cannot Engage Automatic», move the steering wheel and try again.",
+            "«Edit Name» under «Swath Select» renames the line — worth doing, "
+            "so it matches the name on the trial sheet.",
+            "The two ends should be far apart — the length of the field, not a "
+            "few metres. A short baseline magnifies any error in the numbers "
+            "across the rest of the field.",
+            "If somebody has already put the line on a USB stick for you, take "
+            "the USB route instead — it is fewer presses and no typing to get "
+            "wrong.",
+        ) + extra_cautions,
+        common_errors=(
+            "Pressing «Mark A» instead of «Enter A», and getting «No DGPS» — "
+            "or a line wherever the machine happened to be parked.",
+            "Dropping the minus sign on the longitude, which puts the line on "
+            "the other side of the world.",
+            "Latitude and longitude the wrong way round.",
+            "Typing degrees and minutes instead of decimal degrees. 51 53.3 N "
+            "and 51.888 are the same place written two ways, and the display "
+            "only takes the second.",
+            "Leaving «Type» on something other than «Straight».",
+            "Making the line with the wrong field set on the FARM page. It is "
+            "filed under that field, and lost until somebody goes looking.",
+        ),
+        confidence=confidence,
+        sources=sources,
+    )
+
+    _add(
+        monitor_key=monitor_key,
+        objective="import_guidance",
+        transport=Transport.USB,
+        file_format="ISOXML task data — Generic ISO11783 (v3) - Type 1",
+        extensions=(".xml",),
+        media_path="TASKDATA\\  — the folder the software writes, at the ROOT "
+                   "of the stick",
+        minutes=15,
+        prerequisites=(
+            "A USB stick with the line already on it, as ISOXML. If all you "
+            "have is coordinates on paper, use the type-it-in route instead — "
+            "it needs no stick at all.",
+            "The file is made at the office. In Ag Leader SMS the export that "
+            "loaded on this display is «Generic ISO11783 (v3) - Type 1», under "
+            "«ISO11783 Displays».",
+        ),
+        steps=_IV4_IMPORT_LINES.step_texts(),
+        verify=(
+            "«Import Complete» appeared and you pressed «OK».",
+            "The line is in «Swath Select», under «List», for the field you "
+            "picked.",
+            "«Map» draws it where you expect, and it drives there with the "
+            "steering off.",
+        ),
+        cautions=(
+            _SWATH_WORD,
+            "Lines come in under «Import2». «Import» is crop settings and "
+            "screen layouts, and never lists a line.",
+            "At the «Swath Datum Mismatch Warning», press «Copy», then «Yes». "
+            "If the display then says the swath is already present, the line "
+            "was already there — nothing went wrong.",
+            "The CN1 counts on «Import Complete» are about CN1 files. On an "
+            "ISOXML import they read 0 every time.",
+            "«Import2» also takes lines as a shapefile — «Source» «Shapefile», "
+            "«Data Type» «MultiSwath+». That route was seen on the display but "
+            "not taken end to end.",
+        ) + extra_cautions,
+        common_errors=(
+            "Looking under «Import» for the lines.",
+            "No «ISOXML» in the «Source» list: the display has not seen the "
+            "stick.",
+            "The TASKDATA folder one level down, inside another folder, so the "
+            "display finds nothing.",
+            "Exporting from SMS for a different display. «Generic ISO11783 "
+            "(v3) - Type 1» is the one that loaded.",
+        ),
+        confidence=confidence,
+        sources=sources + (
+            "Ag Leader SMS, Setup for Display Export, photographed the same "
+            "day",
+        ),
+    )
+
+    _add(
+        monitor_key=monitor_key,
+        objective="export_work_data",
+        transport=Transport.USB,
+        file_format="ISOXML task data written by the display",
+        extensions=(".xml", ".bin"),
+        media_path="TASKDATA\\  — the display writes it at the ROOT of the "
+                   "stick",
+        minutes=15,
+        prerequisites=(
+            "An EMPTY stick. Copy anything already on it to a computer and "
+            "delete the rest before you go out.",
+        ),
+        steps=_IV4_EXPORT.step_texts(),
+        verify=(
+            "«Export Complete» appeared and you pressed «OK».",
+            "On a computer, the stick holds a TASKDATA folder. The .bin files "
+            "beside TASKDATA.XML are the logged data — copy all of it.",
+            "The trial field opens in the office software with the area and "
+            "the date you expect.",
+        ),
+        cautions=(
+            "«Export», top right, stays grey until the display has found the "
+            "stick.",
+            "«All» takes the guidance lines and boundaries along with the "
+            "yield. There is nothing else to take off separately.",
+        ) + extra_cautions,
+        common_errors=(
+            "Pulling the stick out before «Export Complete».",
+            "Copying only TASKDATA.XML and losing every logged value.",
+            "Turning the key off while «Your data is being saved» is on "
+            "screen.",
+        ),
+        confidence=confidence,
+        sources=sources,
+    )
+
+
+_voyager_lines_and_data(
+    "new_holland.intelliview_iv",
+    Confidence.VERIFIED,
+    _IV4_PHOTO_SOURCE,
+    extra_cautions=(
+        "Photographed on a combine. The same display runs tractors; there the "
+        "run pages around the guidance page are laid out differently, and "
+        "«Data Management» is the same.",
     ),
-    verify=("The folder on the stick is not empty and carries today's date.",),
-    cautions=("Use one stick for this machine only.",),
-    confidence=Confidence.CONFIRM_ON_MACHINE,
-    sources=_VOYAGER_SOURCES,
+)
+_voyager_lines_and_data(
+    "case_ih.afs_pro_700",
+    Confidence.CONFIRM_ON_MACHINE,
+    ("Photographed on the New Holland IntelliView IV, the same display, "
+     "11 Sep 2026",) + _VOYAGER_SOURCES,
+    extra_cautions=(
+        "These steps were photographed on a New Holland IntelliView IV, which "
+        "is this display in New Holland colours. Pick the IntelliView IV in "
+        "this guide to see every screen.",
+    ),
 )
 
 
