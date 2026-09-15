@@ -427,7 +427,7 @@ def _cloud_route(monitor_key: str, platform: str, sources: tuple[str, ...],
 
 _COORD_FORMAT = (
     "Write coordinates as plain decimal degrees -- 51.888105, -113.700648 -- "
-    "with south and west negative. Degrees-and-minutes (27 50.7 S) is a "
+    "with south and west negative. Degrees-and-minutes (51 53.3 N) is a "
     "different notation and lands the point kilometres away."
 )
 
