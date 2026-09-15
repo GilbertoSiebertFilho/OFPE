@@ -30,7 +30,7 @@ file is the context and the standing decisions.
 ## Commands (Windows)
 
 ```
-.venv\Scripts\python -m pytest tests -q          # 214 tests, must stay green
+.venv\Scripts\python -m pytest tests -q          # 216 tests, must stay green
 .venv\Scripts\python tools\build_guide.py        # rebuild OFPE-Guide.html (commit it)
 .venv\Scripts\python tools\build_guide.py --offline   # the single-file copy
 .venv\Scripts\python run.py --open               # server app on :8000
@@ -83,7 +83,8 @@ Ask before committing or pushing; a push is live for producers within minutes.
   enforces it — numbers come from the grower's trial sheet).
 - Evidence tiers are enforced in code: `VERIFIED` / `FILE_VERIFIED` /
   `CONFIRM_ON_MACHINE`. Only the user's own cab photos promote a procedure to
-  VERIFIED. Frames from third-party videos need credit; prefer the user's own photos.
+  VERIFIED. Frames from third-party videos are not reproduced in the guide, even when
+  asked — they confirm steps and the video is cited; the pictures come from the user.
   A rebadged twin inherits the steps at `CONFIRM_ON_MACHINE`, never the photos.
 - **Every answer is a link** (`#e=…&m=…&v=…&j=…&r=…`), with **Share** / **Copy the
   link** on the card: sending one answer is how a producer is actually reached.
@@ -104,15 +105,26 @@ Ask before committing or pushing; a push is live for producers within minutes.
   ISOXML. The Case IH AFS Pro 700 carries the same steps at CONFIRM_ON_MACHINE.
   Answers confirmed by the user: press «Copy» at the Swath Datum Mismatch Warning;
   «Back» on the run screen reaches the main menu.
-- Gen 4: 60-page manual (RE338096) → 22 app icons in `assets/icons/john_deere_gen4`;
-  typed lat/long route from Deere's onscreen help, still CONFIRM_ON_MACHINE.
+- Gen 4: 60-page manual (RE338096) → 22 app icons in `assets/icons/john_deere_gen4`.
+  Typed lat/long route (15 Sep 2026): screens from the run page to «Select Guidance
+  Method» confirmed against a third-party YouTube video of a 4240 in a 9870 combine
+  (the user's PDF "JD swather monitor 4240" is frames of that video); the
+  «Lat/Lon Method» screen from Deere's onscreen help. Still CONFIRM_ON_MACHINE.
+  Checked and rejected: the 2630's photos for the Gen 4 coordinate screens — a
+  different generation (tile grid, OK/Cancel) would show a screen that is not there.
+  The video's frames are **not reproduced** in the guide (someone else's footage);
+  they confirm steps and the video is cited as a source.
 - `docs/research/monitor-and-format-research.md` — the August multi-agent format
   research (brand by brand, ISOXML deep dive, sources), brought over from LINEGUIDER.
 
 ## Backlog (updated 2026-09-11, after the IntelliView IV)
 
-1. **Gen 4 walkthrough from cab photos/videos** (the user's next intended step). The
-   videos were sent by Gmail and a YouTube link; the cloud session could not open them.
+1. **Gen 4 cab photos** — the typed lat/long steps are written and live at
+   CONFIRM_ON_MACHINE; what moves them into `walkthroughs.py` at VERIFIED is the user's
+   own photos of a 4240/4600/4640: run page with the Guidance shortcut, AutoTrac
+   Guidance page, Guidance Track List, Select Guidance Method, the name/field screen,
+   the Lat/Lon screen with its keypad, and the finished line. (Aug: videos sent by
+   Gmail were never opened — worth asking for again.)
 2. Photograph the 2630 "Load field boundaries" route, and a Case IH AFS Pro 700 doing
    the three jobs it currently borrows from the IntelliView IV.
 3. Identify "RAVEN PRO" (probably Viper Pro) and "Topcon X20" from the producer survey
