@@ -704,7 +704,10 @@ ol.vsteps > li::before {
 }
 /* The button crop sits in the flow of the sentence at the size of a word:
    the eye matches it against the glass without leaving the instruction. */
-.vbtn { display: block; margin: 9px 0 0; max-width: 210px; width: 100%;
+/* A crop is shown at its own size, up to 210 px -- never stretched past it.
+   Cut from a sharp phone photo it reaches the cap anyway; cut from a small one
+   it stays small and legible instead of blowing up into a blur. */
+.vbtn { display: block; margin: 9px 0 0; width: auto; max-width: min(210px, 100%);
   border: 1.5px solid var(--line); border-radius: 8px; background: #fff; }
 .vshot {
   display: flex; gap: 9px; align-items: center; margin-top: 10px;

@@ -684,6 +684,21 @@ def test_the_voyager_twins_share_steps_but_not_the_claim():
                                   transport) is None
 
 
+def test_the_gen4_coordinate_screen_is_written_as_the_photographs_show_it():
+    """Two things a photographed 4240 overturned, held in place.
+
+    John Deere's onscreen help closes the Lat/Lon screen with Done; the display
+    says OK. And there is no minus key -- the pad has +/-, which is the one
+    press standing between a Canadian longitude and a line in Asia. Both were
+    written wrong once, from the help text, before the photographs arrived.
+    """
+    steps = pr.resolve("john_deere.gen4", "import_guidance", "manual",
+                       None).procedure.steps
+    assert not any("«Done»" in s for s in steps), "the 4240 says OK, not Done"
+    assert any("«+/-»" in s for s in steps), "the sign key is «+/-»"
+    assert any("«Lat/Lon Method»" in s for s in steps)
+
+
 def test_the_typed_route_tells_a_canadian_which_number_is_negative():
     """The trials are in Alberta and Saskatchewan: latitude positive, longitude
     negative. The IntelliView IV's typed route says so where the minus sign is

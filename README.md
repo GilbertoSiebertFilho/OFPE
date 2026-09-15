@@ -280,12 +280,13 @@ the machine, doing the job, and photographing every screen on the way through.
 A manual says what a display is documented to do; a photograph says what it
 actually showed, on that software, on that day.
 
-Two displays have been through it:
+Three displays have been through it:
 
 | Display | Photographed doing |
 |---|---|
 | John Deere GreenStar 3 2630 | finding the version · AB line typed as lat/long · AB line from a stick · pulling off work data |
 | New Holland IntelliView IV | AB line typed as lat/long · AB line from a stick as ISOXML · pulling off work data |
+| John Deere Gen 4 (4240) | AB line typed as lat/long, from naming the track to the finished line |
 
 A photographed job is written once, in `ofpe/procedures/walkthroughs.py`, and
 the procedure reads its steps from there — two copies of the same ten
@@ -295,10 +296,18 @@ itself, shown inline at the size of a word, and the whole screen behind it with
 a note saying what to notice.
 
 The extraction is a script per display (`tools/extract_gen3_photos.py`,
-`tools/extract_iv4_photos.py`): it names the photograph each crop comes from
+`tools/extract_iv4_photos.py`, `tools/extract_gen4_photos.py`): it names the photograph each crop comes from
 and the fractions of it to cut, so anybody can check a crop against the
 original. The IntelliView IV set has one alteration, recorded in the script:
 the operator's name on the FARM page is blurred.
+
+**Only the user's own photographs go in.** The Gen 4 set arrived in a PDF
+whose first seven pages were frames of somebody else's video; those pages are
+skipped by the script, and the four screens they covered are text-only steps
+whose labels were checked against that video. A photograph of a *different*
+display is not a stand-in either: the 2630's pictures were checked for the Gen 4
+coordinate screens and rejected, because a producer would be sent looking for a
+screen their display does not have.
 
 **A rebadged twin gets the steps, not the claim.** The Case IH AFS Pro 700 is
 the IntelliView IV in different paint and takes the same steps word for word —

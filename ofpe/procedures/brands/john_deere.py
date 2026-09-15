@@ -1209,33 +1209,21 @@ _point_routes("john_deere.gs3_2630",
 #  Gen 4: an AB line typed in as coordinates                                   #
 # --------------------------------------------------------------------------- #
 #
-# Two sources, checked against each other, and neither of them a photograph
-# of ours:
+# Photographed by the user on a 4240, from the New Guidance Track screen to the
+# finished line. The steps and photographs live in walkthroughs.py; this entry
+# reads them from there, as the 2630 and the IntelliView IV do.
 #
-# - A video of a 4240 in a 9870 combine walks every screen from the run page
-#   to Select Guidance Method: the GUIDANCE shortcut, the AutoTrac Guidance
-#   page, Set Track, the Guidance Track List with its New Track button, and
-#   the grid of methods under Straight Track. The labels in steps 4-7 are the
-#   labels on those screens. The video then takes A + Heading, not Lat/Lon, so
-#   it stops being evidence at the method grid.
-# - John Deere's onscreen help for the Generation 4 covers the Lat/Lon Method
-#   screen itself: latitude and longitude for point A, then for point B, then
-#   Done, in decimal degrees. Its list of method names matches the grid in the
-#   video word for word, which is what lets the two be joined.
+# The four screens before the photographs -- the Guidance shortcut, Set Track,
+# the track list, the method grid -- were read off a video of a 4240, whose
+# frames are not reproduced. The GreenStar 3 2630's photographs were checked
+# for these screens and rejected: another generation, a list where the Gen 4
+# has a grid of tiles, Accept where it has OK.
 #
-# The GreenStar 3 2630's photographs are NOT used here, though its typed route
-# has the same shape: the Gen 4 is a different generation of software, with
-# the method picked from a grid of tiles rather than a list, OK and Cancel
-# rather than Accept, and a different keyboard. A picture of a 2630 beside a
-# Gen 4 step would show the producer a screen their display does not have.
-#
-# So this stays at CONFIRM ON MACHINE. The frames from the video are not
-# reproduced -- they are somebody else's footage. When the Gen 4 is
-# photographed in a cab, these steps move into walkthroughs.py with the
-# photographs beside them, the way the 2630 and the IntelliView IV did.
-#
-# The first three lines are word for word the 2630's. The physics does not
-# change with the display, and identical text shares one voice recording.
+# Two things the photographs settled against John Deere's onscreen help: the
+# coordinate screen closes with OK, not Done; and the pad has no minus key, only
+# +/-, which is where a dropped sign on the longitude comes from.
+
+_GEN4_LATLON = walkthrough_for("john_deere.gen4", "import_guidance", "manual")
 
 _add(
     monitor_key="john_deere.gen4",
@@ -1244,33 +1232,18 @@ _add(
     version_key=ANY_VERSION,
     file_format="None — you type four numbers in",
     media_path="",
+    filesystem="n/a",
     minutes=15,
-    steps=(
-        "You need FOUR numbers, not two. Write them down before you "
-        "climb in: Lat A, Long A, Lat B, Long B.",
-        "A and B are the two ends of the line. Lat A and Long A fix "
-        "where it starts; Lat B and Long B fix where it points. Miss "
-        "one and the display has no line.",
-        "All four in decimal degrees, minus signs included — like "
-        "51.888105 and -113.700648.",
-        "On the run page, press «Guidance» on the shortcut bar along the "
-        "bottom — or «Menu», then «Guidance». The «AutoTrac Guidance» page "
-        "opens.",
-        "Press «Set Track», on the right-hand side, under the Guidance heading.",
-        "The «Guidance Track List» opens. Press «New Track» — bottom left, or "
-        "in the middle when the list says «No Tracks Found».",
-        "On «Select Guidance Method», leave «Straight Track» selected on the "
-        "left and press «Lat/Lon Method».",
-        "Name the track — the name on the trial sheet — and pick the field it "
-        "belongs to. Press «OK».",
-        "Enter the latitude and the longitude for point A: Lat A, then Long A.",
-        "Enter the latitude and the longitude for point B: Lat B, then Long B.",
-        "Press «Done». The line is set, and the «AutoTrac Guidance» page shows "
-        "it under the Guidance heading.",
-        "Check «Track Spacing» on that page is your working width. The passes "
-        "either side of the line are spaced by it, and it is the number people "
-        "forget.",
+    prerequisites=(
+        "NO USB stick needed. Nothing is plugged into the display and no file "
+        "is involved — you type the line in and it is done.",
+        "FOUR numbers, not two: Lat A and Long A for one end of the line, "
+        "Lat B and Long B for the other. All in decimal degrees — in Canada "
+        "the latitude is positive and the longitude negative.",
+        "This makes a straight AB line. A curve cannot be typed in — that one "
+        "has to be driven.",
     ),
+    steps=_GEN4_LATLON.step_texts(),
     verify=(
         "The track is in the «Guidance Track List» under the name you gave it.",
         "The line draws through the ground you meant. If it is in another "
@@ -1285,12 +1258,13 @@ _add(
         "«Lat/Lon + Heading Method» is the other typed route: one point and a "
         "direction. The trials give you both ends of the line, so use "
         "«Lat/Lon Method».",
-        "The screens up to «Select Guidance Method» were checked against a "
-        "4240 on video; the coordinate screen itself comes from John Deere's "
-        "onscreen help. Use the correction button if your display says it "
-        "differently — on a 4600 or 4640 the steps are the same.",
-        "A field not set up yet can be left blank, and the line still works. "
-        "It is just filed nowhere, and hard to find next season.",
+        "«OK» on the coordinate screen stays grey until all four boxes have a "
+        "number. If it will not press, one of them is still empty.",
+        "The latitude pad only takes -80 to +80. Anything outside that is a "
+        "longitude typed into the wrong box.",
+        "The screens from the Guidance shortcut to the method grid were "
+        "checked against a 4240, not photographed; everything from naming the "
+        "track on was. On a 4600 or 4640 the steps are the same.",
         "The two ends should be far apart — the length of the field, not a "
         "few metres. A short baseline magnifies any error in the numbers "
         "across the rest of the field.",
@@ -1303,24 +1277,27 @@ _add(
     common_errors=(
         "Having only one pair of coordinates. Two numbers give you a point, "
         "not a line — you need both ends.",
+        "Looking for a minus key. There is none: type the number and press "
+        "«+/-». Forget it and the longitude lands in the eastern hemisphere.",
         "Latitude and longitude the wrong way round.",
-        "Dropping the minus sign on the longitude, which throws the line into "
-        "another hemisphere.",
         "Typing degrees and minutes instead of decimal degrees. 51 53.3 N "
         "and 51.888 are the same place written two ways, and the display "
         "only takes the second.",
         "Choosing «A + Heading Method» instead of «Lat/Lon Method», and "
         "getting a line through wherever the machine was parked.",
+        "Leaving «Field» at ---. The line still works, but it is filed nowhere "
+        "and hard to find next season.",
         "Leaving «Track Spacing» at whatever it was, so every pass after the "
         "first is the wrong distance out.",
     ),
-    confidence=Confidence.CONFIRM_ON_MACHINE,
+    confidence=Confidence.VERIFIED,
     sources=(
-        "Video of a John Deere 4240 in a 9870 combine, creating a straight "
-        "track: the run page, AutoTrac Guidance, Set Track, Guidance Track "
-        "List, New Track and Select Guidance Method (YouTube, 2019)",
+        "Photographed by the user on a John Deere 4240 in a swather: New "
+        "Guidance Track, Rename Track, Select a Field, Create Track | Lat/Lon "
+        "Method, the four number pads and the AutoTrac Guidance page",
+        "Video of a John Deere 4240 in a 9870 combine (YouTube, 2019): the "
+        "run page, Set Track, Guidance Track List and Select Guidance Method",
         "John Deere Generation 4 onscreen help — Straight Track, Lat/Lon "
-        "Method (displaysimulator.deere.com): point A, point B, Done, decimal "
-        "degrees",
+        "Method (displaysimulator.deere.com)",
     ),
 )

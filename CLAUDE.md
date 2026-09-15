@@ -30,7 +30,7 @@ file is the context and the standing decisions.
 ## Commands (Windows)
 
 ```
-.venv\Scripts\python -m pytest tests -q          # 216 tests, must stay green
+.venv\Scripts\python -m pytest tests -q          # 217 tests, must stay green
 .venv\Scripts\python tools\build_guide.py        # rebuild OFPE-Guide.html (commit it)
 .venv\Scripts\python tools\build_guide.py --offline   # the single-file copy
 .venv\Scripts\python run.py --open               # server app on :8000
@@ -106,25 +106,26 @@ Ask before committing or pushing; a push is live for producers within minutes.
   Answers confirmed by the user: press «Copy» at the Swath Datum Mismatch Warning;
   «Back» on the run screen reaches the main menu.
 - Gen 4: 60-page manual (RE338096) → 22 app icons in `assets/icons/john_deere_gen4`.
-  Typed lat/long route (15 Sep 2026): screens from the run page to «Select Guidance
-  Method» confirmed against a third-party YouTube video of a 4240 in a 9870 combine
-  (the user's PDF "JD swather monitor 4240" is frames of that video); the
-  «Lat/Lon Method» screen from Deere's onscreen help. Still CONFIRM_ON_MACHINE.
-  Checked and rejected: the 2630's photos for the Gen 4 coordinate screens — a
-  different generation (tile grid, OK/Cancel) would show a screen that is not there.
-  The video's frames are **not reproduced** in the guide (someone else's footage);
-  they confirm steps and the video is cited as a source.
+  **Typed lat/long route photographed by the user** (15 Sep 2026) on a 4240 in a
+  swather — PDF "JD swather monitor 4240 (1).pdf", **pages 8–18 only**:
+  `tools/extract_gen4_photos.py` → `assets/photos/john_deere_gen4`, VERIFIED. Pages
+  1–7 of that PDF are frames of a third-party YouTube video (4240 in a 9870
+  combine) and are never reproduced; the four screens they cover (Guidance
+  shortcut, Set Track, Guidance Track List, method grid) are text steps checked
+  against that video. The photos overturned Deere's onscreen help: the coordinate
+  screen closes with «OK», not «Done», and the pad has «+/-», no minus key (a test
+  holds both). The 2630's photos were checked for these screens and rejected
+  (another generation).
 - `docs/research/monitor-and-format-research.md` — the August multi-agent format
   research (brand by brand, ISOXML deep dive, sources), brought over from LINEGUIDER.
 
 ## Backlog (updated 2026-09-11, after the IntelliView IV)
 
-1. **Gen 4 cab photos** — the typed lat/long steps are written and live at
-   CONFIRM_ON_MACHINE; what moves them into `walkthroughs.py` at VERIFIED is the user's
-   own photos of a 4240/4600/4640: run page with the Guidance shortcut, AutoTrac
-   Guidance page, Guidance Track List, Select Guidance Method, the name/field screen,
-   the Lat/Lon screen with its keypad, and the finished line. (Aug: videos sent by
-   Gmail were never opened — worth asking for again.)
+1. **Gen 4, the rest of it** — the typed lat/long route is photographed from naming
+   the track on. Still text-only: the four screens before it (a photo each of the
+   run page with the Guidance shortcut, the AutoTrac Guidance page, the Guidance
+   Track List, the Select Guidance Method grid), and every other Gen 4 job (USB
+   import, work data export), which are written from the manual.
 2. Photograph the 2630 "Load field boundaries" route, and a Case IH AFS Pro 700 doing
    the three jobs it currently borrows from the IntelliView IV.
 3. Identify "RAVEN PRO" (probably Viper Pro) and "Topcon X20" from the producer survey
@@ -157,3 +158,5 @@ Ask before committing or pushing; a push is live for producers within minutes.
   IntelliView IV from 88 cab photos, per-answer links with Share, photos moved out of
   the page, and the viewport/doctype fix that had the live site laid out 980 px wide
   on every phone since it went up.
+- 15 Sep: the Gen 4 typed AB line — first from a third-party video and John
+  Deere's help text, then from the user's own photos of a 4240.

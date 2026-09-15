@@ -17,9 +17,10 @@ route -- and it owns that procedure's steps rather than sitting beside them.
 Two lists of the same instructions would drift within a season, so the
 photographed one is the only one, and the procedure reads its text from here.
 
-Coverage is two displays and growing -- the GreenStar 3 2630 and the New
-Holland IntelliView IV -- which is the honest position: the rest are written
-from manuals and say so. The fix is more cabs, one at a time.
+Coverage is three displays and growing -- the GreenStar 3 2630, the New
+Holland IntelliView IV and the John Deere Gen 4 -- which is the honest
+position: the rest are written from manuals and say so. The fix is more cabs,
+one at a time.
 """
 
 from __future__ import annotations
@@ -1181,6 +1182,208 @@ _IV4_EXPORT = ProcedureWalk(
 )
 
 
+# --------------------------------------------------------------------------- #
+#  John Deere Gen 4 (4240)                                                     #
+# --------------------------------------------------------------------------- #
+#
+# Photographed by the user on a 4240 in a swather, from the New Guidance Track
+# screen to the finished line: the name, the field, the Lat/Lon screen and a
+# number pad for each coordinate. tools/extract_gen4_photos.py cuts them.
+#
+# The four screens before that -- the Guidance shortcut, Set Track, the track
+# list and the method grid -- are not in the user's photographs. Their labels
+# were read off a video of a 4240, whose frames are not reproduced, and those
+# steps carry text only. The one exception is the Guidance panel beside Set
+# Track, which the user's last photograph shows.
+#
+# What the photographs overturned: the coordinate screen closes with OK, not
+# the Done that John Deere's onscreen help names, and there is no minus key --
+# the pad has +/-, with a note saying which sign is which.
+
+_GEN4_FOLDER = "john_deere_gen4"
+
+_GEN4_LATLON = ProcedureWalk(
+    monitor_key="john_deere.gen4",
+    objective="import_guidance",
+    transport="manual",
+    folder=_GEN4_FOLDER,
+    evidence=(
+        "Photographed by the user on a John Deere 4240 in a swather: naming "
+        "the track, choosing its field, the four coordinates on their number "
+        "pads, and the finished line. The screens before that are not in the "
+        "photographs; their labels were read off a video of a 4240."
+    ),
+    steps=(
+        *_GS3_2630_LATLON.steps[:3],
+        WalkStep(
+            text=(
+                "On the run page, press «Guidance» on the shortcut bar along the "
+                "bottom — or «Menu», then «Guidance». The «AutoTrac Guidance» "
+                "page opens."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "Press «Set Track», on the right-hand side, under the Guidance "
+                "heading."
+            ),
+            button="guidance_panel.jpg",
+        ),
+        WalkStep(
+            text=(
+                "The «Guidance Track List» opens. Press «New Track» — bottom "
+                "left, or in the middle when the list says «No Tracks Found»."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "On «Select Guidance Method», leave «Straight Track» selected on "
+                "the left and press «Lat/Lon Method»."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "«New Guidance Track» opens, already named «Track 1». Press the "
+                "pencil beside «Track Name» to change it."
+            ),
+            button="btn_track_name.jpg",
+            screen_name="New Guidance Track",
+            screen="new_track.jpg",
+            look_for=(
+                "«Track Name» with its pencil, «Method: Lat/Lon» to the right, "
+                "and «Field» below with a pencil of its own. «OK» bottom right."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "«Rename Track» opens a keyboard. Type the name on the trial "
+                "sheet and press «OK»."
+            ),
+            screen_name="Rename Track",
+            screen="rename_keyboard.jpg",
+            look_for=(
+                "Numbers on the top row, letters below. The arrows move along "
+                "the name and the ✕ rubs out. «OK» bottom right."
+            ),
+        ),
+        WalkStep(
+            text="Now press the pencil beside «Field».",
+            button="btn_field.jpg",
+            screen_name="Field",
+            screen="field_press.jpg",
+            look_for=(
+                "The box turns yellow as it is pressed. Until a field is chosen "
+                "it reads ---."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "«Select a Field» opens. Work down the left — «Client», «Farm», "
+                "«Field» — and pick the trial field in the list on the right."
+            ),
+            button="btn_client_farm_field.jpg",
+            screen_name="Select a Field",
+            screen="select_field_done.jpg",
+            look_for=(
+                "The chosen field turns yellow, with its client and farm under "
+                "the name. «New Field» adds one that is not there yet; «Clear "
+                "Selections» starts again."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "Press «OK» to go back, then «OK» again on «New Guidance Track»."
+            ),
+            button="btn_ok_new_track.jpg",
+        ),
+        WalkStep(
+            text=(
+                "«Create Track | Lat/Lon Method» shows four empty boxes: "
+                "«Latitude» and «Longitude» under «Set Point A», the same under "
+                "«Set Point B». Press Point A «Latitude»."
+            ),
+            button="btn_point_boxes.jpg",
+            screen_name="Create Track | Lat/Lon Method",
+            screen="create_track_empty.jpg",
+            look_for=(
+                "Point A on the left, Point B on the right. «OK» stays grey "
+                "until all four boxes have a number."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "A number pad opens, titled «Point A Latitude». Type Lat A and "
+                "press «OK»."
+            ),
+            button="note_latitude.jpg",
+            screen_name="Point A Latitude",
+            screen="point_a_lat.jpg",
+            look_for=(
+                "The note on the left gives the range and the sign: + for "
+                "North, - for South. In Canada the latitude stays positive."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "Press Point A «Longitude». In Canada it is negative: type the "
+                "number, press «+/-» so it shows a minus, then «OK»."
+            ),
+            button="btn_plus_minus.jpg",
+            screen_name="Point A Longitude",
+            screen="point_a_lon.jpg",
+            look_for=(
+                "There is no minus key — «+/-» turns the sign, and the note "
+                "says which is which: - for West, + for East."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "Do Point B the same way: «Latitude», then «Longitude» with its "
+                "«+/-»."
+            ),
+            screen_name="Point B Longitude",
+            screen="point_b_lon.jpg",
+            look_for=(
+                "The same pad with a new title. The title is the only thing that "
+                "tells the four apart — read it before you type."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "With all four boxes filled, «OK» lights up. Check the numbers "
+                "against the trial sheet, then press «OK»."
+            ),
+            button="btn_ok_filled.jpg",
+            screen_name="All four in",
+            screen="create_track_filled.jpg",
+            look_for=(
+                "A latitude and a longitude under each point, a minus on each "
+                "longitude. These are test numbers, not a real field."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "The «AutoTrac Guidance» page shows the new line, with its name "
+                "under the Guidance heading."
+            ),
+            screen_name="The line, set",
+            screen="guidance_page.jpg",
+            look_for=(
+                "The name, 5 here, above «Set Track»; «Track Spacing» just "
+                "below it; the line drawn across the map."
+            ),
+        ),
+        WalkStep(
+            text=(
+                "Check «Track Spacing» on that page is your working width. The "
+                "passes either side of the line are spaced by it, and it is the "
+                "number people forget."
+            ),
+        ),
+    ),
+)
+
+
 WALKTHROUGHS: tuple[ProcedureWalk, ...] = (
     _GS3_2630_EXPORT,
     _GS3_2630_LATLON,
@@ -1188,6 +1391,7 @@ WALKTHROUGHS: tuple[ProcedureWalk, ...] = (
     _IV4_LATLON,
     _IV4_IMPORT_LINES,
     _IV4_EXPORT,
+    _GEN4_LATLON,
 )
 
 _BY_PROCEDURE = {
