@@ -347,8 +347,8 @@ Two voices can do the reading, and the page prefers the better one.
 a real TTS model and writes it to `voice/` as a mono MP3. The page fetches a
 clip when you press play — about a dozen for the procedure on screen, not a
 model download. This is possible only because the text is a closed set: 350
-procedures share 627 distinct lines, counting the step numbers called out
-separately, which come to 53.4 minutes of speech and 13 MB. Pulling work
+procedures share 635 distinct lines, counting the step numbers called out
+separately, which come to 54.3 minutes of speech and 13 MB. Pulling work
 data off a 2630 is thirteen steps, 86 seconds of speech and **395 KB**; the
 longest procedure anywhere is 566 KB. Two models are wired up:
 
