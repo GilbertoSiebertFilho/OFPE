@@ -34,7 +34,7 @@ moment and they take turns, so treat the committed page as the one that counts:
 
 They serve the same page, so the difference a visitor sees is only whether the
 address keeps `OFPE-Guide.html` in it — and a shared link works either way,
-because the door carries the `#` across. What matters is the habit:
+because the door carries the answers across. What matters is the habit:
 `tools/build_guide.py`, commit the result, then push. A procedure edited and
 not rebuilt reaches neither.
 
@@ -48,8 +48,8 @@ megabyte and a half of rewritten file per change.
 
 `index.html` exists for the branch setting, where GitHub serves the directory
 and a visitor to the root would otherwise get a 404. It redirects to the guide
-and keeps the part of the address after the `#`, so a link to one answer lands
-on that answer. Under the Actions setting it is never served, and costs
+and keeps the answers in the address — after the `?`, or after the `#` in links
+sent before September 18 — so a link to one answer lands on that answer. Under the Actions setting it is never served, and costs
 nothing.
 
 This works because the repository is public. GitHub Pages on a *private*
