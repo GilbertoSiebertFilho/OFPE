@@ -65,13 +65,21 @@ directly on the other person's phone: their machine, their display, their
 version, those steps. Nothing to pick, nothing to scroll.
 
 ```
-https://gilbertosiebertfilho.github.io/OFPE/#e=combine&m=new_holland.intelliview_iv&v=iv4_all&j=import_guidance&r=manual
+https://gilbertosiebertfilho.github.io/OFPE/?combine/new_holland.intelliview_iv/iv4_all/import_guidance/manual
 ```
 
-Each answer it can still reach is kept in the part after the `#`, so the
-phone's own back gesture undoes one answer at a time instead of leaving the
-page. A link whose display or job no longer exists does not break: the wizard
-takes what it still understands and asks the rest.
+The answers ride after the `?` as a path — machine / display / version / job /
+route — and the address carries nothing else: no `#`, no `&`, no `=`. That is
+on purpose. The first version wrote `#e=combine&m=...`, and Gmail, which wraps
+every link in a google.com redirect, stumbled on those characters and showed
+producers Google's *Redirect Notice* page, in their phone's language, before
+the answer. Links in the old form still open and are rewritten to the new one
+in the address bar.
+
+Each answer is also a step in the browser's history, so the phone's own back
+gesture undoes one answer at a time instead of leaving the page. A link whose
+display or job no longer exists does not break: the wizard takes what it still
+understands and asks the rest.
 
 ## The Guide on its own — nothing to install
 

@@ -82,9 +82,24 @@ def test_a_shared_link_points_at_the_site(guide):
 
 
 def test_the_doorway_keeps_the_answer_in_the_link():
-    """The site's front door redirects to the page. A meta refresh drops the
-    part of the address after the #, which is exactly where a shared answer
-    lives -- so the redirect has to carry it across."""
+    """The site's front door redirects to the page, and a shared answer rides
+    in the address -- after the ? now, after the # in links sent earlier. A
+    meta refresh drops both, so the scripted redirect has to carry them."""
     doorway = (ROOT / "index.html").read_text(encoding="utf-8")
+    assert "location.search" in doorway
     assert "location.hash" in doorway
     assert doorway.index("location.replace") < doorway.index('http-equiv="refresh"')
+
+
+def test_a_shared_link_carries_no_character_a_mail_client_mangles():
+    """Gmail wraps every link in a google.com redirect, and a # or & inside the
+    target is where that goes wrong: the producer gets Google's "Redirect
+    Notice" in their phone's language instead of the answer. So the answers
+    are written as a path after a ? -- slashes and nothing else -- and the old
+    #e=...&m=... form is only ever read, never written."""
+    source = (ROOT / "tools" / "build_guide.py").read_text(encoding="utf-8")
+    link_for = source.split("function linkFor")[1].split("\n}\n")[0]
+    assert "join('/')" in link_for
+    assert "URLSearchParams" not in link_for
+    share = source.split("function shareUrl")[1].split("\n}\n")[0]
+    assert "'#'" not in share and "'?'" in share

@@ -30,7 +30,7 @@ file is the context and the standing decisions.
 ## Commands (Windows)
 
 ```
-.venv\Scripts\python -m pytest tests -q          # 217 tests, must stay green
+.venv\Scripts\python -m pytest tests -q          # 218 tests, must stay green
 .venv\Scripts\python tools\build_guide.py        # rebuild OFPE-Guide.html (commit it)
 .venv\Scripts\python tools\build_guide.py --offline   # the single-file copy
 .venv\Scripts\python run.py --open               # server app on :8000
@@ -86,8 +86,11 @@ Ask before committing or pushing; a push is live for producers within minutes.
   VERIFIED. Frames from third-party videos are not reproduced in the guide, even when
   asked — they confirm steps and the video is cited; the pictures come from the user.
   A rebadged twin inherits the steps at `CONFIRM_ON_MACHINE`, never the photos.
-- **Every answer is a link** (`#e=…&m=…&v=…&j=…&r=…`), with **Share** / **Copy the
-  link** on the card: sending one answer is how a producer is actually reached.
+- **Every answer is a link** (`/OFPE/?machine/display/version/job/route`), with
+  **Share** / **Copy the link** on the card: sending one answer is how a producer is
+  actually reached. No `#`, `&` or `=` in it — Gmail's link protection turned the old
+  `#e=…&m=…` form into a Google "Redirect Notice" page (a test holds this); old links
+  are still read and rewritten.
   Steps must therefore read without their photos ("as in the photo" is banned by a
   test) and the page must stay small enough to open on field data.
 

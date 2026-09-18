@@ -1219,29 +1219,51 @@ function reset(from) {
 const answered = k => S[k] !== null;
 
 /* -------------------------------------------------------------- the link */
-/* Every answer has an address. The answers given so far ride in the part of
-   the URL after the #, so a link sent in a message opens straight onto the
-   same steps -- nothing to pick, nothing to scroll -- and the phone's own back
-   gesture undoes an answer instead of leaving the page. */
+/* Every answer has an address, so a link sent in a message opens straight onto
+   the same steps -- nothing to pick, nothing to scroll -- and the phone's own
+   back gesture undoes an answer instead of leaving the page.
+
+   The answers ride after a ? as a path:
+     .../OFPE/?tractor/john_deere.gen4/gen4_11x/import_guidance/manual
+   Nothing in it but letters, digits, _ . and /. That is deliberate. The first
+   version used #e=tractor&m=... and Gmail's link protection, which wraps every
+   link in a google.com redirect, choked on the # and the & inside it and put
+   a "Redirect Notice" page -- in the phone's language -- between the producer
+   and the answer. A link with no #, & or = passes through untouched, and a
+   messenger's link detection never cuts it short either.
+
+   Links in the old form still open: they were sent before the change. */
 const LINK = { equip: 'e', mon: 'm', ver: 'v', job: 'j', route: 'r' };
 
 function linkFor(state) {
-  const q = new URLSearchParams();
+  const parts = [];
   for (const k of ORDER) {
     if (state[k] === null) break;
-    q.set(LINK[k], k === 'ver' && state[k] === '' ? 'any' : state[k]);
+    parts.push(k === 'ver' && state[k] === '' ? 'any' : state[k]);
   }
-  return q.toString();
+  return parts.join('/');
+}
+
+/* The answers in the address the page was opened on, as {e, m, v, j, r}:
+   from the path after the ?, or from an old #e=...&m=... link. */
+function linkParts() {
+  const hash = location.hash.replace(/^#/, '');
+  if (/(^|&)[emvjr]=/.test(hash)) {
+    const q = new URLSearchParams(hash);
+    return { e: q.get('e'), m: q.get('m'), v: q.get('v'), j: q.get('j'),
+             r: q.get('r') };
+  }
+  const seg = decodeURIComponent(location.search.replace(/^\?/, ''))
+    .split('/').filter(Boolean);
+  return { e: seg[0], m: seg[1], v: seg[2], j: seg[3], r: seg[4] };
 }
 
 /* Read an address back one answer at a time, and stop at the first that no
    longer makes sense -- a display renamed, a job withdrawn since the link was
    sent. The wizard simply asks again from there. */
-function readLink(hash) {
-  const q = new URLSearchParams(hash.replace(/^#/, ''));
+function readLink() {
   const s = { equip: null, mon: null, ver: null, job: null, route: null };
-  const e = q.get('e'), m = q.get('m'), v = q.get('v'), j = q.get('j'),
-        r = q.get('r');
+  const { e, m, v, j, r } = linkParts();
   if (e && D.equipment[e]) s.equip = e;
   const mon = m && monByKey[m];
   if (!mon || (s.equip && !mon.equipment.includes(s.equip))) return s;
@@ -1267,21 +1289,25 @@ let replacing = false;
    page never recorded -- one that came in on a link -- rewrites the current
    entry instead, so the gesture still leads back to wherever the link was
    tapped. */
+/* The answers in the address right now, in the form linkFor writes. */
+const currentLink = () => location.hash
+  ? null : decodeURIComponent(location.search.replace(/^\?/, ''));
+const addressFor = want => location.pathname + (want ? '?' + want : '');
+
 function syncLink() {
   if (following) return;
   const replace = replacing;
   replacing = false;
-  const want = linkFor(S), have = location.hash.replace(/^#/, '');
+  const want = linkFor(S), have = currentLink();
   if (want === have) return;
-  const url = location.pathname + location.search + (want ? '#' + want : '');
   try {
-    if (replace) history.replaceState(history.state, '', url);
-    else history.pushState({ ofpe: 1, prev: have }, '', url);
+    if (replace) history.replaceState(history.state, '', addressFor(want));
+    else history.pushState({ ofpe: 1, prev: have }, '', addressFor(want));
   } catch (e) { /* a sandboxed frame may refuse; the page works without */ }
 }
 
 function followLink() {
-  const next = readLink(location.hash);
+  const next = readLink();
   /* The make filter is not part of the address. Keep it while the machine
      stays the same, exactly as the Back button does. */
   if (next.equip !== S.equip) S.brand = null;
@@ -1295,11 +1321,15 @@ addEventListener('popstate', followLink);
    site's when it was opened as a file or inside something else -- a file://
    link on somebody else's phone opens nothing. */
 function shareUrl() {
-  const hash = linkFor(S);
+  const want = linkFor(S);
   const onSite = /^https?:$/.test(location.protocol)
     && location.hostname.endsWith('github.io');
-  const base = onSite ? location.href.split('#')[0] : D.site;
-  return base + (hash ? '#' + hash : '');
+  /* The short form: the site's folder, not the page inside it. The front door
+     forwards the answers either way. */
+  const base = onSite
+    ? location.origin + location.pathname.replace(/OFPE-Guide\.html$/, '')
+    : D.site;
+  return base + (want ? '?' + want : '');
 }
 
 function flash(btn, text) {
@@ -2015,11 +2045,10 @@ drawCheck();
    so the first press of the phone's back gesture leaves the page as expected. */
 followLink();
 try {
+  /* An old #e=...&m=... link is rewritten into the new form here too, so what
+     the address bar shows -- and what anybody copies out of it -- is clean. */
   const want = linkFor(S);
-  if (want !== location.hash.replace(/^#/, '')) {
-    history.replaceState(null, '',
-      location.pathname + location.search + (want ? '#' + want : ''));
-  }
+  if (want !== currentLink()) history.replaceState(null, '', addressFor(want));
 } catch (e) { /* a sandboxed frame may refuse */ }
 """
 
