@@ -505,6 +505,14 @@ ol.vsteps > li::before {
 #shotbox.zoom .hint { display: none; }
 #shotbox p { margin: 0; max-width: 62ch; text-align: center; color: #e9ede4;
   font-size: var(--t-md); line-height: 1.5; }
+/* The caption names buttons, and a cap takes its colours from the page around
+   it. This frame is a dark overlay in both themes, so neither theme's cap fits:
+   the light theme's plate took the caption's near-white ink and came out white
+   on white -- the one word the caption exists to point at, invisible -- and the
+   dark theme's plate would go dark on dark. So the cap is pinned here, light
+   plate and dark ink, to match the overlay rather than the page. */
+#shotcap .key { background: #f0f2ec; border-color: #d3d8cb; color: #171b15;
+  box-shadow: none; }
 #shotbox .close {
   position: absolute; top: 14px; right: 14px; font: inherit; font-weight: 620;
   cursor: pointer; padding: 9px 15px; border-radius: 8px; min-height: 44px;
